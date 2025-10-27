@@ -1,0 +1,118 @@
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using AdvanceAPI.IRepository;
+using AdvanceAPI.IServices;
+using AdvanceAPI.IServices.Account;
+using AdvanceAPI.IServices.DB;
+using AdvanceAPI.Repository;
+using AdvanceAPI.Services;
+using AdvanceAPI.Services.Account;
+using AdvanceAPI.Services.DB;
+using Serilog;
+using Serilog.Core;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Text;
+
+namespace AdvanceAPI
+{
+
+    public class ServiceConfiguration()
+    {
+        public static void RegisterServices(IServiceCollection services, IConfiguration _config)
+        {
+
+            services.AddControllers();
+            services.AddOpenApi();
+
+            #region API Version - Swagger
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+             .AddJwtBearer(options =>
+             {
+                 options.TokenValidationParameters = new TokenValidationParameters
+                 {
+                     ValidateIssuer = true,
+                     ValidateAudience = true,
+                     ValidateLifetime = true,
+                     ValidateIssuerSigningKey = true,
+                     ValidIssuer = _config["Jwt:Issuer"],
+                     ValidAudience = _config["Jwt:Audience"],
+                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!))
+                 };
+             });
+
+            services.AddApiVersioning(options =>
+            {
+                options.ReportApiVersions = true;
+            });
+
+            services.AddVersionedApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+            });
+
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
+
+            services.AddSwaggerGen(c =>
+            {
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer hgdsfchgdsfghBEARERTOKEN_ghgfsdgfsdgfj\"",
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme {
+                            Reference = new OpenApiReference {
+                                Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
+
+            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+
+            #endregion
+
+            // Add Swagger services
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<Logger>(new LoggerConfiguration().CreateLogger());
+            services.AddSingleton<IGeneral, General>();
+
+            //connection string setup
+            services.AddSingleton<IDBConnectionStrings, DBConnectionStrings>();
+
+            //DB Connection Setup - SQL
+            services.AddScoped<IMySQLConnection, MySQLConnection>();
+            services.AddScoped<IDBOperations, DBOperations>();
+
+            //Repository Setup
+            services.AddScoped<IAccountRepository, AccountRepository>();
+
+            //Services Setup
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAccountService, AccountService>();
+        }
+
+    }
+
+}
+
