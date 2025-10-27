@@ -91,6 +91,7 @@ namespace AdvanceAPI.Services.Account
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var name = principal.FindFirst(ClaimTypes.Name)?.Value;
             var role = principal.FindFirst(ClaimTypes.Role)?.Value;
+            var type=principal.FindFirst(ClaimTypes.Authentication)?.Value;
 
             if (userId == null || name == null || role == null)
             {
@@ -111,6 +112,7 @@ namespace AdvanceAPI.Services.Account
                 EmployeeCode = userId,
                 Name = name,
                 Type = role,
+                MyRoles=role,
                 RefreshTokenId = dt.Rows[0]["TokenId"]?.ToString()
             };
 
