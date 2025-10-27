@@ -12,9 +12,13 @@
 
         public const string ADD_TOKEN = " INSERT INTO login_tokens (UserId, Name, Role, Token, TokenExpiresAt, RefreshToken, RefreshTokenExpiresAt, TokenGeneratedOn, TokenGeneratedFrom,GeneratedAgainstRefreshToken) VALUES (@UserId, @Name, @Role, @Token, @TokenExpiresAt, @RefreshToken, @RefreshTokenExpiresAt, NOW(), @TokenGeneratedFrom,@GeneratedAgainstRefreshToken);";
 
-        public const string VALIDATE_TOKEN = " SELECT TokenId FROM login_tokens WHERE UserId=@UserId AND Token=@Token AND RefreshToken=@RefreshToken AND RefreshTokenExpiresAt>NOW() AND RefreshTokenUseStatus=0;";
+        public const string VALIDATE_TOKEN = " SELECT TokenId FROM login_tokens WHERE UserId=@UserId AND Token=@Token AND RefreshToken=@RefreshToken AND RefreshTokenExpiresAt>NOW() AND RefreshTokenUseStatus=0 AND IsLoggedOut=0;";
 
-        public const string USE_TOKEN = "   UPDATE login_tokens SET RefreshTokenUseStatus=1,RefreshTokenUseOn=NOW(),RefreshTokenUseFrom=@RefreshTokenUseFrom WHERE TokenId=@TokenId;";
+        public const string USE_TOKEN = "UPDATE login_tokens SET RefreshTokenUseStatus=1,RefreshTokenUseOn=NOW(),RefreshTokenUseFrom=@RefreshTokenUseFrom WHERE TokenId=@TokenId;";
+
+        public const string TOKEN_IS_NOT_LOGGEDOUT = "SELECT 1 FROM `login_tokens` where Token=@Token AND IsLoggedOut=0;";
+
+        public const string LOGOUT_TOKEN = "UPDATE `login_tokens` SET IsLoggedOut=1,LogoutOn=NOW(),LogoutFrom=@LogoutFrom where Token=@Token AND IsLoggedOut=0;";
 
     }
 }

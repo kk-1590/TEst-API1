@@ -9,9 +9,8 @@ using AdvanceAPI.SQL.Account;
 
 namespace AdvanceAPI.Repository
 {
-    public class AccountRepository(IConfiguration configuration, ILogger<TokenService> logger, IDBOperations dbContext, IHttpContextAccessor httpContextAccessor) : IAccountRepository
+    public class AccountRepository(ILogger<TokenService> logger, IDBOperations dbContext, IHttpContextAccessor httpContextAccessor) : IAccountRepository
     {
-        private readonly IConfiguration _config = configuration;
         private readonly ILogger<TokenService> _logger = logger;
         private readonly IDBOperations _dbContext = dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
@@ -134,7 +133,6 @@ namespace AdvanceAPI.Repository
                 var remoteIp = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
                 var parameters = new List<SQLParameters>(3)
                 {
-                    new SQLParameters("@Type", "Use Token"),
                     new SQLParameters("@TokenId", token ?? string.Empty),
                     new SQLParameters("@RefreshTokenUseFrom", remoteIp)
                 };
@@ -147,6 +145,42 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+        public async Task<DataTable> IsTokenNotLoggedout(string? token)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>(3)
+                {
+                    new SQLParameters("@Token", token ?? string.Empty),
+                };
 
+                return await _dbContext.SelectAsync(AccountSql.TOKEN_IS_NOT_LOGGEDOUT, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error using token in database.");
+                throw;
+            }
+        }
+
+        public async Task LogoutToken(string? token)
+        {
+            try
+            {
+                string remoteIp = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+                var parameters = new List<SQLParameters>(2)
+                {
+                    new SQLParameters("@Token", token ?? string.Empty),
+                    new SQLParameters("@LogoutFrom", remoteIp ?? string.Empty)
+                };
+
+                await _dbContext.DeleteInsertUpdateAsync(AccountSql.LOGOUT_TOKEN, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error logging out token in database.");
+                throw;
+            }
+        }
     }
 }

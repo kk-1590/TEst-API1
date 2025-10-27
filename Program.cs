@@ -1,4 +1,5 @@
 using AdvanceAPI;
+using AdvanceAPI.Middlewares;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Serilog;
 using Serilog.Context;
@@ -16,12 +17,14 @@ ServiceConfiguration.RegisterServices(builder.Services, builder.Configuration);
 var app = builder.Build();
 app.Use(async (context, next) =>
 {
-    var ipAddress = context.Connection.RemoteIpAddress?.ToString();
+    var forwardedHeader = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+    var ipAddress = forwardedHeader ?? context.Connection.RemoteIpAddress?.ToString();
     using (LogContext.PushProperty("IPAddress", ipAddress))
     {
         await next.Invoke();
     }
 });
+app.UseMiddleware<TokenBlacklistMiddleware>();
 
 app.UseDefaultFiles();
 app.MapStaticAssets();
@@ -40,8 +43,9 @@ app.UseCors(builder =>
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
     app.UseSwaggerUI(options =>
     {
-        foreach (var description in provider.ApiVersionDescriptions)
+        for (int i = 0; i < provider.ApiVersionDescriptions.Count; i++)
         {
+            ApiVersionDescription? description = provider.ApiVersionDescriptions[i];
             options.SwaggerEndpoint(
                 $"/swagger/{description.GroupName}/swagger.json",
                 description.GroupName.ToUpperInvariant());
@@ -59,6 +63,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapFallbackToFile("/index.html");
+// Enable serving Swagger UI at the root URL
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+    options.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+});
+
+app.MapFallbackToFile("/swagger");
+
+
 
 await app.RunAsync();

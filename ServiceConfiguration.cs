@@ -97,6 +97,10 @@ namespace AdvanceAPI
             services.AddSingleton<Logger>(new LoggerConfiguration().CreateLogger());
             services.AddSingleton<IGeneral, General>();
 
+
+            services.AddMemoryCache();
+            services.AddDistributedMemoryCache();
+
             //connection string setup
             services.AddSingleton<IDBConnectionStrings, DBConnectionStrings>();
 

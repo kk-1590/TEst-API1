@@ -1,7 +1,9 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using AdvanceAPI.DTO.Account;
+﻿using AdvanceAPI.DTO.Account;
 using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices.Account;
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.IdentityModel.Tokens;
+using MySqlX.XDevAPI.Common;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -90,10 +92,8 @@ namespace AdvanceAPI.Services.Account
             // Extract claims from the expired token
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var name = principal.FindFirst(ClaimTypes.Name)?.Value;
-            var role = principal.FindFirst(ClaimTypes.Role)?.Value;
-            var type=principal.FindFirst(ClaimTypes.Authentication)?.Value;
 
-            if (userId == null || name == null || role == null)
+            if (userId == null || name == null)
             {
                 return null;
             }
@@ -107,16 +107,26 @@ namespace AdvanceAPI.Services.Account
 
             await _procedures.UseToken(dt.Rows[0]["TokenId"]?.ToString()!);
 
-            var newTokenRequest = new CreateTokenRequest
-            {
-                EmployeeCode = userId,
-                Name = name,
-                Type = role,
-                MyRoles=role,
-                RefreshTokenId = dt.Rows[0]["TokenId"]?.ToString()
-            };
+            DataTable advanceAccess = await _procedures.GetAdvanceAccess(userId);
 
-            return await GenerateJSONWebToken(newTokenRequest);
+            CreateTokenRequest createTokenRequest = new CreateTokenRequest();
+            createTokenRequest.EmployeeCode = userId;
+            createTokenRequest.AdditionalEmployeeCode = string.Empty;
+            DataTable additionalEmployeeCode = await _procedures.GetAdditionalEmployeeCode(userId);
+            if (additionalEmployeeCode != null && additionalEmployeeCode.Rows.Count > 0)
+            {
+                createTokenRequest.AdditionalEmployeeCode = additionalEmployeeCode.Rows[0][0]?.ToString();
+            }
+            createTokenRequest.Name = name;
+            createTokenRequest.Type = advanceAccess.Rows[0][0]?.ToString();
+            createTokenRequest.TypeAlways = advanceAccess.Rows[0][0]?.ToString();
+            createTokenRequest.MyRoles = advanceAccess.Rows[0][1]?.ToString();
+            createTokenRequest.AgainstRoles = advanceAccess.Rows[0][2]?.ToString();
+            createTokenRequest.Application = advanceAccess.Rows[0]["applicationupload"]?.ToString();
+            createTokenRequest.RefreshTokenId = dt.Rows[0]["TokenId"]?.ToString();
+
+
+            return await GenerateJSONWebToken(createTokenRequest);
         }
 
         private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)

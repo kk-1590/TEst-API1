@@ -85,5 +85,30 @@ namespace AdvanceAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                string? token = Request.Headers.Authorization.ToString().Replace("Bearer ", "") ?? string.Empty;
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Details Found..."));
+                }
+
+                ApiResponse apiResponse = await _account.Logout(token);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During Logout....");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
     }
 }

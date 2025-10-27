@@ -5,6 +5,7 @@ using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Caching.Memory;
 using System.Data;
 
 namespace AdvanceAPI.Services.Account
@@ -14,15 +15,18 @@ namespace AdvanceAPI.Services.Account
         public readonly ITokenService _token;
         private readonly ILogger<AccountService> _logger;
         private readonly IGeneral _general;
-        private readonly IAccountRepository _procedures;
+        private readonly IAccountRepository _account;
+        private readonly IMemoryCache _cache;
 
-        public AccountService(ITokenService token, ILogger<AccountService> logger, IGeneral general, IAccountRepository procedures)
+        public AccountService(ITokenService token, ILogger<AccountService> logger, IGeneral general, IAccountRepository account, IMemoryCache cache)
         {
             _token = token;
             _logger = logger;
             _general = general;
-            _procedures = procedures;
+            _account = account;
+            _cache = cache;
         }
+
         public async Task<ApiResponse> Login(UserLoginRequest? loginRequest)
         {
             try
@@ -33,7 +37,7 @@ namespace AdvanceAPI.Services.Account
                     return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Please provide valid credentials");
                 }
 
-                DataTable result = await _procedures.GetUserStatus(loginRequest?.UserId!);
+                DataTable result = await _account.GetUserStatus(loginRequest?.UserId!);
 
                 if (result == null || result.Rows.Count == 0)
                 {
@@ -46,7 +50,7 @@ namespace AdvanceAPI.Services.Account
                 }
 
                 string masterPassword = string.Empty;
-                DataTable mainPassword = await _procedures.GetMainPassword();
+                DataTable mainPassword = await _account.GetMainPassword();
                 if (mainPassword != null && mainPassword.Rows.Count > 0)
                 {
                     masterPassword = mainPassword.Rows[0][0]?.ToString() ?? string.Empty;
@@ -56,14 +60,14 @@ namespace AdvanceAPI.Services.Account
                 {
                     if ((result.Rows[0]["currentstatus"]?.ToString()?.ToUpper() ?? string.Empty) == "ACTIVE")
                     {
-                        DataTable advanceAccess = await _procedures.GetAdvanceAccess(loginRequest?.UserId);
+                        DataTable advanceAccess = await _account.GetAdvanceAccess(loginRequest?.UserId);
 
                         if (advanceAccess != null && advanceAccess.Rows.Count > 0)
                         {
                             CreateTokenRequest createTokenRequest = new CreateTokenRequest();
                             createTokenRequest.EmployeeCode = loginRequest?.UserId;
                             createTokenRequest.AdditionalEmployeeCode = string.Empty;
-                            DataTable additionalEmployeeCode = await _procedures.GetAdditionalEmployeeCode(loginRequest?.UserId);
+                            DataTable additionalEmployeeCode = await _account.GetAdditionalEmployeeCode(loginRequest?.UserId);
                             if (additionalEmployeeCode != null && additionalEmployeeCode.Rows.Count > 0)
                             {
                                 createTokenRequest.AdditionalEmployeeCode = additionalEmployeeCode.Rows[0][0]?.ToString();
@@ -128,6 +132,39 @@ namespace AdvanceAPI.Services.Account
                 return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Sorry!! Invalid token details found...");
             }
         }
+        public async Task<ApiResponse> Logout(string? token)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid token details found....");
+                }
+
+                DataTable isValidToken = await _account.IsTokenNotLoggedout(token!);
+
+                if (isValidToken == null || isValidToken.Rows.Count == 0)
+                {
+                    return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid token details found....");
+                }
+
+                await _account.LogoutToken(token!);
+
+                _cache.Set(token, true, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTime.UtcNow.AddMinutes(180)
+                });
+
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Invalid logout token details found. Parameters: Parameters: {Request}", token);
+                return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Sorry!! Invalid token details found...");
+            }
+        }
+
 
     }
 }
