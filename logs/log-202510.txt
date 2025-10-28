@@ -644,3 +644,100 @@ DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
 2025-10-27 17:53:19 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.AccountController.Login (AdvanceAPI)" in 78.7194ms
 2025-10-27 17:53:19 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.AccountController.Login (AdvanceAPI)"'
 2025-10-27 17:53:19 [INFORMATION] [] Request finished "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/login""" - 200 null "application/json; charset=utf-8" 79.4768ms
+2025-10-28 11:47:12 [WARNING] [] The WebRootPath was not found: "D:\Azure Main\AdvanceAPI\wwwroot". Static files may be unavailable.
+2025-10-28 11:47:12 [WARNING] [] The WebRootPath was not found: "D:\Azure Main\AdvanceAPI\wwwroot". Static files may be unavailable.
+2025-10-28 11:47:12 [INFORMATION] [] User profile is available. Using '"C:\Users\Admin\AppData\Local\ASP.NET\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-10-28 11:47:13 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/_framework/aspnetcore-browser-refresh.js""" - null null
+2025-10-28 11:47:13 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/_vs/browserLink""" - null null
+2025-10-28 11:47:13 [INFORMATION] [] Application started. Press Ctrl+C to shut down.
+2025-10-28 11:47:13 [INFORMATION] [] Hosting environment: "Development"
+2025-10-28 11:47:13 [INFORMATION] [] Content root path: "D:\Azure Main\AdvanceAPI"
+2025-10-28 11:47:13 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/_framework/aspnetcore-browser-refresh.js""" - 200 16505 "application/javascript; charset=utf-8" 139.0819ms
+2025-10-28 11:47:13 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 366.5634ms
+2025-10-28 11:47:13 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/swagger/v1/swagger.json""" - null null
+2025-10-28 11:47:13 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 220.0553ms
+2025-10-28 11:47:47 [INFORMATION] [] Request starting "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:47:49 [INFORMATION] [::1] Executing endpoint '"405 HTTP Method Not Supported"'
+2025-10-28 11:47:49 [INFORMATION] [::1] Executed endpoint '"405 HTTP Method Not Supported"'
+2025-10-28 11:47:49 [INFORMATION] [] Request finished "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/get-campus""" - 405 null null 1232.4305ms
+2025-10-28 11:47:53 [INFORMATION] [] Request starting "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/login""" - "application/json" 50
+2025-10-28 11:47:53 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.AccountController.Login (AdvanceAPI)"'
+2025-10-28 11:47:53 [INFORMATION] [::1] Route matched with "{action = \"Login\", controller = \"Account\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(AdvanceAPI.DTO.Account.UserLoginRequest)" on controller "AdvanceAPI.Controllers.AccountController" ("AdvanceAPI").
+2025-10-28 11:47:54 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:47:55 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.AccountController.Login (AdvanceAPI)" in 1516.1882ms
+2025-10-28 11:47:55 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.AccountController.Login (AdvanceAPI)"'
+2025-10-28 11:47:55 [INFORMATION] [] Request finished "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/login""" - 200 null "application/json; charset=utf-8" 1572.6569ms
+2025-10-28 11:48:04 [INFORMATION] [] Request starting "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:48:04 [INFORMATION] [::1] Executing endpoint '"405 HTTP Method Not Supported"'
+2025-10-28 11:48:04 [INFORMATION] [::1] Executed endpoint '"405 HTTP Method Not Supported"'
+2025-10-28 11:48:04 [INFORMATION] [] Request finished "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/get-campus""" - 405 null null 70.9678ms
+2025-10-28 11:48:06 [INFORMATION] [] Request starting "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:48:06 [INFORMATION] [::1] Executing endpoint '"405 HTTP Method Not Supported"'
+2025-10-28 11:48:06 [INFORMATION] [::1] Executed endpoint '"405 HTTP Method Not Supported"'
+2025-10-28 11:48:06 [INFORMATION] [] Request finished "HTTP/1.1" "POST" "https"://"localhost:44370""""/api/v1/get-campus""" - 405 null null 9.0449ms
+2025-10-28 11:48:09 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:48:09 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:48:09 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:48:09 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 6.3644ms
+2025-10-28 11:48:09 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:05 [WARNING] [] The WebRootPath was not found: "D:\Azure Main\AdvanceAPI\wwwroot". Static files may be unavailable.
+2025-10-28 11:49:05 [WARNING] [] The WebRootPath was not found: "D:\Azure Main\AdvanceAPI\wwwroot". Static files may be unavailable.
+2025-10-28 11:49:05 [INFORMATION] [] User profile is available. Using '"C:\Users\Admin\AppData\Local\ASP.NET\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-10-28 11:49:06 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/_vs/browserLink""" - null null
+2025-10-28 11:49:06 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/_framework/aspnetcore-browser-refresh.js""" - null null
+2025-10-28 11:49:06 [INFORMATION] [] Application started. Press Ctrl+C to shut down.
+2025-10-28 11:49:06 [INFORMATION] [] Hosting environment: "Development"
+2025-10-28 11:49:06 [INFORMATION] [] Content root path: "D:\Azure Main\AdvanceAPI"
+2025-10-28 11:49:06 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/_framework/aspnetcore-browser-refresh.js""" - 200 16505 "application/javascript; charset=utf-8" 39.5188ms
+2025-10-28 11:49:06 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 111.9205ms
+2025-10-28 11:49:06 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/swagger/v1/swagger.json""" - null null
+2025-10-28 11:49:06 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 158.6992ms
+2025-10-28 11:49:10 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:49:10 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:10 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:49:11 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:49:11 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 595.0276ms
+2025-10-28 11:49:11 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:11 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 756.0338ms
+2025-10-28 11:49:40 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:49:40 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:40 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:49:40 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:49:40 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 24.4654ms
+2025-10-28 11:49:40 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:40 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 112.3963ms
+2025-10-28 11:49:42 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:49:42 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:42 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:49:42 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:49:42 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 16.4648ms
+2025-10-28 11:49:42 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:42 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 25.3776ms
+2025-10-28 11:49:43 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:49:43 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:43 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:49:43 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:49:43 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 18.2534ms
+2025-10-28 11:49:43 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:43 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 27.5861ms
+2025-10-28 11:49:43 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:49:43 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:43 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:49:43 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:49:43 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 17.2378ms
+2025-10-28 11:49:43 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:43 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 20.7325ms
+2025-10-28 11:49:44 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:49:44 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:44 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:49:44 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:49:44 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 18.6943ms
+2025-10-28 11:49:44 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:44 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 22.4586ms
+2025-10-28 11:49:45 [INFORMATION] [] Request starting "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - "text/plain" 50
+2025-10-28 11:49:45 [INFORMATION] [::1] Executing endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:45 [INFORMATION] [::1] Route matched with "{action = \"Logout\", controller = \"Inclusive\"}". Executing controller action with signature "System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Logout()" on controller "AdvanceAPI.Controllers.InclusiveController" ("AdvanceAPI").
+2025-10-28 11:49:45 [INFORMATION] [::1] Executing "OkObjectResult", writing value of type '"AdvanceAPI.DTO.ApiResponse"'.
+2025-10-28 11:49:45 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 19.4446ms
+2025-10-28 11:49:45 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
+2025-10-28 11:49:45 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 24.1956ms

@@ -15,6 +15,8 @@ using Serilog;
 using Serilog.Core;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
+using AdvanceAPI.Services.Inclusive;
+using AdvanceAPI.IServices.Inclusive;
 
 namespace AdvanceAPI
 {
@@ -110,10 +112,12 @@ namespace AdvanceAPI
 
             //Repository Setup
             services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IIncusiveRepository, IncusiveRepository>();
 
             //Services Setup
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IInclusiveService, InclusiveService>();
         }
 
     }

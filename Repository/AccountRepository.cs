@@ -9,9 +9,9 @@ using AdvanceAPI.SQL.Account;
 
 namespace AdvanceAPI.Repository
 {
-    public class AccountRepository(ILogger<TokenService> logger, IDBOperations dbContext, IHttpContextAccessor httpContextAccessor) : IAccountRepository
+    public class AccountRepository(ILogger<AccountRepository> logger, IDBOperations dbContext, IHttpContextAccessor httpContextAccessor) : IAccountRepository
     {
-        private readonly ILogger<TokenService> _logger = logger;
+        private readonly ILogger<AccountRepository> _logger = logger;
         private readonly IDBOperations _dbContext = dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 

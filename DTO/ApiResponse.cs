@@ -19,7 +19,5 @@
             Message = message;
             this.data = data;
         }
-
-
     }
 }
