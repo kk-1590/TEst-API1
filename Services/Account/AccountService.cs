@@ -36,7 +36,7 @@ namespace AdvanceAPI.Services.Account
                 {
                     return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Please provide valid credentials");
                 }
-
+                loginRequest!.UserId = loginRequest.UserId!.ToUpper();
                 DataTable result = await _account.GetUserStatus(loginRequest?.UserId!);
 
                 if (result == null || result.Rows.Count == 0)
@@ -129,7 +129,7 @@ namespace AdvanceAPI.Services.Account
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Invalid token details found. Parameters: Parameters: {Request}", refreshTokenRequest);
-                return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Sorry!! Invalid token details found...");
+                return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time...");
             }
         }
         public async Task<ApiResponse> Logout(string? token)
@@ -161,7 +161,7 @@ namespace AdvanceAPI.Services.Account
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Invalid logout token details found. Parameters: Parameters: {Request}", token);
-                return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Sorry!! Invalid token details found...");
+                return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time...");
             }
         }
 

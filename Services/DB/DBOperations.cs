@@ -23,6 +23,10 @@ namespace AdvanceAPI.Services.DB
         {
             return await ExecuteQueryAsync(query, parameters, connection, DefaultTimeout).ConfigureAwait(false);
         }
+        public async Task<DataTable> SelectAsync(string query,  DBConnections connection)
+        {
+            return await ExecuteQueryAsync(query, new List<SQLParameters>(), connection, DefaultTimeout).ConfigureAwait(false);
+        }
 
         public async Task<int> DeleteInsertUpdateAsync(string query, List<SQLParameters>? parameters, DBConnections connection)
         {

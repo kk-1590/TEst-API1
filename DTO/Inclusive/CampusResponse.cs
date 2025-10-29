@@ -5,4 +5,6 @@
         public string? CampusCode { get; set; }
         public string? CampusName { get; set; }
     }
+    
+   
 }

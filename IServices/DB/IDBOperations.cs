@@ -8,6 +8,7 @@ namespace AdvanceAPI.IServices.DB
     {
 
         Task<DataTable> SelectAsync(string query, List<SQLParameters>? parameters, DBConnections connection);
+        Task<DataTable> SelectAsync(string query, DBConnections connection);
 
         Task<int> DeleteInsertUpdateAsync(string query, List<SQLParameters>? parameters, DBConnections connection);
         Task<DataTable> SelectProcedureAsync(string procedureName, List<SQLParameters>? parameters, DBConnections connection);

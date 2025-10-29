@@ -137,7 +137,7 @@ namespace AdvanceAPI.Services.Account
                 ValidateIssuer = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)),
-                ValidateLifetime = true,
+                ValidateLifetime = false,
                 ValidAudience = _config["Jwt:Audience"],
                 ValidIssuer = _config["Jwt:Issuer"]
             };
