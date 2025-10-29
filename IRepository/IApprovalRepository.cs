@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using AdvanceAPI.DTO.Approval;
 
 namespace AdvanceAPI.IRepository
 {
@@ -6,5 +7,6 @@ namespace AdvanceAPI.IRepository
     {
         Task<DataTable> GetDraftItemRefNo(string EmpCode, string AppType);
         Task<DataTable> GetAutoDraftItemRefNo();
+        Task<int> AddDraftItem(string RefNo, AddStockItemRequest AddStock, string EmpCode);
     }
 }

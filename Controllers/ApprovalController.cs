@@ -25,18 +25,20 @@ namespace AdvanceAPI.Controllers
         }
         [HttpPost]
         [Route("Add-stock-item-details")]
+        [AllowAnonymous]
         public async Task<IActionResult> AddStockItem([FromBody] AddStockItemRequest Addstock)
         {
             try
             {
-                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                // string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string employeeId = "GLA108236";
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                //
+                ApiResponse apiResponse = await _approvalService.AddItemDraft(Addstock, employeeId);
 
-                return Ok("");
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
