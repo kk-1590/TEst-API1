@@ -39,12 +39,12 @@ namespace AdvanceAPI.Services.DB
 
             try
             {
-                using var sqlConnection = _sqlConnection.GetMySqlConnection(connection);
+                await using var sqlConnection = _sqlConnection.GetMySqlConnection(connection);
                 await sqlConnection.OpenAsync(CancellationToken.None).ConfigureAwait(false);
 
-                using var sqlCommand = CreateSqlCommand(query, parameters ?? new List<SQLParameters>(), sqlConnection, commandTimeout);
+               await using var sqlCommand = CreateSqlCommand(query, parameters ?? new List<SQLParameters>(), sqlConnection, commandTimeout);
 
-                using var sqlDataReader = await sqlCommand.ExecuteReaderAsync(CancellationToken.None).ConfigureAwait(false);
+                await using var sqlDataReader = await sqlCommand.ExecuteReaderAsync(CancellationToken.None).ConfigureAwait(false);
                 var dataTable = new DataTable();
                 dataTable.Load(sqlDataReader);
                 return dataTable;
@@ -222,6 +222,11 @@ namespace AdvanceAPI.Services.DB
         private void LogError(Exception ex, string queryOrProcedure, List<SQLParameters> parameters, DBConnections connection)
         {
             _logger.LogError(ex, "An error occurred while executing: {QueryOrProcedure}\nParameters: {@Parameters}\nConnection: {Connection}", queryOrProcedure, parameters, connection);
+        }
+
+        public void Dispose()
+        {
+            
         }
     }
 }
