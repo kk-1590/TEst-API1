@@ -18,7 +18,7 @@ namespace AdvanceAPI.Controllers
     {
         private readonly ILogger<ApprovalController> _logger;
         private readonly IApprovalService _approvalService;
-        public ApprovalController(ILogger<ApprovalController> logger,IApprovalService approvalService)
+        public ApprovalController(ILogger<ApprovalController> logger, IApprovalService approvalService)
         {
             _logger = logger;
             _approvalService = approvalService;

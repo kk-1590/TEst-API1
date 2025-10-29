@@ -741,3 +741,15 @@ DenyAnonymousAuthorizationRequirement: Requires an authenticated user."
 2025-10-28 11:49:45 [INFORMATION] [::1] Executed action "AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)" in 19.4446ms
 2025-10-28 11:49:45 [INFORMATION] [::1] Executed endpoint '"AdvanceAPI.Controllers.InclusiveController.Logout (AdvanceAPI)"'
 2025-10-28 11:49:45 [INFORMATION] [] Request finished "HTTP/1.1" "GET" "https"://"localhost:44370""""/api/v1/get-campus""" - 200 null "application/json; charset=utf-8" 24.1956ms
+2025-10-29 13:05:51 [WARNING] [] The WebRootPath was not found: "D:\Azure Main\AdvanceAPI\wwwroot". Static files may be unavailable.
+2025-10-29 13:05:51 [WARNING] [] The WebRootPath was not found: "D:\Azure Main\AdvanceAPI\wwwroot". Static files may be unavailable.
+2025-10-29 13:05:51 [INFORMATION] [] User profile is available. Using '"C:\Users\Admin\AppData\Local\ASP.NET\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-10-29 13:05:52 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/_vs/browserLink""" - null null
+2025-10-29 13:05:52 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/_framework/aspnetcore-browser-refresh.js""" - null null
+2025-10-29 13:05:52 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/_framework/aspnetcore-browser-refresh.js""" - 200 16505 "application/javascript; charset=utf-8" 127.4871ms
+2025-10-29 13:05:52 [INFORMATION] [] Application started. Press Ctrl+C to shut down.
+2025-10-29 13:05:52 [INFORMATION] [] Hosting environment: "Development"
+2025-10-29 13:05:52 [INFORMATION] [] Content root path: "D:\Azure Main\AdvanceAPI"
+2025-10-29 13:05:52 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/_vs/browserLink""" - 200 null "text/javascript; charset=UTF-8" 232.8556ms
+2025-10-29 13:05:52 [INFORMATION] [] Request starting "HTTP/2" "GET" "https"://"localhost:44370""""/swagger/v1/swagger.json""" - null null
+2025-10-29 13:05:52 [INFORMATION] [] Request finished "HTTP/2" "GET" "https"://"localhost:44370""""/swagger/v1/swagger.json""" - 200 null "application/json;charset=utf-8" 236.4625ms

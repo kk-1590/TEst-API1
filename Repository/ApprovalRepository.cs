@@ -10,17 +10,17 @@ namespace AdvanceAPI.Repository
 {
     public class ApprovalRepository : IApprovalRepository
     {
-        private readonly ILogger<IncusiveRepository> _logger ;
-        private readonly IDBOperations _dbContext ;
-        
+        private readonly ILogger<ApprovalRepository> _logger;
+        private readonly IDBOperations _dbContext;
 
-        public ApprovalRepository(ILogger<IncusiveRepository> logger, IDBOperations dbContext)
+
+        public ApprovalRepository(ILogger<ApprovalRepository> logger, IDBOperations dbContext)
         {
             _logger = logger;
             _dbContext = dbContext;
         }
-        
-        public async Task<DataTable> GetDraftItemRefNo(string EmpCode,string AppType)
+
+        public async Task<DataTable> GetDraftItemRefNo(string EmpCode, string AppType)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                return await _dbContext.SelectAsync(ApprovalSql.GET_AUTO_ITEM_REFNO,  DBConnections.Advance);
+                return await _dbContext.SelectAsync(ApprovalSql.GET_AUTO_ITEM_REFNO, DBConnections.Advance);
             }
             catch (Exception ex)
             {
@@ -49,13 +49,13 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-        public async Task<int> AddDraftItem(string RefNo,AddStockItemRequest AddStock,string EmpCode)
+        public async Task<int> AddDraftItem(string RefNo, AddStockItemRequest AddStock, string EmpCode)
         {
             try
             {
                 List<SQLParameters> parametersList = new List<SQLParameters>();
                 //@ReferenceNo,@AppType,@ItemCode,@ItemName,@Make,@Size,@Unit,@Balance,@Quantity,@PrevRate,@CurRate,@ChangeReason,@TotalAmount,NOW(),@IniId,'Pending',@WarIn,@WarType,@ActualAmount,@VatPer,@R_Total,@R_Pending,'Pending',@SerialNo,@DisPer,@CampusCode
-                parametersList.Add(new SQLParameters("@ReferenceNo",RefNo));
+                parametersList.Add(new SQLParameters("@ReferenceNo", RefNo));
                 parametersList.Add(new SQLParameters("@AppType", AddStock.ApprovalType));
                 parametersList.Add(new SQLParameters("@ItemCode", AddStock.ItemCode));
                 parametersList.Add(new SQLParameters("@ItemName", AddStock.ItemName));
@@ -78,8 +78,8 @@ namespace AdvanceAPI.Repository
                 parametersList.Add(new SQLParameters("@SerialNo", AddStock.GstPer));
                 parametersList.Add(new SQLParameters("@DisPer", AddStock.DiscountPercent));
                 parametersList.Add(new SQLParameters("@CampusCode", AddStock.CampusCode));
-                
-                
+
+
                 return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.INERT_DRAFT, parametersList, DBConnections.Advance);
             }
             catch (Exception ex)
@@ -88,6 +88,6 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-        
+
     }
 }

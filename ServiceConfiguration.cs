@@ -113,11 +113,13 @@ namespace AdvanceAPI
             //Repository Setup
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IIncusiveRepository, IncusiveRepository>();
+            services.AddScoped<IAccountRepository, AccountRepository>();
 
             //Services Setup
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IInclusiveService, InclusiveService>();
+            services.AddScoped<IAccountService, AccountService>();
         }
 
     }
