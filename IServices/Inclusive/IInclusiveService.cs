@@ -1,6 +1,7 @@
 ﻿using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Account;
 using AdvanceAPI.DTO.Inclusive;
+using AdvanceAPI.ENUMS.Inclusive;
 using System.Data;
 
 namespace AdvanceAPI.IServices.Inclusive
@@ -18,5 +19,6 @@ namespace AdvanceAPI.IServices.Inclusive
         Task<ApiResponse> GetVendorSubFirms(int? vendorId);
         Task<ApiResponse> GetAllEmployees(string? search);
         Task<ApiResponse> GetBudget(GetFirmBudgetRequest? firm);
+        Task<bool> IsUserAllowed(string? employeeId, UserRolePermission userRolePermission);
     }
 }

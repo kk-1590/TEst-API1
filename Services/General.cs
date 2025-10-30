@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Net;
 using AdvanceAPI.Controllers;
 using AdvanceAPI.IServices;
 using System.Text;
@@ -13,10 +14,12 @@ namespace AdvanceAPI.Services
     {
         private readonly ILogger<General> _logger;
         private readonly IDBOperations _dBOperations;
-        public General(ILogger<General> logger, IDBOperations dBOperations)
+        private readonly IHttpContextAccessor _httpAccessor;
+        public General(ILogger<General> logger, IDBOperations dBOperations, IHttpContextAccessor httpAccessor)
         {
             _logger = logger;
             _dBOperations = dBOperations;
+            _httpAccessor = httpAccessor;
         }
 
         public string EncryptOrDecrypt(string? text)
@@ -87,14 +90,58 @@ namespace AdvanceAPI.Services
             return !string.IsNullOrEmpty(campusCode) && validCampusCodes.Contains(campusCode);
         }
 
-        public async Task<bool> CheckColumn(string columnName, string EmpCode)
+        public  string GetReplace(string str)
+        {
+            return str.Replace("\"", "\\\"").Replace("'", "\\'");
+        }
+        public string GetIpAddress()
+        {
+            if (_httpAccessor.HttpContext == null)
+            {
+                return "";
+            }
+            var r=Dns.GetHostAddresses(Dns.GetHostName());
+    
+            for(int i=0;i<r.Length;i++)
+            {
+                string s = r[i].ToString();
+                if(s.Contains("172.16.13.244"))
+                {
+                    return _httpAccessor.HttpContext.Connection.RemoteIpAddress.ToString() ?? "";
+                }
+            }
+
+            return _httpAccessor.HttpContext.Request.Headers["X-Forwarded-For"].ToString()??"";
+        }
+
+        public async Task<string> GetEmpName(string empCode)
         {
             List<SQLParameters> sqlParameters = new List<SQLParameters>();
-           // sqlParameters.Add(new SQLParameters("@ColumnName", columnName));
-            sqlParameters.Add(new SQLParameters("@EmpCode", EmpCode));
-            
-            DataTable dataTable = await _dBOperations.SelectAsync(GeneralSql.CECK_ALLOWED_COLUMN.Replace("@ColumnName",columnName),sqlParameters,DBConnections.Advance);
-            return dataTable.Rows.Count > 0;
+            sqlParameters.Add(new SQLParameters("@EmpCode", empCode));
+            DataTable dt=await _dBOperations.SelectAsync(GeneralSql.GETEMPNAME,sqlParameters,DBConnections.Advance);
+            if (dt.Rows.Count > 0)
+            {
+                return dt.Rows[0][0]?.ToString() ?? string.Empty;
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
+
+        public async Task<bool> IsFileExists(string file)
+        {
+            try
+            {
+                string fullPath = Path.GetFullPath(file);
+                return System.IO.File.Exists(fullPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During IsFileExists. File: {File}", file);
+                return false;
+            }
+        }
+
     }
 }

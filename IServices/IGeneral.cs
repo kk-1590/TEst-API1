@@ -8,6 +8,10 @@
         string GetFinancialSession(DateTime dateTime);
         long StringToLong(string? input);
         bool IsValidCampusCode(string? campusCode);
-        Task<bool> CheckColumn(string columnName, string EmpCode);
+        string GetReplace(string str);
+        string GetIpAddress();
+        Task<string> GetEmpName(string empCode);
+        Task<bool> IsFileExists(string file);
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Account;
 using AdvanceAPI.DTO.Inclusive;
+using AdvanceAPI.ENUMS.Inclusive;
 using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Inclusive;
@@ -360,5 +361,10 @@ namespace AdvanceAPI.Services.Inclusive
             return new ApiResponse(StatusCodes.Status200OK, "Success", budgetResponse);
         }
 
+        public async Task<bool> IsUserAllowed(string? employeeId, UserRolePermission userRolePermission)
+        {
+            var result = await _inclusive.CheckUserRole(employeeId, userRolePermission);
+            return result.Rows.Count > 0;
+        }
     }
 }

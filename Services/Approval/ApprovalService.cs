@@ -1,9 +1,11 @@
 ﻿using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Approval;
 using AdvanceAPI.DTO.Inclusive;
+using AdvanceAPI.ENUMS.Inclusive;
 using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Approval;
+using AdvanceAPI.IServices.Inclusive;
 using System.Data;
 
 namespace AdvanceAPI.Services.Approval
@@ -12,10 +14,12 @@ namespace AdvanceAPI.Services.Approval
     {
         private readonly IApprovalRepository _approvalRepository;
         private readonly IGeneral _generalService;
-        public ApprovalService(IApprovalRepository approvalRepository, IGeneral generalService)
+        private readonly IInclusiveService _inclusiveService;
+        public ApprovalService(IApprovalRepository approvalRepository, IGeneral generalService, IInclusiveService inclusiveService)
         {
             _approvalRepository = approvalRepository;
             _generalService = generalService;
+            _inclusiveService = inclusiveService;
         }
         public async Task<ApiResponse> AddItemDraft(AddStockItemRequest AddStockItem,string EmpCode)
         {
@@ -104,29 +108,31 @@ namespace AdvanceAPI.Services.Approval
         public async Task<ApiResponse> GenerateApproval(string EmpCode,GeneratePurchaseApprovalRequest GeneratePurchaseApproval)
         {
             DataTable PurchaseApprovalRefNo =await _approvalRepository.GeneratePurchaseApprovalRefNo();
+           
             string ApprovalRefNo=string.Empty;
+           
             if (PurchaseApprovalRefNo.Rows.Count > 0)
             {
-                ApprovalRefNo=PurchaseApprovalRefNo.Rows[0][0].ToString();
+                ApprovalRefNo = PurchaseApprovalRefNo?.Rows[0][0].ToString() ?? string.Empty;
             }
 
             if (Convert.ToDateTime(GeneratePurchaseApproval.ApprovalDate) > Convert.ToDateTime(GeneratePurchaseApproval.ApprovalTillDate))
             {
-                string AllowPost = "0";
-                if (await _generalService.CheckColumn("OpenPostFacto", EmpCode))
+                if (await _inclusiveService.IsUserAllowed(EmpCode,UserRolePermission.OpenPostFacto))
                 {
                     GeneratePurchaseApproval.ApprovalType = "Post Facto - " + GeneratePurchaseApproval.ApprovalType;
                 }
                 else
                 {
-                    new ApiResponse(StatusCodes.Status422UnprocessableEntity,"Error","Sorry! Post Facto Approval Not Allowed In Your Case. For Post Facto Please Take Permission From Concern Authority.");
+                  return  new ApiResponse(StatusCodes.Status422UnprocessableEntity,"Error","Sorry! Post Facto Approval Not Allowed In Your Case. For Post Facto Please Take Permission From Concern Authority.");
                 }
             }
+
+            int totdays = Convert.ToInt32((Convert.ToDateTime(GeneratePurchaseApproval.ApprovalTillDate) - Convert.ToDateTime(GeneratePurchaseApproval.ApprovalDate)).TotalDays);
+            int insresult=await _approvalRepository.SubmitPurchaseBill(EmpCode,GeneratePurchaseApproval,ApprovalRefNo,totdays.ToString());
             
             
-            
-            
-            return new ApiResponse(StatusCodes.Status200OK,"Success",PurchaseApprovalRefNo);
+            return new ApiResponse(StatusCodes.Status200OK,"Success","Appproval Generate Successfully");
         }
 
 
@@ -234,5 +240,82 @@ namespace AdvanceAPI.Services.Approval
             }
         }
 
+        public async Task<ApiResponse> DeleteDraftedItem(string ItemId)
+        {
+            using (DataTable dt=await _approvalRepository.CheckDeletedDraftedItem(ItemId))
+            {
+                if (dt.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Item exist to delete in selected criteria...");
+                }
+                else
+                {
+                    int ins = await _approvalRepository.DeletedDraftedItem(ItemId);
+                    return new ApiResponse(StatusCodes.Status200OK, "Success", $"{ins} Draft Item(s) deleted successfully.");
+                }
+            }
+        }
+
+        public async Task<ApiResponse> GetMyApprovals(string? emploeeId, string? type, AprrovalsListRequest? search)
+        {
+
+            List<MyApprovalReponse> approvals = new List<MyApprovalReponse>();
+
+            bool IsAllowedDisableBill = await _inclusiveService.IsUserAllowed(emploeeId, ENUMS.Inclusive.UserRolePermission.AllowDisabledBill);
+
+            bool OnlySelfApprovals = (type == "STORE" && !await _inclusiveService.IsUserAllowed(emploeeId, ENUMS.Inclusive.UserRolePermission.AllowAllApproval));
+
+            using (DataTable approvalsTable = await _approvalRepository.GetMyApprovals(emploeeId, OnlySelfApprovals, search))
+            {
+                foreach (DataRow row in approvalsTable.Rows)
+                {
+                    MyApprovalReponse approval = new MyApprovalReponse(row);
+
+                    DataTable dtIsComparisonDefined = await _approvalRepository.CheckIsApprovalComparisonDefined(approval.ReferenceNo ?? string.Empty);
+
+                    if (dtIsComparisonDefined.Rows.Count > 0 || approval.CanDeleteApproval == true)
+                    {
+                        approval.OpenComparisionChart = true;
+                    }
+
+                    if (IsAllowedDisableBill && (approval.Status == "Pending" || approval.Status == "Approved") && string.IsNullOrWhiteSpace(approval.BillId) && approval.BillRequired == "Yes")
+                    {
+                        approval.CanLockBillStatus = true;
+                    }
+
+                    if (await _generalService.IsFileExists($"Uploads/Approvals/{approval.ReferenceNo}.xlsx"))
+                    {
+                        approval.CanOpenExcel = true;
+                    }
+                    approvals.Add(approval);
+                }
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "Success", approvals);
+
+        }
+
+        public async Task<ApiResponse> DeleteApproval(string? emploeeId, string? referenceNo)
+        {
+
+            using (DataTable dtIsExist = await _approvalRepository.CheckIsApprovalExists(referenceNo))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exist with given reference no to delete.");
+                }
+            }
+
+
+            int deletedCount = await _approvalRepository.DeleteApproval(emploeeId, referenceNo);
+
+            if (deletedCount > 0)
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Success", $"Approval deleted successfully.");
+            }
+            else
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Failed to delete approval. Please try again.");
+            }
+        }
     }
 }

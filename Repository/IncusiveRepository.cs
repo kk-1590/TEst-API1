@@ -78,7 +78,7 @@ namespace AdvanceAPI.Repository
                 }
                 else
                 {
-                    stringBuilder.Append($" and (ItemName LIKE '%@"+ getPurchaseItemRequest.ItemName + "%' OR Size LIKE '%"+ getPurchaseItemRequest.ItemName + "%' OR Make LIKE '%"+ getPurchaseItemRequest.ItemName + "%')");
+                    stringBuilder.Append($" and (ItemName LIKE '%"+ getPurchaseItemRequest.ItemName + "%' OR Size LIKE '%"+ getPurchaseItemRequest.ItemName + "%' OR Make LIKE '%"+ getPurchaseItemRequest.ItemName + "%')");
                     //parameters.Add(new SQLParameters("@ItemNames", getPurchaseItemRequest.ItemName!));
                 }
 
@@ -349,6 +349,24 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during IsFirmBudgetExist.");
+                throw;
+            }
+        }
+        public async Task<DataTable> CheckUserRole(string? employeeCode, UserRolePermission userRolePermission)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>()
+                {
+                    new SQLParameters("@EmployeeCode", employeeCode ?? string.Empty),
+                    new SQLParameters("@ColumnName", userRolePermission.ToString() ?? string.Empty)
+                };
+
+                return await _dbContext.SelectAsync(InclusiveSql.CHECK_USER_ROLE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CheckUserRole.");
                 throw;
             }
         }

@@ -41,6 +41,8 @@
         public const string GET_VENDOR_BUDGET_DETAILS = "Select IFNULL(SUM(A.Amount),0) 'Amount' from ((Select Amount from otherapprovalsummary where VendorID =@VendorId And PExtra3=@SubFirm And PExtra4 like 'No%' And `Status` in ('Approved') And @FromDate<=AppDate And @ToDate>=AppDate) UNION (Select TotalAmount from purchaseapprovalsummary where VendorID =@VendorId And PExtra3=@SubFirm And `Status` in ('Approved') And @FromDate<=AppDate And @ToDate>=AppDate)) A ; ";
 
 
+        public const string CHECK_USER_ROLE = "Select * from userroles where employee_code=@EmployeeCode And @ColumnName is not null And ((CAST(@ColumnName as CHAR)='1') or (CAST(@ColumnName as CHAR) ='Yes'))";
+
 
 
     }

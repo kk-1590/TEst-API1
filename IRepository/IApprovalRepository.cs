@@ -18,5 +18,17 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetApprovalNumber3Authorities(string? search, bool isNonMathuraAuthoritiesRequired);
         Task<DataTable> CheckIsApprovalDraftItemsExists(string? emploeeId, DeleteApprovalDraftRequest? deleteRequest);
         Task<int> DeleteApprovalDraftItems(string? emploeeId, DeleteApprovalDraftRequest? deleteRequest);
+        Task<DataTable> GetVenderRegister(string VenderCode);
+
+        Task<int> SubmitPurchaseBill(string EmpCode, GeneratePurchaseApprovalRequest generatePurchaseApprovalRequest,
+            string RefNo, string TotalDays);
+
+        Task<DataTable> CheckDeletedDraftedItem(string ItemId);
+        Task<int> DeletedDraftedItem(string ItemId);
+
+        Task<DataTable> GetMyApprovals(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search);
+        Task<DataTable> CheckIsApprovalComparisonDefined(string? referenceNo);
+        Task<DataTable> CheckIsApprovalExists(string? referenceNo);
+        Task<int> DeleteApproval(string? employeeId, string? referenceNo);
     }
 }

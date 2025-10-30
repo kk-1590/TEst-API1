@@ -16,7 +16,7 @@ namespace AdvanceAPI.DTO.Approval
         [Required]
         public string? ChangeReason { get;set; }
         [Required]
-        public long? CurrentRate { get;set; }
+        public string CurrentRate { get;set; }
         [Required]
         [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
         public decimal DiscountPercent { get;set; }
@@ -27,7 +27,7 @@ namespace AdvanceAPI.DTO.Approval
         [Required]
         public string? Make { get; set; }
         [Required]
-        public long? PrevRate { get; set; }
+        public string PrevRate { get; set; }
         [Required]
         [RegularExpression(@"^\d$", ErrorMessage = "integer value dalo bhai")]
         public int Quantity { get; set; }
