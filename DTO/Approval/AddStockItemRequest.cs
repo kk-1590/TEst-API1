@@ -5,7 +5,7 @@ namespace AdvanceAPI.DTO.Approval
     public class AddStockItemRequest
     {
         [Required]
-        public decimal ActualAmount {  get; set; }
+        [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]        public decimal ActualAmount {  get; set; }
         [Required]
         public string? ApprovalType { get;set; }
         [Required]
@@ -16,9 +16,9 @@ namespace AdvanceAPI.DTO.Approval
         [Required]
         public string? ChangeReason { get;set; }
         [Required]
-        public string? CurrentRate { get;set; }
+        public long? CurrentRate { get;set; }
         [Required]
-        [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
+        [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
         public decimal DiscountPercent { get;set; }
         [Required]
         public string? ItemCode { get;set; }
@@ -27,19 +27,19 @@ namespace AdvanceAPI.DTO.Approval
         [Required]
         public string? Make { get; set; }
         [Required]
-        public string? PrevRate { get; set; }
+        public long? PrevRate { get; set; }
         [Required]
         [RegularExpression(@"^\d$", ErrorMessage = "integer value dalo bhai")]
         public int Quantity { get; set; }
         [Required]
         public string? Size { get; set; }
         [Required]
-        [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
+        [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
         public decimal TotalAmount { get; set; }
         [Required]
         public string? Unit { get; set; }
-        [Required]
-        [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
+        [Range(0.00, 100, ErrorMessage = "GST percentage must be greater than 0 and up to 100.")]
+        [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
         public decimal? GstPer { get; set; }
         [Required]
         [RegularExpression(@"^\d$", ErrorMessage = "integer value dalo bhai")]

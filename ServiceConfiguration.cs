@@ -15,8 +15,10 @@ using Serilog;
 using Serilog.Core;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
+using AdvanceAPI.IServices.Approval;
 using AdvanceAPI.Services.Inclusive;
 using AdvanceAPI.IServices.Inclusive;
+using AdvanceAPI.Services.Approval;
 
 namespace AdvanceAPI
 {
@@ -97,7 +99,7 @@ namespace AdvanceAPI
             // Add Swagger services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<Logger>(new LoggerConfiguration().CreateLogger());
-            services.AddSingleton<IGeneral, General>();
+
 
 
             services.AddMemoryCache();
@@ -113,13 +115,14 @@ namespace AdvanceAPI
             //Repository Setup
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IIncusiveRepository, IncusiveRepository>();
-            services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IApprovalRepository, ApprovalRepository>();
 
             //Services Setup
+            services.AddScoped<IGeneral, General>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IInclusiveService, InclusiveService>();
-            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IApprovalService, ApprovalService>();
         }
 
     }

@@ -78,7 +78,7 @@ namespace AdvanceAPI.Repository
                 }
                 else
                 {
-                    stringBuilder.Append($" and ItemName LIKE '%@"+ getPurchaseItemRequest.ItemName + "%' OR Size LIKE '%"+ getPurchaseItemRequest.ItemName + "%' OR Make LIKE '%"+ getPurchaseItemRequest.ItemName + "%'");
+                    stringBuilder.Append($" and (ItemName LIKE '%@"+ getPurchaseItemRequest.ItemName + "%' OR Size LIKE '%"+ getPurchaseItemRequest.ItemName + "%' OR Make LIKE '%"+ getPurchaseItemRequest.ItemName + "%')");
                     //parameters.Add(new SQLParameters("@ItemNames", getPurchaseItemRequest.ItemName!));
                 }
 

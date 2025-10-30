@@ -78,9 +78,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-
                 ApiResponse apiResponse = await _inclusiveService.GetPurchaseDepartment();
-
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
@@ -91,6 +89,7 @@ namespace AdvanceAPI.Controllers
         }
         [HttpPost]
         [Route("get-purchase-item")]
+        
         public async Task<IActionResult> GetPurcheseItem([FromBody] GetPurchaseItemRequest getPurchaseItemRequest)
         {
             try
