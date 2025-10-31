@@ -3,6 +3,7 @@ namespace AdvanceAPI.SQLConstants.Approval;
 public class ApprovalSql
 {
     public const string GET_ITEM_REFERENCE_NO = "SELECT DISTINCT ReferenceNo FROM `purchaseapprovaldetail_draft` WHERE IniId =@EmpCode AND AppType=@AppType;";
+    public const string CHECK_ALREADY_ITEM = "SELECT ItemCode FROM `purchaseapprovaldetail_draft` WHERE IniId =@EmpCode AND AppType=@AppType and ItemCode=@ItemCode;";
 
     public const string GET_AUTO_ITEM_REFNO =
         "Select IFNULL(CAST(MAX(ReferenceNo)+1 as CHAR),CONCAT(CAST(DATE_FORMAT(now(),'%y%m%d') as CHAR),'0001')) 'ReferenceNo' from (Select ReferenceNo from purchaseapprovaldetail_draft) A  where ReferenceNo like CONCAT(CAST(DATE_FORMAT(now(),'%y%m%d') as CHAR),'%');";

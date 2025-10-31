@@ -29,7 +29,7 @@ namespace AdvanceAPI.DTO.Approval
         [Required]
         public string PrevRate { get; set; }
         [Required]
-        [RegularExpression(@"^\d$", ErrorMessage = "integer value dalo bhai")]
+       // [RegularExpression(@"^\d$", ErrorMessage = "integer value Is Required")]
         public int Quantity { get; set; }
         [Required]
         public string? Size { get; set; }
@@ -42,7 +42,7 @@ namespace AdvanceAPI.DTO.Approval
         [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]
         public decimal? GstPer { get; set; }
         [Required]
-        [RegularExpression(@"^\d$", ErrorMessage = "integer value dalo bhai")]
+       // [RegularExpression(@"^\d$", ErrorMessage = "integer value Is Required")]
         public int Warranty { get; set; }
         [Required]
         [AllowedValues("Day","Month","Year")]

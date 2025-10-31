@@ -140,24 +140,24 @@ namespace AdvanceAPI.Controllers
         }
 
 
-        [HttpGet]
-        [Route("get-approval_final-authorities/{campusCode}")]
-        public async Task<IActionResult> GetApprovalFinalAuthorities([FromRoute] string? campusCode)
+        [HttpPost]
+        [Route("get-approval_final-authorities")]
+        public async Task<IActionResult> GetApprovalFinalAuthorities([FromBody] GetApprovalFinalAuthoritiesRequest? requestDetails)
         {
             try
             {
-                if (string.IsNullOrEmpty(campusCode))
+                if (string.IsNullOrEmpty(requestDetails?.CampusCode))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
 
-                ApiResponse apiResponse = await _approvalService.GetApprovalFinalAuthorities(campusCode);
+                ApiResponse apiResponse = await _approvalService.GetApprovalFinalAuthorities(requestDetails);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error During get-stock-item-details");
+                _logger.LogError(ex, "Error During get-approval_final-authorities");
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }

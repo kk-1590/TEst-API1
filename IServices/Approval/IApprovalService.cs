@@ -9,7 +9,7 @@ namespace AdvanceAPI.IServices.Approval
         Task<ApiResponse> GetDraftedItem(string EmpCode, string AppType, string CampusCode);
         Task<ApiResponse> GetDraftItemSummary(string EmpCode, string AppType, string CampusCode);
         Task<ApiResponse> GetApprovalSessions();
-        Task<ApiResponse> GetApprovalFinalAuthorities(string? campusCode);
+        Task<ApiResponse> GetApprovalFinalAuthorities(GetApprovalFinalAuthoritiesRequest? requestDetails);
         Task<ApiResponse> GetApprovalNumber3Authorities(GetNumber3AuthorityRequest? search);
         Task<ApiResponse> DeleteApprovalDraft(string? emploeeId, DeleteApprovalDraftRequest? deleteRequest);
         Task<ApiResponse> GenerateApproval(string EmpCode, GeneratePurchaseApprovalRequest GeneratePurchaseApproval);

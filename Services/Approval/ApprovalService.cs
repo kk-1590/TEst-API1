@@ -23,6 +23,8 @@ namespace AdvanceAPI.Services.Approval
         }
         public async Task<ApiResponse> AddItemDraft(AddStockItemRequest AddStockItem,string EmpCode)
         {
+            
+            
              string RefNo=string.Empty;
              DataTable refNoDataTable=await _approvalRepository.GetDraftItemRefNo(EmpCode,AddStockItem.ApprovalType);
              if (refNoDataTable.Rows.Count > 0)
@@ -156,15 +158,15 @@ namespace AdvanceAPI.Services.Approval
             }
 
         }
-        public async Task<ApiResponse> GetApprovalFinalAuthorities(string? campusCode)
+        public async Task<ApiResponse> GetApprovalFinalAuthorities(GetApprovalFinalAuthoritiesRequest? requestDetails)
         {
             List<FinalAuthoritiesResponse> authorities = new List<FinalAuthoritiesResponse>();
-            if (!_generalService.IsValidCampusCode(campusCode))
+            if (!_generalService.IsValidCampusCode(requestDetails?.CampusCode))
             {
                 return new ApiResponse(StatusCodes.Status200OK, "Success", authorities);
             }
 
-            using (DataTable authoritiesList = await _approvalRepository.GetApprovalFinalAuthority(campusCode))
+            using (DataTable authoritiesList = await _approvalRepository.GetApprovalFinalAuthority(requestDetails?.CampusCode))
             {
                 foreach (DataRow row in authoritiesList.Rows)
                 {
@@ -177,6 +179,24 @@ namespace AdvanceAPI.Services.Approval
                         LimitFrom = _generalService.StringToLong(row["LimitFrom"]?.ToString() ?? "0"),
                         LimitTo = _generalService.StringToLong(row["LimitTo"]?.ToString() ?? "0"),
                     });
+                }
+
+
+                if (!string.IsNullOrEmpty(requestDetails?.ApprovalType))
+                {
+                    authorities = authorities
+                         .Where(a => a.ApprovalCategory != null && a.ApprovalCategory.Equals(requestDetails.ApprovalType, StringComparison.OrdinalIgnoreCase))
+                         .ToList();
+
+                }
+
+                if (!string.IsNullOrEmpty(requestDetails?.Amount?.ToString()) && requestDetails?.Amount > 0 && requestDetails.Amount.HasValue)
+                {
+                    authorities = authorities
+                        .Where(a => a.LimitFrom.HasValue && a.LimitTo.HasValue &&
+                                     a.LimitFrom.Value <= requestDetails.Amount.Value &&
+                                    a.LimitTo.Value >= requestDetails.Amount.Value)
+                        .ToList();
                 }
 
                 return new ApiResponse(StatusCodes.Status200OK, "Success", authorities);
