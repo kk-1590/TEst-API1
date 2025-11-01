@@ -25,5 +25,6 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> IsFirmBudgetPending(GetFirmBudgetRequest? firm, string? fromDate, string? toDate, ApprovalTypes approvalTypes);
         Task<DataTable> GetVendorBudgetDetails(GetFirmBudgetRequest? firm, string? fromDate, string? toDate);
         Task<DataTable> CheckUserRole(string? employeeCode, UserRolePermission userRolePermission);
+        Task<DataTable> GetFileKey();
     }
 }

@@ -59,6 +59,7 @@ namespace AdvanceAPI.Controllers
                 string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (!ModelState.IsValid)
                 {
+                    
                     return BadRequest(ModelState);
                 }
                // string employeeId = "GLA108236";
@@ -66,7 +67,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _approvalService.GetDraftedItem(employeeId, itms.AppType, itms.CampusCode.ToString());
+                ApiResponse apiResponse = await _approvalService.GetDraftedItem(employeeId, itms.AppType, itms.CampusCode.ToString(),itms.RefNo);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -92,7 +93,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _approvalService.GetDraftItemSummary (employeeId, itms.AppType, itms.CampusCode.ToString());
+                ApiResponse apiResponse = await _approvalService.GetDraftItemSummary (employeeId, itms.AppType, itms.CampusCode.ToString(),itms.RefNo);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -294,6 +295,111 @@ namespace AdvanceAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During delete-approval/{ReferenceNo} ", referenceNo);
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpGet]
+        [Route("get-draft")]
+        public async Task<IActionResult> GetDraft()
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(employeeId) )
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.GETDRAFt(employeeId);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-draft", "");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpGet]
+        [Route("get-print-approval-details/{referenceNo}")]
+        public async Task<IActionResult> GetPrintApprovalDetails([FromRoute] string? referenceNo)
+        {
+            try
+            {
+                string? type = User.FindFirstValue(ClaimTypes.Authentication);
+                if (string.IsNullOrEmpty(type))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                if (string.IsNullOrWhiteSpace(referenceNo))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Approval No Found..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.GetPOApprovalDetails(type, referenceNo);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-stock-item-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpPatch]
+        [Route("update-approval-note")]
+        public async Task<IActionResult> UpdateApprovalNote([FromBody] UpdateApprovalNoteRequest? updateRequest)
+        {
+            try
+            {
+                string? employee = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employee))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                if (string.IsNullOrWhiteSpace(updateRequest?.ReferenceNo))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Approval number cannot be empty..."));
+                }
+
+                if (string.IsNullOrWhiteSpace(updateRequest?.Note))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Note cannot be empty..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.UpdateApprovalNote(employee, updateRequest.ReferenceNo, updateRequest.Note);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During update-approval-note");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpGet]
+        [Route("get-edit-approval-details/{referenceNo}")]
+        public async Task<IActionResult> GetEditApprovalDetails([FromRoute] string? referenceNo)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(referenceNo))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Approval No Found..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.GetEditApprovalDetails(referenceNo);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-edit-approval-details");
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }

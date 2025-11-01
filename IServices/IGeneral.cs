@@ -11,7 +11,17 @@
         string GetReplace(string str);
         string GetIpAddress();
         Task<string> GetEmpName(string empCode);
-        Task<bool> IsFileExists(string file);
+        bool IsFileExists(string file);
+        string EncryptWithKey(string clearText, string key);
+        string ToTitleCase(string input);
+        string ConvertToTwoDecimalPlaces(string input);
+
+        double ConvertToDouble(string input);
+        decimal ConvertToDecimal(string input);
+        string AmountInWords(string amount);
+        bool ViewCurrentStock(string? type);
+
+        bool ViewPreviousRate(string? type);
 
     }
 }

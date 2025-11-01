@@ -43,7 +43,7 @@
 
         public const string CHECK_USER_ROLE = "Select * from userroles where employee_code=@EmployeeCode And @ColumnName is not null And ((CAST(@ColumnName as CHAR)='1') or (CAST(@ColumnName as CHAR) ='Yes'))";
 
-
+        public const string GET_FILE_ENC_KEY = "SELECT edkey from gla_student_management.barriers";
 
     }
 }

@@ -370,5 +370,17 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+        public async Task<DataTable> GetFileKey()
+        {
+            try
+            {
+                return await _dbContext.SelectAsync(InclusiveSql.GET_FILE_ENC_KEY,  DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CheckUserRole.");
+                throw;
+            }
+        }
     }
 }

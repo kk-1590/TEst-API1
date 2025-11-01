@@ -23,7 +23,7 @@ namespace AdvanceAPI.Repository
             _general = general;
         }
 
-        public async Task<DataTable> GetDraftItemRefNo(string EmpCode, string AppType)
+        public async Task<DataTable> GetDraftItemRefNo(string EmpCode, string AppType,string RefNo)
         {
             try
             {
@@ -31,6 +31,7 @@ namespace AdvanceAPI.Repository
                 {
                     new SQLParameters("@EmpCode", EmpCode ?? string.Empty),
                     new SQLParameters("@AppType", AppType ?? string.Empty),
+                    new SQLParameters("@ReferenceNo", RefNo ?? string.Empty),
                 };
                 return await _dbContext.SelectAsync(ApprovalSql.GET_ITEM_REFERENCE_NO, parameters, DBConnections.Advance);
             }
@@ -58,7 +59,7 @@ namespace AdvanceAPI.Repository
             {
                 List<SQLParameters> parametersList = new List<SQLParameters>();
                 //@ReferenceNo,@AppType,@ItemCode,@ItemName,@Make,@Size,@Unit,@Balance,@Quantity,@PrevRate,@CurRate,@ChangeReason,@TotalAmount,NOW(),@IniId,'Pending',@WarIn,@WarType,@ActualAmount,@VatPer,@R_Total,@R_Pending,'Pending',@SerialNo,@DisPer,@CampusCode
-                parametersList.Add(new SQLParameters("@ReferenceNo", RefNo));
+                parametersList.Add(new SQLParameters("@ReferenceNo", AddStock.RefNo ?? string.Empty));
                 parametersList.Add(new SQLParameters("@AppType", AddStock.ApprovalType));
                 parametersList.Add(new SQLParameters("@ItemCode", AddStock.ItemCode));
                 parametersList.Add(new SQLParameters("@ItemName", AddStock.ItemName));
@@ -81,6 +82,7 @@ namespace AdvanceAPI.Repository
                 parametersList.Add(new SQLParameters("@SerialNo", string.Empty));
                 parametersList.Add(new SQLParameters("@DisPer", AddStock.DiscountPercent));
                 parametersList.Add(new SQLParameters("@CampusCode", AddStock.CampusCode));
+                parametersList.Add(new SQLParameters("@DraftName", AddStock.DraftName));
                 return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.INERT_DRAFT, parametersList, DBConnections.Advance);
             }
             catch (Exception ex)
@@ -90,7 +92,7 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<DataTable> GetDraftedItem(string EmpCode, string AppType,string CampusCode)
+        public async Task<DataTable> GetDraftedItem(string EmpCode, string AppType,string CampusCode,string RefNo)
         {
             try
             {
@@ -99,6 +101,7 @@ namespace AdvanceAPI.Repository
                 parametersList.Add(new SQLParameters("@EmpCode", EmpCode));
                 parametersList.Add(new SQLParameters("@ApprovalType", AppType));
                 parametersList.Add(new SQLParameters("@CampusCode", CampusCode ));
+                parametersList.Add(new SQLParameters("@ReferenceNo",RefNo?? string.Empty));
                 return await _dbContext.SelectAsync(ApprovalSql.GET_DRAFTED_ITEM,parametersList, DBConnections.Advance);
             }
             catch (Exception ex)
@@ -108,7 +111,7 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<DataTable> GetDraftedSummary(string EmpCode, string AppType, string CampusCode)
+        public async Task<DataTable> GetDraftedSummary(string EmpCode, string AppType, string CampusCode, string RefNo)
         {
             try
             {
@@ -116,6 +119,7 @@ namespace AdvanceAPI.Repository
                 parametersList.Add(new SQLParameters("@EmpCode", EmpCode));
                 parametersList.Add(new SQLParameters("@AppType", AppType));
                 parametersList.Add(new SQLParameters("@CampusCode", CampusCode));
+                parametersList.Add(new SQLParameters("@ReferenceNo", RefNo));
                 return await _dbContext.SelectAsync(ApprovalSql.Get_Draft_Summary, parametersList,
                     DBConnections.Advance);
             }
@@ -204,6 +208,7 @@ namespace AdvanceAPI.Repository
                     new SQLParameters("@IniId", emploeeId ?? string.Empty),
                     new SQLParameters("@AppType", deleteRequest?.ApprovalType ?? string.Empty),
                     new SQLParameters("@CampusCode", deleteRequest?.CampusCode ?? string.Empty),
+                    new SQLParameters("@ReferenceNo", deleteRequest?.ReferenceNo ?? string.Empty),
                 };
 
                 return await _dbContext.SelectAsync(ApprovalSql.CHEKC_IS_DRAFT_APPROVAL_ITEMS_EXISTS, parameters, DBConnections.Advance);
@@ -224,13 +229,14 @@ namespace AdvanceAPI.Repository
                     new SQLParameters("@IniId", emploeeId ?? string.Empty),
                     new SQLParameters("@AppType", deleteRequest?.ApprovalType ?? string.Empty),
                     new SQLParameters("@CampusCode", deleteRequest?.CampusCode ?? string.Empty),
+                    new SQLParameters("@ReferenceNo", deleteRequest?.ReferenceNo ?? string.Empty),
                 };
 
                 return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_DRAFT_APPROVAL_ITEMS, parameters, DBConnections.Advance);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during CheckIsApprovalDraftItemsExists.");
+                _logger.LogError(ex, "Error during DeleteApprovalDraftItems.");
                 throw;
             }
         }
@@ -380,6 +386,7 @@ namespace AdvanceAPI.Repository
                 //sqlParametersList.Add(new SQLParameters("@RefNo",RefNo));
                 sqlParametersList.Add(new SQLParameters("@AppType",generatePurchaseApprovalRequest.ApprovalType));
                 sqlParametersList.Add(new SQLParameters("@CampusCode",generatePurchaseApprovalRequest.campus));
+                sqlParametersList.Add(new SQLParameters("@ReferenceNo",generatePurchaseApprovalRequest.RefNo));
                 sqlParametersList.Add(new SQLParameters("@EmpCode",EmpCode));
                 {
                     ins = await _dbContext.DeleteInsertUpdateAsync(
@@ -468,6 +475,9 @@ namespace AdvanceAPI.Repository
                         parameters.Add(new SQLParameters("@CampusCode", search.CampusCode ?? string.Empty));
                     }
                 }
+                
+                parameters.Add(new SQLParameters("@LimitItems", search?.NoOfItems ?? 0));
+                parameters.Add(new SQLParameters("@OffSetItems", search?.ItemsFrom ?? 0));
 
                 string sqlQuery = ApprovalSql.GET_MY_APPROVALS.Replace("@Condition", extraCondition.ToString());
 
@@ -528,5 +538,232 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+
+        public async Task<DataTable> CheckAlreadyDraftedItem(string EmpCode, string AppType,string ItemCode,string RefNo)
+        {
+            try
+            {
+                List<SQLParameters>  sqlParametersList = new List<SQLParameters>();
+                sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode ?? string.Empty));
+                sqlParametersList.Add(new SQLParameters("@AppType", AppType ?? string.Empty));
+                sqlParametersList.Add(new SQLParameters("@ItemCode", ItemCode ?? string.Empty));
+                sqlParametersList.Add(new SQLParameters("@ReferenceNo", RefNo ?? string.Empty));
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_ALREADY_ITEM,sqlParametersList, DBConnections.Advance);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e, "Error during CheckAlreadyDraftedItem.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetDraft(string EmpCode)
+        {
+            try
+            {
+                List<SQLParameters> sqlParametersList = new List<SQLParameters>();
+                sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode ?? string.Empty));
+                return await _dbContext.SelectAsync(ApprovalSql.GET_DRAFT,sqlParametersList, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CheckAlreadyDraftedItem.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetPOApprovalDetails(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty)
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_PO_APPROVAL_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetPOApprovalDetails.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckIsApprovalComparisonLocked(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty)
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_IS_APPPROVAL_COMPARISON_LOCKED, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CheckIsApprovalComparisonLocked.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetPOApprovalBillExpenditureDetails(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty)
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_BILL_EXPENDITURE_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetPOApprovalBillExpenditureDetails.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetApprovalPaymentDetails(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty)
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_PAYMENT_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalPaymentDetails.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetApprovalWarrentyDetails(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty)
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_WARRENTY_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalWarrentyDetails.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetApprovalRepairMaintinanceDetails(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty)
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_REPAIR_MAINTINANCE_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalRepairMaintinanceDetails.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetApprovalItems(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty)
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_ITEMS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalItems.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetApprovalItemPreviousPurchaseDetails(string? referenceNo, string? itemCode)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ItemCode", itemCode ?? string.Empty),
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty),
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_ITEMS_PREVIOUS_PURCHASE_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalItemPreviousPurchaseDetails.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetApprovalEmployeeDesignationContact(string? employeeId)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@EmployeeId", employeeId ?? string.Empty),
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_EMPLOYEES_DESIGNATION_DEPARTMENT, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalItemPreviousPurchaseDetails.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckApprovalExistsToUpdate(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty),
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_IS_APPROVAL_EXISTS_TO_UPDATE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CheckApprovalExists.");
+                throw;
+            }
+        }
+
+
+        public async Task<int> UpdateApprovalNote(string? employeeId, string? referenceNo, string? note)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@EmployeeId", employeeId ?? string.Empty),
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty),
+                    new SQLParameters("@Note", note?.Trim()?.Replace("\n", " ")?.ToUpper() ?? string.Empty)
+                };
+                return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_APPROVAL_NOTE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during UpdateApprovalNote.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetEditApprovalDetails(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty),
+                };
+                return await _dbContext.SelectAsync(ApprovalSql.GET_EDIT_APPROVAL_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetEditApprovalDetails.");
+                throw;
+            }
+        }
+
     }
 }

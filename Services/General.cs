@@ -1,12 +1,14 @@
-﻿using System.Data;
-using System.Net;
-using AdvanceAPI.Controllers;
-using AdvanceAPI.IServices;
-using System.Text;
+﻿using AdvanceAPI.Controllers;
 using AdvanceAPI.DTO.DB;
 using AdvanceAPI.ENUMS.DB;
+using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.DB;
 using AdvanceAPI.SQLConstants;
+using System.Data;
+using System.Globalization;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AdvanceAPI.Services
 {
@@ -129,7 +131,7 @@ namespace AdvanceAPI.Services
             }
         }
 
-        public async Task<bool> IsFileExists(string file)
+        public  bool IsFileExists(string file)
         {
             try
             {
@@ -141,6 +143,84 @@ namespace AdvanceAPI.Services
                 _logger.LogError(ex, "Error During IsFileExists. File: {File}", file);
                 return false;
             }
+        }
+        public string EncryptWithKey(string clearText, string key)
+        {
+            string EncryptionKey = key;
+            byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
+            using (Aes encryptor = Aes.Create())
+            {
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
+                encryptor.Key = pdb.GetBytes(32);
+                encryptor.IV = pdb.GetBytes(16);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateEncryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(clearBytes, 0, clearBytes.Length);
+                        cs.Close();
+                    }
+                    clearText = Convert.ToBase64String(ms.ToArray());
+                }
+            }
+            return clearText;
+        }
+
+        public string ToTitleCase(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+            return textInfo.ToTitleCase(input.ToLower());
+        }
+
+        public string ConvertToTwoDecimalPlaces(string input)
+        {
+            if (decimal.TryParse(input, out decimal number))
+            {
+                return number.ToString("F2");
+            }
+            return input;
+        }
+
+        public double ConvertToDouble(string input)
+        {
+            if (double.TryParse(input, out double number))
+            {
+                return number;
+            }
+            return 0;
+        }
+
+        public decimal ConvertToDecimal(string input)
+        {
+            if (decimal.TryParse(input, out decimal number))
+            {
+                return number;
+            }
+            return 0;
+        }
+
+        public string AmountInWords(string amount)
+        {
+            return Spell.SpellAmount.InWrods(Convert.ToDecimal(amount)).Replace("Taka ", "").Replace("Only", "Rupees Only");
+        }
+
+        public bool ViewCurrentStock(string? type)
+        {
+            string[] GetBalanceStock = new string[] { "Purchase Approval Form", "Repeat Purchase Approval Form", "Additional Purchase Approval Form", "Transport - Purchase Approval Form", "Post Facto - Purchase Approval Form", "Post Facto - Repeat Purchase Approval Form", "Post Facto - Additional Purchase Approval Form", "Post Facto - Transport - Purchase Approval Form" };
+
+            return Array.IndexOf(GetBalanceStock, type) != -1;
+        }
+
+        public bool ViewPreviousRate(string? type)
+        {
+
+            string[] GetPrevRate = new string[] { "Purchase Approval Form", "Repeat Purchase Approval Form", "Repeat Repair & Maintenance Approval Form", "Additional Purchase Approval Form", "Water Testing Approval Form", "Renewal Approval Form", "Annual Maintenance Approval Form", "Transport - Purchase Approval Form", "Post Facto - Purchase Approval Form", "Post Facto - Repeat Purchase Approval Form", "Post Facto - Repeat Repair & Maintenance Approval Form", "Post Facto - Additional Purchase Approval Form", "Post Facto - Water Testing Approval Form", "Post Facto - Renewal Approval Form", "Post Facto - Annual Maintenance Approval Form", "Post Facto - Transport - Purchase Approval Form", "Job Work Approval Form", "Services", "Post Facto - Services" };
+
+            return Array.IndexOf(GetPrevRate, type) != -1;
         }
 
     }

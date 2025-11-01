@@ -5,7 +5,7 @@ namespace AdvanceAPI.DTO.Approval;
 public class GeneratePurchaseApprovalRequest
 {
     [Required(ErrorMessage = "Amount in words is required.")]
-    [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "Amount in words must contain only alphabets.")]
+    [RegularExpression(@"^[A-Za-z -]+$", ErrorMessage = "Amount in words must contain only alphabets, spaces, and hyphens.")]
     public string AmountInWords { get; set; }
     [Required(ErrorMessage = "Amount in Digit is required.")]
     public int AmountInDigit { get; set; }
@@ -67,7 +67,8 @@ public class GeneratePurchaseApprovalRequest
     public int campus { get; set; }
     [Required]
     public List<DraftedItemResponse> DraftedItems { get; set; }
-    
+    [Required]
+    public string RefNo { get; set; }
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (TotalAmount >= 1000)

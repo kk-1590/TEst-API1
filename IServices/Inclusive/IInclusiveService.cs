@@ -20,5 +20,6 @@ namespace AdvanceAPI.IServices.Inclusive
         Task<ApiResponse> GetAllEmployees(string? search);
         Task<ApiResponse> GetBudget(GetFirmBudgetRequest? firm);
         Task<bool> IsUserAllowed(string? employeeId, UserRolePermission userRolePermission);
+        Task<string> GetEnCryptedKey();
     }
 }

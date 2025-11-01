@@ -366,5 +366,18 @@ namespace AdvanceAPI.Services.Inclusive
             var result = await _inclusive.CheckUserRole(employeeId, userRolePermission);
             return result.Rows.Count > 0;
         }
+
+        public async Task<string> GetEnCryptedKey()
+        {
+            DataTable dt = await _inclusive.GetFileKey();
+            if (dt.Rows.Count > 0)
+            {
+                return dt.Rows[0][0].ToString()??string.Empty;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
     }
 }

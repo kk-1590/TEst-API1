@@ -10,6 +10,7 @@ namespace AdvanceAPI.DTO.Approval
         public string? Status { get; set; }
         public string? Department { get; set; }
         public string? ReferenceNo { get; set; }
-
+        public int? ItemsFrom { get; set; }
+        public int? NoOfItems { get; set; }
     }
 }

@@ -23,26 +23,32 @@ namespace AdvanceAPI.Services.Approval
         }
         public async Task<ApiResponse> AddItemDraft(AddStockItemRequest AddStockItem,string EmpCode)
         {
-            
+            using (DataTable dt=await _approvalRepository.CheckAlreadyDraftedItem(EmpCode,AddStockItem.ApprovalType,AddStockItem.ItemCode,AddStockItem.RefNo))
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity,"Error",$"`{AddStockItem.ItemName}` already exists");
+                }
+            }
             
              string RefNo=string.Empty;
-             DataTable refNoDataTable=await _approvalRepository.GetDraftItemRefNo(EmpCode,AddStockItem.ApprovalType);
+             DataTable refNoDataTable=await _approvalRepository.GetDraftItemRefNo(EmpCode,AddStockItem.ApprovalType,AddStockItem.RefNo);
              if (refNoDataTable.Rows.Count > 0)
              {
-                 RefNo=refNoDataTable.Rows[0][0].ToString();
+                 AddStockItem.RefNo=refNoDataTable.Rows[0][0].ToString();
              }
              else
              {
                  refNoDataTable = await _approvalRepository.GetAutoDraftItemRefNo();
                  if (refNoDataTable.Rows.Count > 0)
                  {
-                     RefNo = refNoDataTable.Rows[0][0].ToString();
+                     AddStockItem.RefNo = refNoDataTable.Rows[0][0].ToString();
                  }
              }
              int AddItem=await _approvalRepository.AddDraftItem(RefNo,AddStockItem,EmpCode);
              if (AddItem > 0)
              {
-                 return new ApiResponse(StatusCodes.Status200OK,"Success","Item Add Successfully");
+                 return new ApiResponse(StatusCodes.Status200OK,"Success",new {Message = "Item Add Successfully",RefNo= AddStockItem.RefNo });
              }
              else
              {
@@ -51,9 +57,9 @@ namespace AdvanceAPI.Services.Approval
              
         }
 
-        public async Task<ApiResponse> GetDraftedItem(string EmpCode, string AppType, string CampusCode)
+        public async Task<ApiResponse> GetDraftedItem(string EmpCode, string AppType, string CampusCode,string RefNo)
         {
-            DataTable itms=await _approvalRepository.GetDraftedItem(EmpCode,AppType,CampusCode);
+            DataTable itms=await _approvalRepository.GetDraftedItem(EmpCode,AppType,CampusCode,RefNo);
             List<DraftedItemResponse> items = new List<DraftedItemResponse>();
             foreach (DataRow item in itms.Rows)
             {
@@ -92,9 +98,9 @@ namespace AdvanceAPI.Services.Approval
             return new ApiResponse(StatusCodes.Status200OK,"Success",items);
         }
 
-        public async Task<ApiResponse> GetDraftItemSummary(string EmpCode, string AppType, string CampusCode)
+        public async Task<ApiResponse> GetDraftItemSummary(string EmpCode, string AppType, string CampusCode,string RefNo)
         {
-            DataTable summary=await _approvalRepository.GetDraftedSummary(EmpCode,AppType,CampusCode);
+            DataTable summary=await _approvalRepository.GetDraftedSummary(EmpCode,AppType,CampusCode,RefNo);
             DraftedSummaryResponse result = new DraftedSummaryResponse();
             if (summary.Rows.Count > 0)
             {
@@ -303,7 +309,7 @@ namespace AdvanceAPI.Services.Approval
                         approval.CanLockBillStatus = true;
                     }
 
-                    if (await _generalService.IsFileExists($"Uploads/Approvals/{approval.ReferenceNo}.xlsx"))
+                    if (_generalService.IsFileExists($"Uploads/Approvals/{approval.ReferenceNo}.xlsx"))
                     {
                         approval.CanOpenExcel = true;
                     }
@@ -337,5 +343,254 @@ namespace AdvanceAPI.Services.Approval
                 return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Failed to delete approval. Please try again.");
             }
         }
+        public async Task<ApiResponse> GETDRAFt(string emploeeId)
+        {
+            DataTable data = await _approvalRepository.GetDraft(emploeeId);
+            List< DraftResponse > lst=new List< DraftResponse >();
+            if (data.Rows.Count > 0)
+            {
+                //AppType,DraftName,CampusCode,COUNT(ReferenceNo) 'ItemCount',SUM(Balance) 'TotalBalance'
+                foreach(DataRow dr in data.Rows)
+                lst.Add(new DraftResponse
+                {
+                    AppType = dr["AppType"].ToString(),
+                    DraftName = dr["DraftName"].ToString(),
+                    CampusCode = dr["CampusCode"].ToString(),
+                    ItemCount = Convert.ToInt32(dr["ItemCount"].ToString()),
+                    Balance = (dr["TotalBalance"].ToString()),
+                    ReferenceNo = (dr["ReferenceNo"].ToString()),
+                    CampusName= await _generalService.CampusNameByCode(dr["CampusCode"].ToString()!)
+
+                });
+                return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
+            }
+            else
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
+            }
+        }
+        public async Task<ApiResponse> GetPOApprovalDetails(string? type, string? referenceNo)
+        {
+            using (DataTable dtApproval = await _approvalRepository.GetPOApprovalDetails(referenceNo))
+            {
+                if (dtApproval.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Approval Details Found");
+                }
+
+                PrintApprovalResponse printApprovalResponse = new PrintApprovalResponse(dtApproval.Rows[0]);
+
+                using (DataTable dtIsComparisonDefined = await _approvalRepository.CheckIsApprovalComparisonLocked(referenceNo ?? string.Empty))
+                {
+                    if (dtIsComparisonDefined.Rows.Count > 0)
+                    {
+                        printApprovalResponse.CanViewComparisonChart = true;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(type) && Array.IndexOf(new string[] { "ACCOUNTS", "FINANCE OFFICER", "ACCOUNTS OFFICER", "MANAGEMENT" }, type) >= 0)
+                {
+                    printApprovalResponse.CanEditNote = true;
+                }
+
+                using (DataTable dtBillExpenditureDetails = await _approvalRepository.GetPOApprovalBillExpenditureDetails(referenceNo ?? string.Empty))
+                {
+                    List<ApprovalBillExpenditureDetails> expenditureDetails = new List<ApprovalBillExpenditureDetails>();
+                    foreach (DataRow row in dtBillExpenditureDetails.Rows)
+                    {
+                        expenditureDetails.Add(new ApprovalBillExpenditureDetails(row));
+                    }
+                    printApprovalResponse.BillExpenditureDetails = expenditureDetails;
+                }
+
+                using (DataTable dtPaymentDetails = await _approvalRepository.GetApprovalPaymentDetails(referenceNo ?? string.Empty))
+                {
+                    ApprovalPaymentDetails approvalPaymentDetails = new ApprovalPaymentDetails();
+
+                    List<ApprovalPaymentDetailsList> paymentDetails = new List<ApprovalPaymentDetailsList>();
+                    foreach (DataRow row in dtPaymentDetails.Rows)
+                    {
+                        paymentDetails.Add(new ApprovalPaymentDetailsList(row));
+                    }
+
+                    approvalPaymentDetails.TotalAmount = Convert.ToDouble(printApprovalResponse.TotalAmount ?? "0");
+                    approvalPaymentDetails.TotalIssueAmount = paymentDetails.Sum(p => Convert.ToDouble(p.IssuedAmount ?? "0"));
+
+                    if (approvalPaymentDetails.TotalAmount >= approvalPaymentDetails.TotalIssueAmount)
+                    {
+                        approvalPaymentDetails.PaymentDetailsComment = $"Total Issue Amount @ {approvalPaymentDetails.TotalIssueAmount} Rs./- And Balance Amount @ " + (approvalPaymentDetails.TotalAmount - approvalPaymentDetails.TotalIssueAmount) + " Rs./- ";
+                    }
+                    else
+                    {
+                        approvalPaymentDetails.PaymentDetailsComment = $"Total Issue Amount @ {approvalPaymentDetails.TotalIssueAmount} Rs./- And Over Amount @ " + (approvalPaymentDetails.TotalIssueAmount - approvalPaymentDetails.TotalAmount) + " Rs./- ";
+                    }
+
+                    approvalPaymentDetails.PaymentList = paymentDetails;
+                    printApprovalResponse.PaymentDetails = approvalPaymentDetails;
+                }
+
+                using (DataTable dtWarrentyDetails = await _approvalRepository.GetApprovalWarrentyDetails(referenceNo ?? string.Empty))
+                {
+                    List<ApprovalWarrantyDetails> warrantyDetails = new List<ApprovalWarrantyDetails>();
+                    foreach (DataRow row in dtWarrentyDetails.Rows)
+                    {
+                        warrantyDetails.Add(new ApprovalWarrantyDetails(row));
+                    }
+                    printApprovalResponse.WarrentyDetails = warrantyDetails;
+                }
+
+                using (DataTable dtRepairMaintinaceDetails = await _approvalRepository.GetApprovalRepairMaintinanceDetails(referenceNo ?? string.Empty))
+                {
+                    List<ApprovalRepairMaintinanceDetails> repairMaintinanceDetails = new List<ApprovalRepairMaintinanceDetails>();
+                    foreach (DataRow row in dtRepairMaintinaceDetails.Rows)
+                    {
+                        repairMaintinanceDetails.Add(new ApprovalRepairMaintinanceDetails(row));
+                    }
+                    printApprovalResponse.RepairMaintinaceDetails = repairMaintinanceDetails;
+                }
+
+                printApprovalResponse!.RelativePersonName = _generalService.ToTitleCase(printApprovalResponse?.RelativePersonName ?? string.Empty);
+                printApprovalResponse!.FirmName = _generalService.ToTitleCase(printApprovalResponse?.FirmName ?? string.Empty);
+                printApprovalResponse!.FirmAddress = _generalService.ToTitleCase(printApprovalResponse?.FirmAddress ?? string.Empty);
+                printApprovalResponse!.App1Name = _generalService.ToTitleCase(printApprovalResponse?.App1Name ?? string.Empty);
+                printApprovalResponse!.App2Name = _generalService.ToTitleCase(printApprovalResponse?.App2Name ?? string.Empty);
+                printApprovalResponse!.App3Name = _generalService.ToTitleCase(printApprovalResponse?.App3Name ?? string.Empty);
+                printApprovalResponse!.App4Name = _generalService.ToTitleCase(printApprovalResponse?.App4Name ?? string.Empty);
+
+                printApprovalResponse!.App1Designation = _generalService.ToTitleCase(printApprovalResponse?.App1Designation ?? string.Empty);
+                printApprovalResponse!.App2Designation = _generalService.ToTitleCase(printApprovalResponse?.App2Designation ?? string.Empty);
+                printApprovalResponse!.App3Designation = _generalService.ToTitleCase(printApprovalResponse?.App3Designation ?? string.Empty);
+                printApprovalResponse!.App4Designation = _generalService.ToTitleCase(printApprovalResponse?.App4Designation ?? string.Empty);
+
+                printApprovalResponse!.ForDepartment = _generalService.ToTitleCase(printApprovalResponse?.ForDepartment ?? string.Empty);
+                printApprovalResponse!.AdditionalName = _generalService.ToTitleCase(printApprovalResponse?.AdditionalName ?? string.Empty);
+
+                printApprovalResponse!.TotalAmount = _generalService.ConvertToTwoDecimalPlaces(printApprovalResponse?.TotalAmount ?? "0.00");
+                printApprovalResponse!.DiscountOverAll = _generalService.ConvertToTwoDecimalPlaces(printApprovalResponse?.DiscountOverAll ?? "0.00");
+                printApprovalResponse!.Amount = _generalService.ConvertToTwoDecimalPlaces(printApprovalResponse?.Amount ?? "0.00");
+                printApprovalResponse!.Other = _generalService.ConvertToTwoDecimalPlaces(printApprovalResponse?.Other ?? "0.00");
+
+                printApprovalResponse!.DiscountAmount = _generalService.ConvertToTwoDecimalPlaces((_generalService.StringToLong(printApprovalResponse!.Amount) * Convert.ToDouble(printApprovalResponse!.DiscountOverAll) / 100).ToString());
+
+                printApprovalResponse!.DiscountOverAll = $"{printApprovalResponse!.DiscountOverAll}%";
+
+                using (DataTable dtItems = await _approvalRepository.GetApprovalItems(referenceNo))
+                {
+
+                    double totalTax = 0;
+                    double totalAmount = 0;
+                    double totalPay = 0;
+                    double totalDiscount = 0;
+
+                    List<ApprovalItemDetails>? items = new List<ApprovalItemDetails>();
+                    foreach (DataRow row in dtItems.Rows)
+                    {
+                        ApprovalItemDetails item = new ApprovalItemDetails(row);
+
+                        item.ItemName = _generalService.ToTitleCase(item.ItemName ?? string.Empty);
+                        item.Unit = _generalService.ToTitleCase(item.Unit ?? string.Empty);
+
+                        item.TotalAmount = _generalService.ConvertToTwoDecimalPlaces(item.TotalAmount ?? "0.00");
+                        item.VatPer = _generalService.ConvertToTwoDecimalPlaces(item.VatPer ?? "0.00");
+                        item.DisPer = _generalService.ConvertToTwoDecimalPlaces(item.DisPer ?? "0.00");
+
+                        double actualAmount = _generalService.ConvertToDouble(item.ActualAmount ?? "0.00");
+                        totalAmount += actualAmount;
+                        double myDiscount = 0;
+                        double dt = _generalService.ConvertToDouble(item.DisPer ?? "0.00");
+
+                        if (dt > 0)
+                        {
+                            myDiscount = Math.Round(actualAmount * dt / 100, 2);
+                            actualAmount = actualAmount - myDiscount;
+                        }
+                        double myTotalAmount = _generalService.ConvertToDouble(item.TotalAmount ?? "0.00");
+                        totalPay += myTotalAmount;
+                        totalDiscount += myDiscount;
+                        totalTax = totalTax + (myTotalAmount - actualAmount);
+
+                        using (DataTable dtPreviousDetails = await _approvalRepository.GetApprovalItemPreviousPurchaseDetails(item.ReferenceNo, referenceNo))
+                        {
+                            if (dtPreviousDetails.Rows.Count > 0)
+                            {
+                                ApprovalItemPreviousDetails approvalItemPreviousDetails = new ApprovalItemPreviousDetails(dtPreviousDetails.Rows[0]);
+                                item.PreviosDetails = approvalItemPreviousDetails;
+                            }
+                        }
+                        items.Add(item);
+                    }
+
+                    printApprovalResponse!.Items = items;
+
+                    printApprovalResponse!.SumamryActualAmount = _generalService.ConvertToTwoDecimalPlaces(totalAmount.ToString());
+                    printApprovalResponse!.SumamryDiscountAmount = _generalService.ConvertToTwoDecimalPlaces(totalDiscount.ToString());
+                    printApprovalResponse!.SumamryAmountAfterDiscount = _generalService.ConvertToTwoDecimalPlaces((totalAmount - totalDiscount).ToString());
+                    printApprovalResponse!.SumamryTaxAmount = _generalService.ConvertToTwoDecimalPlaces(totalTax.ToString());
+                    printApprovalResponse!.SumamryAmountToPay = _generalService.ConvertToTwoDecimalPlaces((totalAmount - totalDiscount + totalTax).ToString());
+                    printApprovalResponse!.SumamryCashDiscountPercentage = printApprovalResponse!.DiscountOverAll;
+                    printApprovalResponse!.SumamryCashDiscount = printApprovalResponse!.DiscountAmount;
+                    printApprovalResponse!.SumamryOtherDiscount = printApprovalResponse!.Other;
+                    printApprovalResponse!.SummaryFinalPayableAmount = printApprovalResponse!.TotalAmount;
+
+                }
+
+                printApprovalResponse!.VatType = _generalService.ToTitleCase(printApprovalResponse!.VatType ?? string.Empty);
+                printApprovalResponse!.AmountInWords = _generalService.AmountInWords(printApprovalResponse!.TotalAmount);
+
+                if (_generalService.ConvertToDouble(printApprovalResponse!.TotalAmount) > 100000)
+                {
+                    printApprovalResponse!.App4Name = "Chancellor";
+                }
+
+                using (DataTable dtRecommendedByDesignationContact = await _approvalRepository.GetApprovalEmployeeDesignationContact(printApprovalResponse!.RelativePersonID))
+                {
+                    if (dtRecommendedByDesignationContact.Rows.Count > 0)
+                    {
+                        printApprovalResponse.RelativePersonDesignation = dtRecommendedByDesignationContact.Rows[0]["deisgnation"]?.ToString() ?? string.Empty;
+                        printApprovalResponse.RelativePersonContact = dtRecommendedByDesignationContact.Rows[0]["contactno"]?.ToString() ?? string.Empty;
+                    }
+                }
+
+                printApprovalResponse.ViewCurrentStock = _generalService.ViewCurrentStock(printApprovalResponse.MyType);
+
+                printApprovalResponse.ViewPreviousRate = _generalService.ViewPreviousRate(printApprovalResponse.MyType);
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", printApprovalResponse);
+
+            }
+        }
+
+
+        public async Task<ApiResponse> UpdateApprovalNote(string? employeeId, string? referenceNo, string? note)
+        {
+            using (DataTable dtIsExist = await _approvalRepository.CheckApprovalExistsToUpdate(referenceNo))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exist with given reference no to update note.");
+                }
+            }
+
+            await _approvalRepository.UpdateApprovalNote(employeeId, referenceNo, note);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", $"Approval note updated successfully.");
+        }
+
+        public async Task<ApiResponse> GetEditApprovalDetails(string? referenceNo)
+        {
+            using (DataTable dtApprovalDetails = await _approvalRepository.GetEditApprovalDetails(referenceNo))
+            {
+                if (dtApprovalDetails.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No approval exist with given reference no.");
+                }
+                EditGetApprovalDetailsResponse editGetApprovalDetailsResponse = new EditGetApprovalDetailsResponse(dtApprovalDetails.Rows[0]);
+                editGetApprovalDetailsResponse.isExcelFileUploaded = _generalService.IsFileExists($"Uploads/Approvals/{editGetApprovalDetailsResponse.ReferenceNo}.xlsx");
+                return new ApiResponse(StatusCodes.Status200OK, "Success", editGetApprovalDetailsResponse);
+
+            }
+
+        }
+
     }
 }

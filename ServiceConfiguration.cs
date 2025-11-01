@@ -18,7 +18,9 @@ using System.Text;
 using AdvanceAPI.IServices.Approval;
 using AdvanceAPI.Services.Inclusive;
 using AdvanceAPI.IServices.Inclusive;
+using AdvanceAPI.IServices.VenderPriceComp;
 using AdvanceAPI.Services.Approval;
+using AdvanceAPI.Services.VenderPriceCompServices;
 
 namespace AdvanceAPI
 {
@@ -116,6 +118,7 @@ namespace AdvanceAPI
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IIncusiveRepository, IncusiveRepository>();
             services.AddScoped<IApprovalRepository, ApprovalRepository>();
+            services.AddScoped<IVenderPriceCompRepository, VenderPriceCompRepository>();
 
             //Services Setup
             services.AddScoped<IGeneral, General>();
@@ -123,6 +126,7 @@ namespace AdvanceAPI
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IInclusiveService, InclusiveService>();
             services.AddScoped<IApprovalService, ApprovalService>();
+            services.AddScoped<IVenderPriceComparisionServices, VenderPriceCompServices>();
         }
 
     }

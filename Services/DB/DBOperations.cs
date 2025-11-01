@@ -45,8 +45,29 @@ namespace AdvanceAPI.Services.DB
                await using var sqlCommand = CreateSqlCommand(query, parameters ?? new List<SQLParameters>(), sqlConnection, commandTimeout);
 
                 await using var sqlDataReader = await sqlCommand.ExecuteReaderAsync(CancellationToken.None).ConfigureAwait(false);
-                var dataTable = new DataTable();
-                dataTable.Load(sqlDataReader);
+                //var results = new List<DataTable>();
+                //int count = 0;
+                //while (sqlDataReader.Read())
+                //{
+                //    count++;
+                //}
+                //DataTable dataTable = new DataTable();
+                //dataTable.Load(sqlDataReader);
+
+                DataTable dataTable = new DataTable();
+
+                // Manually create columns based on the reader schema
+                for (int i = 0; i < sqlDataReader.FieldCount; i++)
+                {
+                    dataTable.Columns.Add(sqlDataReader.GetName(i), sqlDataReader.GetFieldType(i));
+                }
+
+                while (sqlDataReader.Read())
+                {
+                    object[] rowData = new object[sqlDataReader.FieldCount];
+                    sqlDataReader.GetValues(rowData);
+                    dataTable.Rows.Add(rowData);
+                }
                 return dataTable;
             }
             catch (Exception ex)
