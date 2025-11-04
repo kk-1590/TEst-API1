@@ -22,6 +22,8 @@
         bool ViewCurrentStock(string? type);
 
         bool ViewPreviousRate(string? type);
+        bool ValidatePdfFile(IFormFile file);
+        string Encrypt(string clearText);
 
     }
 }

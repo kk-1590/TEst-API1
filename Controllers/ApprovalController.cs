@@ -403,6 +403,33 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
+        [HttpGet]
+        [Route("edit-approval-details/{referenceNo}")]
+        public async Task<IActionResult> EditApprovalDetails([FromRoute] string? referenceNo,[FromBody]UpdateApprovalEditDetails details)
+        {
+            try
+            {
+                string? employee = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employee))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                if (string.IsNullOrWhiteSpace(referenceNo))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Approval No Found..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.UpdateApprovalNote(referenceNo,details,employee);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During edit-approval-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        
     }
 
 }

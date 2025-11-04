@@ -316,7 +316,14 @@ namespace AdvanceAPI.Services.Approval
                     approvals.Add(approval);
                 }
             }
-            return new ApiResponse(StatusCodes.Status200OK, "Success", approvals);
+            DataTable dts=await _approvalRepository.GetMyApprovalsCount(emploeeId, OnlySelfApprovals, search);
+            int TotalRecord = 0;
+            if (dts.Rows.Count > 0)
+            {
+                TotalRecord = Convert.ToInt32(dts.Rows[0][0].ToString());
+            }
+            
+            return new ApiResponse(StatusCodes.Status200OK, "Success",new {Approvals= approvals,TotalRecord = TotalRecord});
 
         }
 
@@ -589,7 +596,56 @@ namespace AdvanceAPI.Services.Approval
                 return new ApiResponse(StatusCodes.Status200OK, "Success", editGetApprovalDetailsResponse);
 
             }
+        }
 
+        public async Task<ApiResponse> UpdateApprovalNote(string referenceNo,UpdateApprovalEditDetails details,string EmpCode )
+        {
+            //Task<int> EditApprovalDetails(string? referenceNo,UpdateApprovalEditDetails details,string EmpCode)
+            int ins=await _approvalRepository.EditApprovalDetails(referenceNo,details,EmpCode);
+            if (details.File != null && details.File.Length > 0)
+            {
+                string SaveFileRes=await _inclusiveService.SaveFile(referenceNo , "Uploads/Approvals",details.File,".xlsx");
+            }
+            if (ins>0)
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` record updated successfully.");
+            }
+            else
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Success", $"No Changes In Data.");
+            }
+        }
+
+        public async Task<ApiResponse> GetPurchaseApproval( string EmpCode,string EmpCodeAdd,GetApprovalRequest details)
+        {
+            //Task<DataTable> GetApprovalDetails(string EmpCode,string EmpCodeAdd,GetApprovalRequest details)
+            using (DataTable dt=await _approvalRepository.GetApprovalDetails(EmpCode,EmpCodeAdd,details))
+            {
+                List<PurchaseApprovalDetails> lst = new List<PurchaseApprovalDetails>();
+                foreach (DataRow dr in dt.Rows)
+                {
+                    PurchaseApprovalDetails pd = new PurchaseApprovalDetails();
+                    pd.IsRejectable = true;
+                    if (dr["App4ID"].ToString() == "GLAVIVEK" && dr["App4Status"].ToString() == "Approved") // If Vivek sir approved then no body can reject this approval
+                    {
+                       pd.IsRejectable = false;
+                    }
+                    
+                    pd.EncRelativePersonID = _generalService.Encrypt(dr["RelativePersonID"].ToString());
+                    string[] splt = dr["Test"].ToString().Split('$');
+                    pd.VendorId = splt[2];
+                    pd.Department = splt[1];
+                    pd.CampusName = dr["CampusName"].ToString();
+                    pd.ApprovalType = dr["MyType"].ToString();
+                    pd.Status = dr["Status"].ToString();
+                    pd.BudgetAmount = dr["BudgetAmount"].ToString();
+                    pd.prevTaken = dr["PreviousTaken"].ToString();
+                    pd.TotalAmount = dr["TotalAmount"].ToString();
+                    pd.BudgetStatus = dr["BudgetStatus"].ToString();
+                    pd.UploadBy = dr["IniName"].ToString();
+                }
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "", "");
         }
 
     }

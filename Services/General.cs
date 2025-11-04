@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using AdvanceAPI.IServices.Inclusive;
 
 namespace AdvanceAPI.Services
 {
@@ -16,12 +17,14 @@ namespace AdvanceAPI.Services
     {
         private readonly ILogger<General> _logger;
         private readonly IDBOperations _dBOperations;
+        // private readonly IInclusiveService _iInclusiveService;
         private readonly IHttpContextAccessor _httpAccessor;
         public General(ILogger<General> logger, IDBOperations dBOperations, IHttpContextAccessor httpAccessor)
         {
             _logger = logger;
             _dBOperations = dBOperations;
             _httpAccessor = httpAccessor;
+            // _iInclusiveService = iInclusiveService;
         }
 
         public string EncryptOrDecrypt(string? text)
@@ -223,5 +226,51 @@ namespace AdvanceAPI.Services
             return Array.IndexOf(GetPrevRate, type) != -1;
         }
 
+        public  bool ValidatePdfFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return false;
+
+            // Check file extension
+            var extension = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(extension) || !extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // Check MIME type
+            if (file.ContentType != "application/pdf")
+                return false;
+
+            // Optional: Check PDF file header bytes ("%PDF-")
+            using (var reader = new BinaryReader(file.OpenReadStream()))
+            {
+                byte[] headerBytes = reader.ReadBytes(5);
+                var header = System.Text.Encoding.ASCII.GetString(headerBytes);
+                if (!header.Equals("%PDF-", StringComparison.Ordinal))
+                    return false;
+            }
+
+            return true;
+        }
+        public string Encrypt(string clearText)
+        {
+            string EncryptionKey = "GLA" + DateTime.Now.Year + "UNI" + DateTime.Now.Month.ToString().PadLeft(2, '0') + "VER" + DateTime.Now.Day.ToString().PadLeft(2, '0') + "SITY" + DateTime.Now.Hour.ToString().PadLeft(2, '0') ;
+            byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
+            using (Aes encryptor = Aes.Create())
+            {
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
+                encryptor.Key = pdb.GetBytes(32);
+                encryptor.IV = pdb.GetBytes(16);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateEncryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(clearBytes, 0, clearBytes.Length);
+                        cs.Close();
+                    }
+                    clearText = Convert.ToBase64String(ms.ToArray());
+                }
+            }
+            return clearText;
+        }
     }
 }

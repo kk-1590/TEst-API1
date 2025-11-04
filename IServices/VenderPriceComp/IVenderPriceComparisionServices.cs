@@ -10,4 +10,5 @@ public interface IVenderPriceComparisionServices
     Task<ApiResponse> GetVendorDetails(string RefNo);
     Task<ApiResponse> SubmitVendorDetails(string RefNo, string empCode, InsertDetails Details);
     Task<ApiResponse> LockDetails(string RefNo, string empCode);
+    Task<string> SaveFile(string FileName, IFormFile file);
 }

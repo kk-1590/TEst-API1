@@ -3,6 +3,8 @@ using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Inclusive;
 using AdvanceAPI.DTO.VenderPriceComp;
 using AdvanceAPI.IRepository;
+using AdvanceAPI.IServices;
+using AdvanceAPI.IServices.Inclusive;
 using AdvanceAPI.IServices.VenderPriceComp;
 
 namespace AdvanceAPI.Services.VenderPriceCompServices;
@@ -10,12 +12,15 @@ namespace AdvanceAPI.Services.VenderPriceCompServices;
 public class VenderPriceCompServices : IVenderPriceComparisionServices
 {
     private readonly IVenderPriceCompRepository _repository;
+    private readonly IInclusiveService _inclusiveService;
+    private readonly IGeneral _general;
    
     
-    public VenderPriceCompServices(IVenderPriceCompRepository repository)
+    public VenderPriceCompServices(IVenderPriceCompRepository repository, IGeneral general, IInclusiveService incusiveRepository)
     {
         _repository = repository;
-       
+       _general = general;
+       _inclusiveService = incusiveRepository;
     }
     public async Task<ApiResponse> GetApprovalBasicDetails(string RefNo)
     {
@@ -192,6 +197,17 @@ public class VenderPriceCompServices : IVenderPriceComparisionServices
             return new ApiResponse(StatusCodes.Status422UnprocessableEntity,"Error","Details Already Locked");
         }
        int ins=await _repository.LockDetails(empCode,RefNo);
+       
        return new ApiResponse(StatusCodes.Status200OK,"Success",$"`{ins}` Details Lock Successfully");
     }
+
+    public async Task<string> SaveFile(string FileName, IFormFile file)
+    {
+        string FilePath = Directory.GetCurrentDirectory();
+        FilePath=Path.Combine(FilePath,"Reports/PriceComparison");
+        FileName= _general.EncryptWithKey(FileName,await _inclusiveService.GetEnCryptedKey());
+        string str=await _inclusiveService.SaveFile(FileName,FilePath,file,".pdf");
+        return str;
+    }
+    
 }

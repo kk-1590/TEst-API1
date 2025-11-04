@@ -8,7 +8,8 @@ namespace AdvanceAPI.DTO.Approval
         public string DraftName { get; set; }
         public string? RefNo { get; set; }
         [Required]
-        [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]        public decimal ActualAmount {  get; set; }
+        [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]  
+        public decimal ActualAmount {  get; set; }
         [Required]
         public string? ApprovalType { get;set; }
         [Required]

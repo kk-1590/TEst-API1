@@ -61,7 +61,7 @@ public class GeneratePurchaseApprovalRequest
     [Required]
     public string SubFirm { get; set; } 
     [Required]
-    public int TotalAmount { get; set; }
+    public decimal TotalAmount { get; set; }
     [Required]
     [AllowedValues(101,102,103)]
     public int campus { get; set; }

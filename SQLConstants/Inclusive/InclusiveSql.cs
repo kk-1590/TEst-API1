@@ -12,7 +12,7 @@
 
         public const string Get_Base_Url_Table = "SELECT Tag,Site,Type from gla_student_management.siteurls where true ";
 
-        public const string GET_ITEM_BY_CODE = "SELECT ItemName,Size,Unit FROM purchase.itemregister WHERE ItemCode=@itemcode LIMIT 1";
+        public const string GET_ITEM_BY_CODE = "SELECT ItemName,Size,Unit,Make FROM purchase.itemregister WHERE ItemCode=@itemcode LIMIT 1";
 
         public const string GET_ITEM_MAKE_CODE = "Select DISTINCT Make,ItemCode from advances.purchaseapprovaldetail where ItemName=@itemname AND Size=@size AND Unit=@unit And `Status` ='Approved'  ORDER BY  ItemName,Make"; 
       

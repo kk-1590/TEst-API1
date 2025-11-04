@@ -20,5 +20,6 @@ namespace AdvanceAPI.IServices.Approval
         Task<ApiResponse> GetPOApprovalDetails(string? type, string? referenceNo);
         Task<ApiResponse> UpdateApprovalNote(string? employeeId, string? referenceNo, string? note);
         Task<ApiResponse> GetEditApprovalDetails(string? referenceNo);
+        Task<ApiResponse> UpdateApprovalNote(string referenceNo, UpdateApprovalEditDetails details, string EmpCode);
     }
 }

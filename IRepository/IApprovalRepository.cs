@@ -45,5 +45,8 @@ namespace AdvanceAPI.IRepository
         Task<int> UpdateApprovalNote(string? employeeId, string? referenceNo, string? note);
         Task<DataTable> CheckApprovalExistsToUpdate(string? referenceNo);
         Task<DataTable> GetEditApprovalDetails(string? referenceNo);
+        Task<DataTable> GetMyApprovalsCount(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search);
+        Task<int> EditApprovalDetails(string? referenceNo, UpdateApprovalEditDetails details, string EmpCode);
+        Task<DataTable> GetApprovalDetails(string EmpCode, string EmpCodeAdd, GetApprovalRequest details);
     }
 }

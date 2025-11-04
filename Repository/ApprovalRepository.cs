@@ -488,6 +488,50 @@ namespace AdvanceAPI.Repository
                 _logger.LogError(ex, "Error during GetMyApprovals.");
                 throw;
             }
+        }public async Task<DataTable> GetMyApprovalsCount(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search)
+        {
+            try
+            {
+
+
+                StringBuilder extraCondition = new StringBuilder();
+                var parameters = new List<SQLParameters>();
+                if (OnlySelfApprovals)
+                {
+                    extraCondition.Append($" And (IniId = @EmployeeCode or RelativePersonID= @EmployeeCode)");
+                    parameters.Add(new SQLParameters("@EmployeeCode", emploeeId ?? string.Empty));
+                }
+
+                if (!string.IsNullOrEmpty(search?.ReferenceNo))
+                {
+                    extraCondition.Append(" And ReferenceNo= @ReferenceNo");
+                    parameters.Add(new SQLParameters("@ReferenceNo", search.ReferenceNo ?? string.Empty));
+                }
+                else
+                {
+                    extraCondition.Append($"  And `Session`=@Session And `Status`=@Status ");
+                    parameters.Add(new SQLParameters("@Session", search?.Session ?? string.Empty));
+                    parameters.Add(new SQLParameters("@Status", search?.Status ?? string.Empty));
+
+                    if (!string.IsNullOrEmpty(search?.CampusCode))
+                    {
+                        extraCondition.Append(" And CampusCode= @CampusCode");
+                        parameters.Add(new SQLParameters("@CampusCode", search.CampusCode ?? string.Empty));
+                    }
+                }
+                
+                parameters.Add(new SQLParameters("@LimitItems", search?.NoOfItems ?? 0));
+                parameters.Add(new SQLParameters("@OffSetItems", search?.ItemsFrom ?? 0));
+
+                string sqlQuery = ApprovalSql.GET_MY_APPROVAL_COUNT.Replace("@Condition", extraCondition.ToString());
+
+                return await _dbContext.SelectAsync(sqlQuery, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetMyApprovals.");
+                throw;
+            }
         }
 
         public async Task<DataTable> CheckIsApprovalComparisonDefined(string? referenceNo)
@@ -761,6 +805,124 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during GetEditApprovalDetails.");
+                throw;
+            }
+        }
+        public async Task<int> EditApprovalDetails(string? referenceNo,UpdateApprovalEditDetails details,string EmpCode)
+        {
+            try
+            {
+                
+                List<SQLParameters> sqlParametersList = new List<SQLParameters>();
+                sqlParametersList.Add(new SQLParameters("@VenderID",details.VendorId));
+                string FermName = "";
+                string FcontcatName = "";
+                string Fermcno = "";
+                string FermEmail = "";
+                string FermAlter = "";
+                string FermAdd = "";
+               
+                using (DataTable dt=await _dbContext.SelectAsync(ApprovalSql.GET_VENDER_REGISTER,DBConnections.Advance))
+                {
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        FermName = dt.Rows[0]["VendorName"].ToString()??string.Empty;
+                        FcontcatName = dt.Rows[0]["ContactPersons"].ToString()??string.Empty;
+                        Fermcno = dt.Rows[0]["ContactNo"].ToString()??string.Empty;
+                        FermEmail = dt.Rows[0]["EmailID"].ToString()??string.Empty;
+                        FermAlter = dt.Rows[0]["AlternateContactNo"].ToString()??string.Empty;
+                        FermAdd = dt.Rows[0]["Address"].ToString().ToUpper().Replace("<BR/>", " ")??string.Empty;
+                    }
+                }
+               
+                if (details.MyType.Contains("Post Facto -"))
+                {
+                    details.MyType=details.MyType.Replace("Post Facto -", "").Trim();
+                }
+                var parameters = new List<SQLParameters>() {
+                    new SQLParameters("@RefNo", referenceNo ?? string.Empty),
+                    new SQLParameters("@Maad", details.Maad ?? string.Empty),
+                    new SQLParameters("@DepartMent", details.DepartMent ?? string.Empty),
+                    new SQLParameters("@Vendorid", details.VendorId.ToString() ?? string.Empty),
+                    new SQLParameters("@FirmName", FermName ?? string.Empty),
+                    new SQLParameters("@Address", FermAdd ?? string.Empty),
+                    new SQLParameters("@FirmContactNo", Fermcno ?? string.Empty),
+                    new SQLParameters("@FirmPerson", FcontcatName ?? string.Empty),
+                    new SQLParameters("@FirmEmail", FermEmail ?? string.Empty),
+                    new SQLParameters("@AltContactNo", FermAlter ?? string.Empty),
+                    new SQLParameters("@Purpose", details.Purpose ?? string.Empty),
+                    new SQLParameters("@Note", details.Note ?? string.Empty),
+                    new SQLParameters("@AppDate", details.AppDate ?? string.Empty),
+                    new SQLParameters("@BillDate", details.BillTill ?? string.Empty),
+                    new SQLParameters("@ExtendedBillDate", details.ExtendedBillDate ?? string.Empty),
+                    new SQLParameters("@MyType", Convert.ToDateTime(details.AppDate)>Convert.ToDateTime(details.BillTill)?"Post Facto - "+details.MyType:details.MyType),
+                };
+                //@Type,@ChangeUniqueNo,@ChangeIn,@FromData,@ToData,@Operation,now(),@DoneBy,@IpAddress
+                List<SQLParameters> sqlParametersList2 = new List<SQLParameters>();
+                sqlParametersList2.Add(new SQLParameters("@Type", details.MyType??string.Empty));
+                sqlParametersList2.Add(new SQLParameters("@ChangeUniqueNo", referenceNo));
+                sqlParametersList2.Add(new SQLParameters("@ChangeIn",details.MyType));
+                sqlParametersList2.Add(new SQLParameters("@FromData", ""));
+                sqlParametersList2.Add(new SQLParameters("@ToData", ""));
+                sqlParametersList2.Add(new SQLParameters("@DoneBy", EmpCode));
+                sqlParametersList2.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
+                int ins = await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_LOG, sqlParametersList2,DBConnections.Advance);
+                
+                return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_APPROVAL_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during EditApprovalDetails.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetApprovalDetails(string EmpCode,string EmpCodeAdd,GetApprovalRequest details)
+        {
+            try
+            {
+                List<SQLParameters> sqlParametersList = new List<SQLParameters>();
+                string Condition = " And `Session`=@Session And ( App1ID=@EmpCode || App2ID=@EmpCode  || App3ID=@EmpCode  || App4ID=@EmpCode || App1ID=@EmpCodeAdd || App2ID=@EmpCodeAdd  || App3ID=@EmpCodeAdd  || App4ID=@EmpCodeAdd )";
+                sqlParametersList.Add(new SQLParameters("@Session", details.Session));
+                sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode));
+                sqlParametersList.Add(new SQLParameters("@EmpCodeAdd", EmpCodeAdd));
+                sqlParametersList.Add(new SQLParameters("@Limit", details.Limit));
+                sqlParametersList.Add(new SQLParameters("@Offset", details.Page));
+                if (!string.IsNullOrEmpty(details.CampusCode.ToString())) //camppus code
+                {
+                    Condition += " AND CampusCode=@CampusCode";
+                    sqlParametersList.Add(new SQLParameters("@CampusCode", EmpCode));
+                }
+
+                if (!string.IsNullOrEmpty(details.Department))
+                {
+                    Condition += " And ForDepartment==@Department";
+                    sqlParametersList.Add(new SQLParameters("@Department", details.Department));
+                }
+
+                if (!string.IsNullOrEmpty(details.Status))
+                {
+                    switch (details.Status)
+                    {
+                        case "Pending My":
+                            Condition += " And And `Status`='Pending' And ( (App1ID=@EmpCode && App1Status='Pending') || (App2ID=@EmpCode && App2Status='Pending')  || (App3ID=@EmpCode && App3Status='Pending')  || (App4ID=@EmpCode && App4Status='Pending') || (App1ID=@EmpCodeAdd && App1Status='Pending') || (App2ID=@EmpCodeAdd && App2Status='Pending')  || (App3ID=@EmpCodeAdd && App3Status='Pending')  || (App4ID=@EmpCodeAdd && App4Status='Pending') )";
+                        break;
+                        case "Pending All":
+                            Condition += " And `Status`=@Status";
+                            sqlParametersList.Add(new SQLParameters("@Status", "Pending"));
+                            break;
+                        default:
+                            Condition += " And `Status`=@Status";
+                            sqlParametersList.Add(new SQLParameters("@Status", details.Status));
+                            break;
+                    }
+                }
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_DETAILS.Replace("@AdditinalQuery",Condition),sqlParametersList,DBConnections.Advance);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e, "Error during GetApprovalDetails.");
                 throw;
             }
         }

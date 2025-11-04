@@ -115,16 +115,19 @@ namespace AdvanceAPI.Services.Inclusive
             {
                 if (dt.Rows.Count > 0)
                 {
-                    DataTable MakeCode = await _inclusive.GetItemMakeCode(dt.Rows[0]["ItemName"].ToString()!, dt.Rows[0]["Size"].ToString()!, dt.Rows[0]["Unit"].ToString()!);
-                    foreach (DataRow row in MakeCode.Rows) 
+                    DataTable MakeCode = await _inclusive.GetItemMakeCode(dt.Rows[0]["ItemName"].ToString()!,
+                        dt.Rows[0]["Size"].ToString()!, dt.Rows[0]["Unit"].ToString()!);
+                    foreach (DataRow row in MakeCode.Rows)
                     {
-                        DataTable details = await _inclusive.GetItemsDetails(row["ItemCode"].ToString()!, row["Make"].ToString()!);
-                        if (details.Rows.Count > 0) 
+                        DataTable details =
+                            await _inclusive.GetItemsDetails(row["ItemCode"].ToString()!, row["Make"].ToString()!);
+                        if (details.Rows.Count > 0)
                         {
-                            string stock = CallWebService2(BaseUrl, details.Rows[0]["ItemCode"].ToString()!, CampusCode, "@1@", "", "");
+                            string stock = CallWebService2(BaseUrl, details.Rows[0]["ItemCode"].ToString()!, CampusCode,
+                                "@1@", "", "");
                             lst.Add(new StockDetailsResponse
                             {
-                                Make=details.Rows[0]["Make"].ToString(),
+                                Make = details.Rows[0]["Make"].ToString(),
                                 ItemCode = details.Rows[0]["ItemCode"].ToString(),
                                 ItemName = details.Rows[0]["ItemName"].ToString(),
                                 Size = details.Rows[0]["Size"].ToString(),
@@ -134,8 +137,29 @@ namespace AdvanceAPI.Services.Inclusive
                                 Stock = stock.Replace("\r\n", "")
                             });
                         }
+                        
+
+                    }
+
+                    if (MakeCode.Rows.Count <= 0 && lst.Count <= 0) 
+                    {
+                        string stock = CallWebService2(BaseUrl, itemCode, CampusCode,
+                            "@1@", "", "");
+                        lst.Add(new StockDetailsResponse
+                        {
+                            //ItemName,Size,Unit,Make
+                            Make = dt.Rows[0]["Make"]?.ToString() ?? string.Empty,
+                            ItemCode = itemCode,
+                            ItemName = dt.Rows[0]["ItemName"]?.ToString() ?? string.Empty,
+                            Size = dt.Rows[0]["Size"]?.ToString() ?? string.Empty,
+                            PrevPurchase = "0.00",
+                            PrevRate = "0.00",
+                            Unit =dt.Rows[0]["Unit"]?.ToString() ?? string.Empty,
+                            Stock = stock.Replace("\r\n", "")
+                        });
                     }
                 }
+               
             }
             return  new ApiResponse(StatusCodes.Status200OK,"Success",lst);
         }
@@ -379,5 +403,34 @@ namespace AdvanceAPI.Services.Inclusive
                 return string.Empty;
             }
         }
+        public async Task<string> SaveFile(string FileName,string FilePath, IFormFile file,string Ext)
+        {
+            try
+            {
+                string path=Directory.GetCurrentDirectory();
+                
+             //   FileName =_general.EncryptWithKey(FileName,await GetEnCryptedKey());
+                path = Path.Combine(path, FilePath);
+                if (!Path.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                path = Path.Combine(path, FileName+Ext);
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+                
+                return "Success";
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message,"Error During saving file");
+                throw;
+            }
+        }
+
+        
     }
 }

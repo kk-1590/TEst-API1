@@ -31,9 +31,9 @@ public class ApprovalSql
 
     public const string GET_APPROVAL_NUMBER_3_NON_MATHURA_AUTHORITIES = "select CONCAT(first_name,' - ',deisgnation,' [',santioneddeptt,']') 'Text',CONCAT(employee_code,'#',first_name,'#',deisgnation,'#',santioneddeptt) 'Value',employee_code from salary_management.emp_master where `status`!='INACTIVE' AND staff_type!='IV CLASS' AND FIND_IN_SET(employee_code,(SELECT `Value` FROM `othervalues` WHERE Type='Online And Noida Campus Member 3 Authority')) AND (first_name LIKE CONCAT('%',@EmployeeName,'%') OR employee_code LIKE CONCAT('%',@EmployeeCode,'%') ) ORDER BY first_name,deisgnation desc,santioneddeptt";
 
-    public const string CHEKC_IS_DRAFT_APPROVAL_ITEMS_EXISTS = "SELECT 1 FROM `purchaseapprovaldetail_draft` WHERE IniId=@IniId AND AppType=@AppType AND CampusCode=@CampusCode;";
+    public const string CHEKC_IS_DRAFT_APPROVAL_ITEMS_EXISTS = "SELECT 1 FROM `purchaseapprovaldetail_draft` WHERE IniId=@IniId AND AppType=@AppType AND CampusCode=@CampusCode AND ReferenceNo=@ReferenceNo;";
 
-    public const string DELETE_DRAFT_APPROVAL_ITEMS = "DELETE FROM `purchaseapprovaldetail_draft` WHERE IniId=@IniId AND AppType=@AppType AND CampusCode=@CampusCode;";
+    public const string DELETE_DRAFT_APPROVAL_ITEMS = "DELETE FROM `purchaseapprovaldetail_draft` WHERE IniId=@IniId AND AppType=@AppType AND CampusCode=@CampusCode AND ReferenceNo=@ReferenceNo;";
 
     public const string GET_VENDER_REGISTER = "select * from vendorregister where true  and VendorID = @VenderID";
 
@@ -54,7 +54,10 @@ public class ApprovalSql
     public const string GETDRAFTEDITEM="select * from purchaseapprovaldetail_draft where id=@Id";
 
     public const string GET_MY_APPROVALS = "Select PreviousCancelRemark,ReGenerated,IF(`Status`='Rejected',IF(App1Status='Rejected',App1Name,IF(App2Status='Rejected',App2Name,IF(App3Status='Rejected',App3Name,App4Name))),'') 'RejectBy',IF(`Status`='Rejected', IFNULL(RejectionReason,'N/A'),'') AS 'RejectReason' ,RelativePersonID,RelativePersonName,ReferenceNo,`Session`,CampusName,Purpose,TotalItem,DATE_FORMAT(ExtendedBillDate,'%d %b, %y') 'ExeOn',TotalAmount,`Status`,IniName,DATE_FORMAT(AppDate,'%d %b, %y') 'AppDate',DATE_FORMAT(IniOn,'%d %b, %y') 'IniOn',App1Name,App2Name,App3Name,App4Name,App1Status,App2Status,App3Status,App4Status,IFNULL(DATE_FORMAT(App1DoneOn,'%d %b, %y'),'NA') 'App1On',IFNULL(DATE_FORMAT(App2DoneOn,'%d %b, %y'),'NA') 'App2On',IFNULL(DATE_FORMAT(App3DoneOn,'%d %b, %y'),'NA') 'App3On',IFNULL(DATE_FORMAT(App4DoneOn,'%d %b, %y'),'NA') 'App4On',CancelledReason,DATE_FORMAT(CancelledOn,'%d %b, %y') 'CancelledOn',CancelledBy,CloseReason,DATE_FORMAT(CloseOn,'%d %b, %y') 'CloseOn',CloseBy,IF(`Status`='Pending' And HOUR(TIMEDIFF(now(),IniOn))>=48,'Y','N') 'FinalStat',BudgetRequired,BudgetAmount,PreviousTaken,CurStatus,BudgetStatus,BudgetReferenceNo,BillId,BillRequired,VendorID,ForDepartment,Note,MyType,ExtendedBillDate,AdditionalName,AppCat,CONCAT(IFNULL(CONCAT(App1Name,', '),''),IFNULL(CONCAT(App2Name,', '),''),IFNULL(CONCAT(App3Name,', '),''),IFNULL(CONCAT(App4Name,', '),'')) 'Auth',DATE_FORMAT(AppDate,'%m/%d/%Y') 'AD',DATE_FORMAT(ExtendedBillDate,'%m/%d/%Y') 'EBD' from purchaseapprovalsummary where true @Condition  ORDER BY IniOn,`Status`  LIMIT @LimitItems OFFSET @OffSetItems";
+    
+    public const string GET_MY_APPROVAL_COUNT=  "select count(*) from purchaseapprovalsummary where true @Condition  ORDER BY IniOn,`Status` ";
 
+    
     public const string CHECK_IS_APPROVAL_COMPARISON_DEFINED = "SELECT DISTINCT ReferenceNo from price_comparison_chart WHERE ReferenceNo=@ReferenceNo";
 
     public const string CHECK_APPROVAL_EXISTS = "SELECT * from purchaseapprovalsummary WHERE ReferenceNo=@ReferenceNo AND `Status`='Pending' ";
@@ -86,5 +89,17 @@ public class ApprovalSql
 
     public const string GET_EDIT_APPROVAL_DETAILS = "SELECT ReferenceNo,MyType,CampusName,TotalAmount,AppCat AS 'ApprovalCategory',CONCAT(IFNULL(CONCAT(App1Name,', '),''),IFNULL(CONCAT(App2Name,', '),''),IFNULL(CONCAT(App3Name,', '),''),IFNULL(CONCAT(App4Name,', '),'')) AS 'Authorities',AdditionalName AS 'Maad',ForDepartment as 'Department',VendorID,FirmName,FirmAddress,Note,Purpose,DATE_FORMAT(AppDate,'%d.%m.%Y')'AppDateShow',DATE_FORMAT(BillTill,'%d.%m.%Y')'BillTillShow',DATE_FORMAT(AppDate,'%Y-%m-%d')'AppDateDB',DATE_FORMAT(BillTill,'%Y-%m-%d')'BillTillDB' from purchaseapprovalsummary WHERE ReferenceNo=@ReferenceNo AND `Status`!='Deleted';";
 
+    public const string UPDATE_APPROVAL_DETAILS =
+        "UPDATE purchaseapprovalsummary SET AdditionalName=@Maad,ForDepartment=@DepartMent,VendorID=@Vendorid,FirmName=@FirmName,FirmAddress=@Address,FirmContactNo=@FirmContactNo,FirmPerson=@FirmPerson,FirmEmail=@FirmEmail,\nFirmAlternateContactNo=@AltContactNo,Note=@Note,Purpose=@Purpose,AppDate=@AppDate,BillTill=@BillDate,ExtendedBillDate=@ExtendedBillDate,MyType=@MyType WHERE ReferenceNo=@RefNo";
 
+    public const string UPDATE_LOG =
+        "insert into changeslog (Type,ChangeUniqueNo,ChangeIn,FromData,ToData,Operation,DoneOn,DoneBy,DoneFrom) values (@Type,@ChangeUniqueNo,@ChangeIn,@FromData,@ToData,@Operation,now(),@DoneBy,@IpAddress)";
+
+    #region PassApproval
+
+    public const string GET_APPROVAL_DETAILS = "Select PreviousCancelRemark,CAST(CONCAT(AdditionalName,'$',ForDepartment,'$',CAST(VendorID as CHAR),'$',FirmName,'$',RelativePersonID,'$',RelativePersonName)  as CHAR) as 'Test',IF(`Status`='Rejected',CONCAT('Rejected By : ',IF(App1Status='Rejected',App1Name,IF(App2Status='Rejected',App2Name,IF(App3Status='Rejected',App3Name,App4Name))),'<br/>Reason : ',IFNULL(RejectionReason,'N/A')),'') 'RejectedReason',RelativePersonID,RelativePersonName,ReferenceNo,`Session`,MyType,Purpose,TotalItem,TotalAmount,`Status`,DATE_FORMAT(ExtendedBillDate,'%d %b, %y') 'ExeOn',IniName,DATE_FORMAT(AppDate,'%d %b, %y') 'AppDate',DATE_FORMAT(IniOn,'%d %b, %y') 'IniOn',App1Name,CampusName, App2Name,App3Name,App4Name,App1Status,App2Status,App3Status,App4Status,IFNULL(DATE_FORMAT(App1DoneOn,'%d %b, %y'),'NA') 'App1On',IFNULL(DATE_FORMAT(App2DoneOn,'%d %b, %y'),'NA') 'App2On',IFNULL(DATE_FORMAT(App3DoneOn,'%d %b, %y'),'NA') 'App3On',IFNULL(DATE_FORMAT(App4DoneOn,'%d %b, %y'),'NA') 'App4On',App1ID,App2ID,App3ID,App4ID,ByPass,BillId,CancelledReason,DATE_FORMAT(CancelledOn,'%d %b, %y') 'CancelledOn',CancelledBy,CloseReason,DATE_FORMAT(CloseOn,'%d %b, %y') 'CloseOn',CloseBy,IF(`Status`='Pending' And HOUR(TIMEDIFF(now(),IniOn))>=0,'Y','N') 'FinalStat',BudgetRequired,BudgetAmount,PreviousTaken,CurStatus,BudgetStatus,BudgetReferenceNo from purchaseapprovalsummary where true @AdditinalQuery limit @Limit offset @Offset";
+
+    #endregion
+
+    
 }

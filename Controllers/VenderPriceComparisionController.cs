@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.VenderPriceComp;
+using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.VenderPriceComp;
 using Microsoft.AspNetCore.Authorization;
 
@@ -16,11 +17,13 @@ namespace AdvanceAPI.Controllers
     {
         private readonly ILogger<InclusiveController> _logger;
         private readonly IVenderPriceComparisionServices _venderPriceComparisionServices;
+        private readonly IGeneral _general;
 
-        public VenderPriceComparisionController(ILogger<InclusiveController> logger, IVenderPriceComparisionServices venderPriceComparisionServices)
+        public VenderPriceComparisionController(ILogger<InclusiveController> logger, IVenderPriceComparisionServices venderPriceComparisionServices, IGeneral general)
         {
             _logger = logger;
            _venderPriceComparisionServices = venderPriceComparisionServices;
+           _general = general;
         }
         [HttpGet]
         [Route("get-basic-purchase-details/{RefNo}")]
@@ -111,19 +114,39 @@ namespace AdvanceAPI.Controllers
                 throw;
             }
         }
+        public class SubmitVenderDetailsModel
+        {
+            public IFormFile File { get; set; }
+        }
         [HttpPut]
         [Route("lock-details/{RefNo}")]
-        public async Task<IActionResult> SubmitVenderDetails(string RefNo)
+        public async Task<IActionResult> SubmitVendorDetailsLock([FromForm] SubmitVenderDetailsModel model,[FromRoute]string RefNo)
         {
             try
             {
-                
                 string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
+                // if (file == null)
+                // {
+                //     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                // }
+                if (model.File.Length > 0)
+                {
+                    if (!_general.ValidatePdfFile(model.File))
+                    {
+                        return BadRequest( new ApiResponse(StatusCodes.Status400BadRequest,"Error","Invalid PDF File"));
+                    }
+                }
                 ApiResponse response=await _venderPriceComparisionServices.LockDetails(RefNo,employeeId);
+                if (response.Status == StatusCodes.Status200OK && model.File.Length > 0)
+                {
+                    //Task<string> SaveFile(string FileName, string FilePath, IFormFile file)
+                    
+                    string SaveFileResponse=await _venderPriceComparisionServices.SaveFile(RefNo,model.File);
+                }
                 return Ok(response);
             }
             catch (Exception e)

@@ -21,5 +21,6 @@ namespace AdvanceAPI.IServices.Inclusive
         Task<ApiResponse> GetBudget(GetFirmBudgetRequest? firm);
         Task<bool> IsUserAllowed(string? employeeId, UserRolePermission userRolePermission);
         Task<string> GetEnCryptedKey();
+        Task<string> SaveFile(string FileName, string FilePath, IFormFile file,string Ext);
     }
 }
