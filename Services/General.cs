@@ -56,7 +56,7 @@ namespace AdvanceAPI.Services
         {
             List<SQLParameters> sqlParameters = new List<SQLParameters>();
             sqlParameters.Add(new SQLParameters("@CampusCode", CampusCode));
-            DataTable getCampusCame=await _dBOperations.SelectAsync(GeneralSql.GET_CAMPUS_NAME,sqlParameters,DBConnections.Advance);
+            DataTable getCampusCame = await _dBOperations.SelectAsync(GeneralSql.GET_CAMPUS_NAME, sqlParameters, DBConnections.Advance);
             if (getCampusCame.Rows.Count > 0)
             {
                 return getCampusCame.Rows[0][0]?.ToString() ?? string.Empty;
@@ -95,7 +95,7 @@ namespace AdvanceAPI.Services
             return !string.IsNullOrEmpty(campusCode) && validCampusCodes.Contains(campusCode);
         }
 
-        public  string GetReplace(string str)
+        public string GetReplace(string str)
         {
             return str.Replace("\"", "\\\"").Replace("'", "\\'");
         }
@@ -105,25 +105,25 @@ namespace AdvanceAPI.Services
             {
                 return "";
             }
-            var r=Dns.GetHostAddresses(Dns.GetHostName());
-    
-            for(int i=0;i<r.Length;i++)
+            var r = Dns.GetHostAddresses(Dns.GetHostName());
+
+            for (int i = 0; i < r.Length; i++)
             {
                 string s = r[i].ToString();
-                if(s.Contains("172.16.13.244"))
+                if (s.Contains("172.16.13.244"))
                 {
                     return _httpAccessor.HttpContext.Connection.RemoteIpAddress.ToString() ?? "";
                 }
             }
 
-            return _httpAccessor.HttpContext.Request.Headers["X-Forwarded-For"].ToString()??"";
+            return _httpAccessor.HttpContext.Request.Headers["X-Forwarded-For"].ToString() ?? "";
         }
 
         public async Task<string> GetEmpName(string empCode)
         {
             List<SQLParameters> sqlParameters = new List<SQLParameters>();
             sqlParameters.Add(new SQLParameters("@EmpCode", empCode));
-            DataTable dt=await _dBOperations.SelectAsync(GeneralSql.GETEMPNAME,sqlParameters,DBConnections.Advance);
+            DataTable dt = await _dBOperations.SelectAsync(GeneralSql.GETEMPNAME, sqlParameters, DBConnections.Advance);
             if (dt.Rows.Count > 0)
             {
                 return dt.Rows[0][0]?.ToString() ?? string.Empty;
@@ -134,7 +134,7 @@ namespace AdvanceAPI.Services
             }
         }
 
-        public  bool IsFileExists(string file)
+        public bool IsFileExists(string file)
         {
             try
             {
@@ -226,7 +226,7 @@ namespace AdvanceAPI.Services
             return Array.IndexOf(GetPrevRate, type) != -1;
         }
 
-        public  bool ValidatePdfFile(IFormFile file)
+        public bool ValidatePdfFile(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return false;
@@ -253,7 +253,7 @@ namespace AdvanceAPI.Services
         }
         public string Encrypt(string clearText)
         {
-            string EncryptionKey = "GLA" + DateTime.Now.Year + "UNI" + DateTime.Now.Month.ToString().PadLeft(2, '0') + "VER" + DateTime.Now.Day.ToString().PadLeft(2, '0') + "SITY" + DateTime.Now.Hour.ToString().PadLeft(2, '0') ;
+            string EncryptionKey = "GLA" + DateTime.Now.Year + "UNI" + DateTime.Now.Month.ToString().PadLeft(2, '0') + "VER" + DateTime.Now.Day.ToString().PadLeft(2, '0') + "SITY" + DateTime.Now.Hour.ToString().PadLeft(2, '0');
             byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
             using (Aes encryptor = Aes.Create())
             {

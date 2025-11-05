@@ -23,7 +23,7 @@ namespace AdvanceAPI.Repository
             _general = general;
         }
 
-        public async Task<DataTable> GetDraftItemRefNo(string EmpCode, string AppType,string RefNo)
+        public async Task<DataTable> GetDraftItemRefNo(string EmpCode, string AppType, string RefNo)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<DataTable> GetDraftedItem(string EmpCode, string AppType,string CampusCode,string RefNo)
+        public async Task<DataTable> GetDraftedItem(string EmpCode, string AppType, string CampusCode, string RefNo)
         {
             try
             {
@@ -100,9 +100,9 @@ namespace AdvanceAPI.Repository
                 List<SQLParameters> parametersList = new List<SQLParameters>();
                 parametersList.Add(new SQLParameters("@EmpCode", EmpCode));
                 parametersList.Add(new SQLParameters("@ApprovalType", AppType));
-                parametersList.Add(new SQLParameters("@CampusCode", CampusCode ));
-                parametersList.Add(new SQLParameters("@ReferenceNo",RefNo?? string.Empty));
-                return await _dbContext.SelectAsync(ApprovalSql.GET_DRAFTED_ITEM,parametersList, DBConnections.Advance);
+                parametersList.Add(new SQLParameters("@CampusCode", CampusCode));
+                parametersList.Add(new SQLParameters("@ReferenceNo", RefNo ?? string.Empty));
+                return await _dbContext.SelectAsync(ApprovalSql.GET_DRAFTED_ITEM, parametersList, DBConnections.Advance);
             }
             catch (Exception ex)
             {
@@ -246,8 +246,8 @@ namespace AdvanceAPI.Repository
             try
             {
                 List<SQLParameters> sqlParametersList = new List<SQLParameters>();
-                sqlParametersList.Add(new SQLParameters("@VenderID",VenderCode));
-                return await _dbContext.SelectAsync(ApprovalSql.GET_VENDER_REGISTER, sqlParametersList,DBConnections.Advance);
+                sqlParametersList.Add(new SQLParameters("@VenderID", VenderCode));
+                return await _dbContext.SelectAsync(ApprovalSql.GET_VENDER_REGISTER, sqlParametersList, DBConnections.Advance);
             }
             catch (Exception e)
             {
@@ -257,7 +257,7 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<int> SubmitPurchaseBill(string EmpCode,GeneratePurchaseApprovalRequest generatePurchaseApprovalRequest,string RefNo,string TotalDays)
+        public async Task<int> SubmitPurchaseBill(string EmpCode, GeneratePurchaseApprovalRequest generatePurchaseApprovalRequest, string RefNo, string TotalDays)
         {
             DataTable VenderDetails =
                 await GetVenderRegister(generatePurchaseApprovalRequest.ApprovalMessers.ToString());
@@ -269,12 +269,12 @@ namespace AdvanceAPI.Repository
             string FermAdd = "";
             if (VenderDetails != null && VenderDetails.Rows.Count > 0)
             {
-                FermName = VenderDetails.Rows[0]["VendorName"].ToString()??string.Empty;
-                FcontcatName = VenderDetails.Rows[0]["ContactPersons"].ToString()??string.Empty;
-                Fermcno = VenderDetails.Rows[0]["ContactNo"].ToString()??string.Empty;
-                FermEmail = VenderDetails.Rows[0]["EmailID"].ToString()??string.Empty;
-                FermAlter = VenderDetails.Rows[0]["AlternateContactNo"].ToString()??string.Empty;
-                FermAdd = VenderDetails.Rows[0]["Address"].ToString().ToUpper().Replace("<BR/>", " ")??string.Empty;
+                FermName = VenderDetails.Rows[0]["VendorName"].ToString() ?? string.Empty;
+                FcontcatName = VenderDetails.Rows[0]["ContactPersons"].ToString() ?? string.Empty;
+                Fermcno = VenderDetails.Rows[0]["ContactNo"].ToString() ?? string.Empty;
+                FermEmail = VenderDetails.Rows[0]["EmailID"].ToString() ?? string.Empty;
+                FermAlter = VenderDetails.Rows[0]["AlternateContactNo"].ToString() ?? string.Empty;
+                FermAdd = VenderDetails.Rows[0]["Address"].ToString().ToUpper().Replace("<BR/>", " ") ?? string.Empty;
             }
             string[] App1 = generatePurchaseApprovalRequest.Approval1.Split("#");
             string[] App2 = generatePurchaseApprovalRequest.Approval2.Split("#");
@@ -294,85 +294,85 @@ namespace AdvanceAPI.Repository
             }
             string Session = _general.GetFinancialSession(DateTime.Now);
             //@RefNo,@Session,@MyType,@Note,@Purpose,@BillUptoValue,@BillUptoType,@UploadById,@UploadByName,NOW(),@IpAddress,@ForDepartment,
-// @FirmName,@FirmPerson,@FirmEmail,@FirmPanNo,@FirmAddress,
-// @FirmContactNo,@FirmAlternateContactNo,@TotalItem,@Amount,@VatPer,@TotalAmount,'Pending',@CashPer,@Other,@FinalApprovalId,@FinalApprovalName,@FinalApprovalDesignation,
-// 'Pending',NULL,@ApprovalCategory,'Pending',@VendorID,@IniID,
-// @IniName,@IniDesignation,@IniDepartment,@AppDate,@ReferenceBillStatus,@BillTill,@ExtendedBillDate,'0.00',@ApprovalItemCount,'Pending',@BillRequired,@Maad,@BudgetBalanceAmount,@BudgetRequired,@BudgetAmount,
-// @PreviousTaken,@CurStatus,@BudgetStatus,@BudgetReferenceNo,@CampusCode,@CampusName
-//@App1ID,@App1Name,@App1Designation,'Pending',NULL,@App2ID,@App2Name,@App2Designation,'Pending',NULL,@App3ID,@App3Name,@App3Designation,'Pending',NULL
+            // @FirmName,@FirmPerson,@FirmEmail,@FirmPanNo,@FirmAddress,
+            // @FirmContactNo,@FirmAlternateContactNo,@TotalItem,@Amount,@VatPer,@TotalAmount,'Pending',@CashPer,@Other,@FinalApprovalId,@FinalApprovalName,@FinalApprovalDesignation,
+            // 'Pending',NULL,@ApprovalCategory,'Pending',@VendorID,@IniID,
+            // @IniName,@IniDesignation,@IniDepartment,@AppDate,@ReferenceBillStatus,@BillTill,@ExtendedBillDate,'0.00',@ApprovalItemCount,'Pending',@BillRequired,@Maad,@BudgetBalanceAmount,@BudgetRequired,@BudgetAmount,
+            // @PreviousTaken,@CurStatus,@BudgetStatus,@BudgetReferenceNo,@CampusCode,@CampusName
+            //@App1ID,@App1Name,@App1Designation,'Pending',NULL,@App2ID,@App2Name,@App2Designation,'Pending',NULL,@App3ID,@App3Name,@App3Designation,'Pending',NULL
             List<SQLParameters> sqlParametersList = new List<SQLParameters>();
-            sqlParametersList.Add(new SQLParameters("@EmpCode",EmpCode));
-            sqlParametersList.Add(new SQLParameters("@RefNo",RefNo));
-            sqlParametersList.Add(new SQLParameters("@Session",Session));
-            sqlParametersList.Add(new SQLParameters("@MyType",generatePurchaseApprovalRequest.ApprovalType ?? string.Empty));
-            sqlParametersList.Add(new SQLParameters("@Note",_general.GetReplace(generatePurchaseApprovalRequest.ApprovalNote)));
-            sqlParametersList.Add(new SQLParameters("@Purpose",_general.GetReplace(generatePurchaseApprovalRequest.ApprovalPurpose)));
-            sqlParametersList.Add(new SQLParameters("@BillUptoValue",TotalDays));
-            sqlParametersList.Add(new SQLParameters("@BillUptoType","Day"));
-            sqlParametersList.Add(new SQLParameters("@UploadById",EmpCode));
-            sqlParametersList.Add(new SQLParameters("@UploadByName",await _general.GetEmpName(EmpCode))); ///GET EMP NAME
-            sqlParametersList.Add(new SQLParameters("@IpAddress",_general.GetIpAddress()));
-            sqlParametersList.Add(new SQLParameters("@ForDepartment",generatePurchaseApprovalRequest.ApprovalDepartment));
-            sqlParametersList.Add(new SQLParameters("@FirmName",FermName));
-            sqlParametersList.Add(new SQLParameters("@FirmPerson",FcontcatName));
-            sqlParametersList.Add(new SQLParameters("@FirmPanNo",""));
-            sqlParametersList.Add(new SQLParameters("@FirmAddress",FermAdd));
-            sqlParametersList.Add(new SQLParameters("@FirmContactNo",Fermcno));
-            sqlParametersList.Add(new SQLParameters("@FirmEmail",FermEmail));
-            sqlParametersList.Add(new SQLParameters("@FirmAlternateContactNo",FermAlter));
-            sqlParametersList.Add(new SQLParameters("@TotalItem",generatePurchaseApprovalRequest.DraftedItems.Count));
-            sqlParametersList.Add(new SQLParameters("@Amount",generatePurchaseApprovalRequest.DraftedItems.Sum(x=>Convert.ToDouble(x.ActualAmount))));
-            sqlParametersList.Add(new SQLParameters("@VatPer",generatePurchaseApprovalRequest.OverAllGST));
-            sqlParametersList.Add(new SQLParameters("@TotalAmount",generatePurchaseApprovalRequest.AmountInDigit));
-            sqlParametersList.Add(new SQLParameters("@CashPer",generatePurchaseApprovalRequest.OverAllDiscount));
-            sqlParametersList.Add(new SQLParameters("@Other",generatePurchaseApprovalRequest.OtherCharges));
+            sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode));
+            sqlParametersList.Add(new SQLParameters("@RefNo", RefNo));
+            sqlParametersList.Add(new SQLParameters("@Session", Session));
+            sqlParametersList.Add(new SQLParameters("@MyType", generatePurchaseApprovalRequest.ApprovalType ?? string.Empty));
+            sqlParametersList.Add(new SQLParameters("@Note", _general.GetReplace(generatePurchaseApprovalRequest.ApprovalNote)));
+            sqlParametersList.Add(new SQLParameters("@Purpose", _general.GetReplace(generatePurchaseApprovalRequest.ApprovalPurpose)));
+            sqlParametersList.Add(new SQLParameters("@BillUptoValue", TotalDays));
+            sqlParametersList.Add(new SQLParameters("@BillUptoType", "Day"));
+            sqlParametersList.Add(new SQLParameters("@UploadById", EmpCode));
+            sqlParametersList.Add(new SQLParameters("@UploadByName", await _general.GetEmpName(EmpCode))); ///GET EMP NAME
+            sqlParametersList.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
+            sqlParametersList.Add(new SQLParameters("@ForDepartment", generatePurchaseApprovalRequest.ApprovalDepartment));
+            sqlParametersList.Add(new SQLParameters("@FirmName", FermName));
+            sqlParametersList.Add(new SQLParameters("@FirmPerson", FcontcatName));
+            sqlParametersList.Add(new SQLParameters("@FirmPanNo", ""));
+            sqlParametersList.Add(new SQLParameters("@FirmAddress", FermAdd));
+            sqlParametersList.Add(new SQLParameters("@FirmContactNo", Fermcno));
+            sqlParametersList.Add(new SQLParameters("@FirmEmail", FermEmail));
+            sqlParametersList.Add(new SQLParameters("@FirmAlternateContactNo", FermAlter));
+            sqlParametersList.Add(new SQLParameters("@TotalItem", generatePurchaseApprovalRequest.DraftedItems.Count));
+            sqlParametersList.Add(new SQLParameters("@Amount", generatePurchaseApprovalRequest.DraftedItems.Sum(x => Convert.ToDouble(x.ActualAmount))));
+            sqlParametersList.Add(new SQLParameters("@VatPer", generatePurchaseApprovalRequest.OverAllGST));
+            sqlParametersList.Add(new SQLParameters("@TotalAmount", generatePurchaseApprovalRequest.AmountInDigit));
+            sqlParametersList.Add(new SQLParameters("@CashPer", generatePurchaseApprovalRequest.OverAllDiscount));
+            sqlParametersList.Add(new SQLParameters("@Other", generatePurchaseApprovalRequest.OtherCharges));
             if (generatePurchaseApprovalRequest.AmountInDigit >= 1000)
             {
-                sqlParametersList.Add(new SQLParameters("@ReferenceBillStatus","Open"));
-                sqlParametersList.Add(new SQLParameters("@BillRequired","Yes"));
-                sqlParametersList.Add(new SQLParameters("@App1ID",App1[0]));
-                sqlParametersList.Add(new SQLParameters("@App1Name",App1[1]));
-                sqlParametersList.Add(new SQLParameters("@App1Designation",App1[2]));
-                sqlParametersList.Add(new SQLParameters("@App2ID",App2[0]));
-                sqlParametersList.Add(new SQLParameters("@App2Name",App2[1]));
-                sqlParametersList.Add(new SQLParameters("@App2Designation",App2[2]));
-                sqlParametersList.Add(new SQLParameters("@App3ID",App3[0]));
-                sqlParametersList.Add(new SQLParameters("@App3Name",App3[1]));
-                sqlParametersList.Add(new SQLParameters("@App3Designation",App3[2]));
-                sqlParametersList.Add(new SQLParameters("@FinalApprovalId",App4[0]));
-                sqlParametersList.Add(new SQLParameters("@FinalApprovalName",App4[1]));
-                sqlParametersList.Add(new SQLParameters("@FinalApprovalDesignation",App4[2]));
+                sqlParametersList.Add(new SQLParameters("@ReferenceBillStatus", "Open"));
+                sqlParametersList.Add(new SQLParameters("@BillRequired", "Yes"));
+                sqlParametersList.Add(new SQLParameters("@App1ID", App1[0]));
+                sqlParametersList.Add(new SQLParameters("@App1Name", App1[1]));
+                sqlParametersList.Add(new SQLParameters("@App1Designation", App1[2]));
+                sqlParametersList.Add(new SQLParameters("@App2ID", App2[0]));
+                sqlParametersList.Add(new SQLParameters("@App2Name", App2[1]));
+                sqlParametersList.Add(new SQLParameters("@App2Designation", App2[2]));
+                sqlParametersList.Add(new SQLParameters("@App3ID", App3[0]));
+                sqlParametersList.Add(new SQLParameters("@App3Name", App3[1]));
+                sqlParametersList.Add(new SQLParameters("@App3Designation", App3[2]));
+                sqlParametersList.Add(new SQLParameters("@FinalApprovalId", App4[0]));
+                sqlParametersList.Add(new SQLParameters("@FinalApprovalName", App4[1]));
+                sqlParametersList.Add(new SQLParameters("@FinalApprovalDesignation", App4[2]));
             }
             else
             {
-                sqlParametersList.Add(new SQLParameters("@FinalApprovalId",App1[0]));
-                sqlParametersList.Add(new SQLParameters("@FinalApprovalName",App1[1]));
-                sqlParametersList.Add(new SQLParameters("@FinalApprovalDesignation",App1[2]));
+                sqlParametersList.Add(new SQLParameters("@FinalApprovalId", App1[0]));
+                sqlParametersList.Add(new SQLParameters("@FinalApprovalName", App1[1]));
+                sqlParametersList.Add(new SQLParameters("@FinalApprovalDesignation", App1[2]));
                 // sqlParametersList.Add(new SQLParameters("@FinalApprovalId",App1[0]));
-                sqlParametersList.Add(new SQLParameters("@ReferenceBillStatus","Closed"));
-                sqlParametersList.Add(new SQLParameters("@BillRequired","No"));
-                
+                sqlParametersList.Add(new SQLParameters("@ReferenceBillStatus", "Closed"));
+                sqlParametersList.Add(new SQLParameters("@BillRequired", "No"));
+
             }
-            sqlParametersList.Add(new SQLParameters("@ApprovalCategory",generatePurchaseApprovalRequest.ApprovalCategory));
-            sqlParametersList.Add(new SQLParameters("@VendorID",generatePurchaseApprovalRequest.ApprovalMessers));
-            sqlParametersList.Add(new SQLParameters("@IniID",IniBy[0]));
-            sqlParametersList.Add(new SQLParameters("@IniName",IniBy[1]));
-            sqlParametersList.Add(new SQLParameters("@IniDesignation",IniBy[2]));
-            sqlParametersList.Add(new SQLParameters("@IniDepartment",IniBy[3]));
-            sqlParametersList.Add(new SQLParameters("@AppDate",generatePurchaseApprovalRequest.ApprovalDate));
-            sqlParametersList.Add(new SQLParameters("@BillTill",generatePurchaseApprovalRequest.ApprovalTillDate));
-            sqlParametersList.Add(new SQLParameters("@ExtendedBillDate",generatePurchaseApprovalRequest.ApprovalTillDate));
-            sqlParametersList.Add(new SQLParameters("@ApprovalItemCount",generatePurchaseApprovalRequest.DraftedItems.Count));
-            sqlParametersList.Add(new SQLParameters("@Maad",generatePurchaseApprovalRequest.Maad));
-            sqlParametersList.Add(new SQLParameters("@BudgetBalanceAmount",generatePurchaseApprovalRequest.BudgetBalanceAmount));
-            sqlParametersList.Add(new SQLParameters("@BudgetRequired",generatePurchaseApprovalRequest.BudgetDet));
-            sqlParametersList.Add(new SQLParameters("@BudgetAmount",generatePurchaseApprovalRequest.BudgetAmount));
-            sqlParametersList.Add(new SQLParameters("@PreviousTaken",generatePurchaseApprovalRequest.BudgetReleaseAmount));
-            sqlParametersList.Add(new SQLParameters("@CurStatus",CurStatus));
-            sqlParametersList.Add(new SQLParameters("@BudgetStatus",BudgetStatus));
-            sqlParametersList.Add(new SQLParameters("@BudgetReferenceNo",generatePurchaseApprovalRequest.BudgetRefNo));
-            sqlParametersList.Add(new SQLParameters("@CampusCode",generatePurchaseApprovalRequest.campus));
-            sqlParametersList.Add(new SQLParameters("@CampusName",await _general.CampusNameByCode(generatePurchaseApprovalRequest.campus.ToString())));
+            sqlParametersList.Add(new SQLParameters("@ApprovalCategory", generatePurchaseApprovalRequest.ApprovalCategory));
+            sqlParametersList.Add(new SQLParameters("@VendorID", generatePurchaseApprovalRequest.ApprovalMessers));
+            sqlParametersList.Add(new SQLParameters("@IniID", IniBy[0]));
+            sqlParametersList.Add(new SQLParameters("@IniName", IniBy[1]));
+            sqlParametersList.Add(new SQLParameters("@IniDesignation", IniBy[2]));
+            sqlParametersList.Add(new SQLParameters("@IniDepartment", IniBy[3]));
+            sqlParametersList.Add(new SQLParameters("@AppDate", generatePurchaseApprovalRequest.ApprovalDate));
+            sqlParametersList.Add(new SQLParameters("@BillTill", generatePurchaseApprovalRequest.ApprovalTillDate));
+            sqlParametersList.Add(new SQLParameters("@ExtendedBillDate", generatePurchaseApprovalRequest.ApprovalTillDate));
+            sqlParametersList.Add(new SQLParameters("@ApprovalItemCount", generatePurchaseApprovalRequest.DraftedItems.Count));
+            sqlParametersList.Add(new SQLParameters("@Maad", generatePurchaseApprovalRequest.Maad));
+            sqlParametersList.Add(new SQLParameters("@BudgetBalanceAmount", generatePurchaseApprovalRequest.BudgetBalanceAmount));
+            sqlParametersList.Add(new SQLParameters("@BudgetRequired", generatePurchaseApprovalRequest.BudgetDet));
+            sqlParametersList.Add(new SQLParameters("@BudgetAmount", generatePurchaseApprovalRequest.BudgetAmount));
+            sqlParametersList.Add(new SQLParameters("@PreviousTaken", generatePurchaseApprovalRequest.BudgetReleaseAmount));
+            sqlParametersList.Add(new SQLParameters("@CurStatus", CurStatus));
+            sqlParametersList.Add(new SQLParameters("@BudgetStatus", BudgetStatus));
+            sqlParametersList.Add(new SQLParameters("@BudgetReferenceNo", generatePurchaseApprovalRequest.BudgetRefNo));
+            sqlParametersList.Add(new SQLParameters("@CampusCode", generatePurchaseApprovalRequest.campus));
+            sqlParametersList.Add(new SQLParameters("@CampusName", await _general.CampusNameByCode(generatePurchaseApprovalRequest.campus.ToString())));
 
             try
             {
@@ -384,10 +384,10 @@ namespace AdvanceAPI.Repository
                 sqlParametersList.Clear();
                 //RefNo,AppType,CampusCode,EmpCode
                 //sqlParametersList.Add(new SQLParameters("@RefNo",RefNo));
-                sqlParametersList.Add(new SQLParameters("@AppType",generatePurchaseApprovalRequest.ApprovalType));
-                sqlParametersList.Add(new SQLParameters("@CampusCode",generatePurchaseApprovalRequest.campus));
-                sqlParametersList.Add(new SQLParameters("@ReferenceNo",generatePurchaseApprovalRequest.RefNo));
-                sqlParametersList.Add(new SQLParameters("@EmpCode",EmpCode));
+                sqlParametersList.Add(new SQLParameters("@AppType", generatePurchaseApprovalRequest.ApprovalType));
+                sqlParametersList.Add(new SQLParameters("@CampusCode", generatePurchaseApprovalRequest.campus));
+                sqlParametersList.Add(new SQLParameters("@ReferenceNo", generatePurchaseApprovalRequest.RefNo));
+                sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode));
                 {
                     ins = await _dbContext.DeleteInsertUpdateAsync(
                         ApprovalSql.INSER_APPROVAL_DETAILS.Replace("@RefNo", RefNo), sqlParametersList,
@@ -395,22 +395,22 @@ namespace AdvanceAPI.Repository
                 }
                 {
                     // @EmpCode,@CampusCode,@AppType
-                    ins=await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_APPROVAL_DRAFT_DETAILS, sqlParametersList, DBConnections.Advance);
+                    ins = await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_APPROVAL_DRAFT_DETAILS, sqlParametersList, DBConnections.Advance);
                 }
                 return ins;
             }
             catch (Exception e)
             {
                 sqlParametersList.Clear();
-                sqlParametersList.Add(new SQLParameters("@ReferenceNo",RefNo));
-                int ins=await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_PURCHASE_DETAILS, sqlParametersList, DBConnections.Advance);
-                ins=await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_PURCHASE_SUMMARY, sqlParametersList, DBConnections.Advance);
+                sqlParametersList.Add(new SQLParameters("@ReferenceNo", RefNo));
+                int ins = await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_PURCHASE_DETAILS, sqlParametersList, DBConnections.Advance);
+                ins = await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_PURCHASE_SUMMARY, sqlParametersList, DBConnections.Advance);
                 _logger.LogError(e, "An error occurred while Generate Final Purchase Approval.");
                 Console.WriteLine(e);
                 throw;
             }
-           
-            
+
+
         }
 
         public async Task<DataTable> CheckDeletedDraftedItem(string ItemId)
@@ -418,8 +418,8 @@ namespace AdvanceAPI.Repository
             try
             {
                 List<SQLParameters> sqlParametersList = new List<SQLParameters>();
-                sqlParametersList.Add(new SQLParameters("@Id",ItemId));
-                return await _dbContext.SelectAsync(ApprovalSql.GETDRAFTEDITEM,sqlParametersList,DBConnections.Advance);
+                sqlParametersList.Add(new SQLParameters("@Id", ItemId));
+                return await _dbContext.SelectAsync(ApprovalSql.GETDRAFTEDITEM, sqlParametersList, DBConnections.Advance);
             }
             catch (Exception e)
             {
@@ -433,8 +433,8 @@ namespace AdvanceAPI.Repository
             try
             {
                 List<SQLParameters> sqlParametersList = new List<SQLParameters>();
-                sqlParametersList.Add(new SQLParameters("@Id",ItemId));
-                int ins=await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_DRAFTED_ITEM, sqlParametersList, DBConnections.Advance); 
+                sqlParametersList.Add(new SQLParameters("@Id", ItemId));
+                int ins = await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_DRAFTED_ITEM, sqlParametersList, DBConnections.Advance);
                 return ins;
             }
             catch (Exception e)
@@ -475,7 +475,7 @@ namespace AdvanceAPI.Repository
                         parameters.Add(new SQLParameters("@CampusCode", search.CampusCode ?? string.Empty));
                     }
                 }
-                
+
                 parameters.Add(new SQLParameters("@LimitItems", search?.NoOfItems ?? 0));
                 parameters.Add(new SQLParameters("@OffSetItems", search?.ItemsFrom ?? 0));
 
@@ -488,7 +488,8 @@ namespace AdvanceAPI.Repository
                 _logger.LogError(ex, "Error during GetMyApprovals.");
                 throw;
             }
-        }public async Task<DataTable> GetMyApprovalsCount(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search)
+        }
+        public async Task<DataTable> GetMyApprovalsCount(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search)
         {
             try
             {
@@ -519,7 +520,7 @@ namespace AdvanceAPI.Repository
                         parameters.Add(new SQLParameters("@CampusCode", search.CampusCode ?? string.Empty));
                     }
                 }
-                
+
                 parameters.Add(new SQLParameters("@LimitItems", search?.NoOfItems ?? 0));
                 parameters.Add(new SQLParameters("@OffSetItems", search?.ItemsFrom ?? 0));
 
@@ -583,16 +584,16 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<DataTable> CheckAlreadyDraftedItem(string EmpCode, string AppType,string ItemCode,string RefNo)
+        public async Task<DataTable> CheckAlreadyDraftedItem(string EmpCode, string AppType, string ItemCode, string RefNo)
         {
             try
             {
-                List<SQLParameters>  sqlParametersList = new List<SQLParameters>();
+                List<SQLParameters> sqlParametersList = new List<SQLParameters>();
                 sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode ?? string.Empty));
                 sqlParametersList.Add(new SQLParameters("@AppType", AppType ?? string.Empty));
                 sqlParametersList.Add(new SQLParameters("@ItemCode", ItemCode ?? string.Empty));
                 sqlParametersList.Add(new SQLParameters("@ReferenceNo", RefNo ?? string.Empty));
-                return await _dbContext.SelectAsync(ApprovalSql.CHECK_ALREADY_ITEM,sqlParametersList, DBConnections.Advance);
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_ALREADY_ITEM, sqlParametersList, DBConnections.Advance);
             }
             catch (Exception e)
             {
@@ -608,7 +609,7 @@ namespace AdvanceAPI.Repository
             {
                 List<SQLParameters> sqlParametersList = new List<SQLParameters>();
                 sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode ?? string.Empty));
-                return await _dbContext.SelectAsync(ApprovalSql.GET_DRAFT,sqlParametersList, DBConnections.Advance);
+                return await _dbContext.SelectAsync(ApprovalSql.GET_DRAFT, sqlParametersList, DBConnections.Advance);
 
             }
             catch (Exception ex)
@@ -808,36 +809,36 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-        public async Task<int> EditApprovalDetails(string? referenceNo,UpdateApprovalEditDetails details,string EmpCode)
+        public async Task<int> EditApprovalDetails(string? referenceNo, UpdateApprovalEditDetails details, string EmpCode)
         {
             try
             {
-                
+
                 List<SQLParameters> sqlParametersList = new List<SQLParameters>();
-                sqlParametersList.Add(new SQLParameters("@VenderID",details.VendorId));
+                sqlParametersList.Add(new SQLParameters("@VenderID", details.VendorId));
                 string FermName = "";
                 string FcontcatName = "";
                 string Fermcno = "";
                 string FermEmail = "";
                 string FermAlter = "";
                 string FermAdd = "";
-               
-                using (DataTable dt=await _dbContext.SelectAsync(ApprovalSql.GET_VENDER_REGISTER,sqlParametersList,DBConnections.Advance))
+
+                using (DataTable dt = await _dbContext.SelectAsync(ApprovalSql.GET_VENDER_REGISTER, sqlParametersList, DBConnections.Advance))
                 {
                     if (dt != null && dt.Rows.Count > 0)
                     {
-                        FermName = dt.Rows[0]["VendorName"].ToString()??string.Empty;
-                        FcontcatName = dt.Rows[0]["ContactPersons"].ToString()??string.Empty;
-                        Fermcno = dt.Rows[0]["ContactNo"].ToString()??string.Empty;
-                        FermEmail = dt.Rows[0]["EmailID"].ToString()??string.Empty;
-                        FermAlter = dt.Rows[0]["AlternateContactNo"].ToString()??string.Empty;
-                        FermAdd = dt.Rows[0]["Address"].ToString().ToUpper().Replace("<BR/>", " ")??string.Empty;
+                        FermName = dt.Rows[0]["VendorName"].ToString() ?? string.Empty;
+                        FcontcatName = dt.Rows[0]["ContactPersons"].ToString() ?? string.Empty;
+                        Fermcno = dt.Rows[0]["ContactNo"].ToString() ?? string.Empty;
+                        FermEmail = dt.Rows[0]["EmailID"].ToString() ?? string.Empty;
+                        FermAlter = dt.Rows[0]["AlternateContactNo"].ToString() ?? string.Empty;
+                        FermAdd = dt.Rows[0]["Address"].ToString().ToUpper().Replace("<BR/>", " ") ?? string.Empty;
                     }
                 }
-               
+
                 if (details.MyType.Contains("Post Facto -"))
                 {
-                    details.MyType=details.MyType.Replace("Post Facto -", "").Trim();
+                    details.MyType = details.MyType.Replace("Post Facto -", "").Trim();
                 }
                 var parameters = new List<SQLParameters>() {
                     new SQLParameters("@RefNo", referenceNo ?? string.Empty),
@@ -859,16 +860,16 @@ namespace AdvanceAPI.Repository
                 };
                 //@Type,@ChangeUniqueNo,@ChangeIn,@FromData,@ToData,@Operation,now(),@DoneBy,@IpAddress
                 List<SQLParameters> sqlParametersList2 = new List<SQLParameters>();
-                sqlParametersList2.Add(new SQLParameters("@Type", details.MyType??string.Empty));
+                sqlParametersList2.Add(new SQLParameters("@Type", details.MyType ?? string.Empty));
                 sqlParametersList2.Add(new SQLParameters("@ChangeUniqueNo", referenceNo));
-                sqlParametersList2.Add(new SQLParameters("@ChangeIn",details.MyType));
-                sqlParametersList2.Add(new SQLParameters("@Operation","Update Approval"));
+                sqlParametersList2.Add(new SQLParameters("@ChangeIn", details.MyType));
+                sqlParametersList2.Add(new SQLParameters("@Operation", "Update Approval"));
                 sqlParametersList2.Add(new SQLParameters("@FromData", ""));
                 sqlParametersList2.Add(new SQLParameters("@ToData", ""));
                 sqlParametersList2.Add(new SQLParameters("@DoneBy", EmpCode));
                 sqlParametersList2.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
-                int ins = await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_LOG, sqlParametersList2,DBConnections.Advance);
-                
+                int ins = await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_LOG, sqlParametersList2, DBConnections.Advance);
+
                 return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_APPROVAL_DETAILS, parameters, DBConnections.Advance);
             }
             catch (Exception ex)
@@ -878,7 +879,7 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<DataTable> GetApprovalDetails(string EmpCode,string EmpCodeAdd,AprrovalsListRequest details)
+        public async Task<DataTable> GetApprovalDetails(string EmpCode, string EmpCodeAdd, AprrovalsListRequest details)
         {
             try
             {
@@ -910,7 +911,7 @@ namespace AdvanceAPI.Repository
                     {
                         case "Pending My":
                             Condition += " And  `Status`='Pending' And ( (App1ID=@EmpCode && App1Status='Pending') || (App2ID=@EmpCode && App2Status='Pending')  || (App3ID=@EmpCode && App3Status='Pending')  || (App4ID=@EmpCode && App4Status='Pending') || (App1ID=@EmpCodeAdd && App1Status='Pending') || (App2ID=@EmpCodeAdd && App2Status='Pending')  || (App3ID=@EmpCodeAdd && App3Status='Pending')  || (App4ID=@EmpCodeAdd && App4Status='Pending') )";
-                        break;
+                            break;
                         case "Pending All":
                             Condition += " And `Status`=@Status";
                             sqlParametersList.Add(new SQLParameters("@Status", "Pending"));
@@ -921,7 +922,7 @@ namespace AdvanceAPI.Repository
                             break;
                     }
                 }
-                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_DETAILS.Replace("@AdditinalQuery",Condition),sqlParametersList,DBConnections.Advance);
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_DETAILS.Replace("@AdditinalQuery", Condition), sqlParametersList, DBConnections.Advance);
             }
             catch (Exception e)
             {

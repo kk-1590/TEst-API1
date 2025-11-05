@@ -34,7 +34,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-               // string employeeId = "GLA108236";
+                // string employeeId = "GLA108236";
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
@@ -48,10 +48,10 @@ namespace AdvanceAPI.Controllers
                 _logger.LogError(ex, "Error During get-stock-item-details");
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
-        } 
+        }
         [HttpPost]
         [Route("get-drafted-item")]
-       
+
         public async Task<IActionResult> DraftedItem([FromBody] DraftedItemRequest itms)
         {
             try
@@ -59,15 +59,15 @@ namespace AdvanceAPI.Controllers
                 string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (!ModelState.IsValid)
                 {
-                    
+
                     return BadRequest(ModelState);
                 }
-               // string employeeId = "GLA108236";
+                // string employeeId = "GLA108236";
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _approvalService.GetDraftedItem(employeeId, itms.AppType, itms.CampusCode.ToString(),itms.RefNo);
+                ApiResponse apiResponse = await _approvalService.GetDraftedItem(employeeId, itms.AppType, itms.CampusCode.ToString(), itms.RefNo);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -88,12 +88,12 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-               // string employeeId = "GLA108236";
+                // string employeeId = "GLA108236";
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _approvalService.GetDraftItemSummary (employeeId, itms.AppType, itms.CampusCode.ToString(),itms.RefNo);
+                ApiResponse apiResponse = await _approvalService.GetDraftItemSummary(employeeId, itms.AppType, itms.CampusCode.ToString(), itms.RefNo);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -187,12 +187,12 @@ namespace AdvanceAPI.Controllers
         }
         [HttpPost]
         [Route("generate-approval")]
-        public async Task<IActionResult> generateApproval([FromBody]GeneratePurchaseApprovalRequest generatePurchaseApprovalRequest)
+        public async Task<IActionResult> generateApproval([FromBody] GeneratePurchaseApprovalRequest generatePurchaseApprovalRequest)
         {
             try
             {
                 string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(employeeId) )
+                if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
@@ -218,12 +218,12 @@ namespace AdvanceAPI.Controllers
             try
             {
                 string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(employeeId) )
+                if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
 
-                
+
                 //Task<ApiResponse> GenerateApproval(string EmpCode,GeneratePurchaseApprovalRequest GeneratePurchaseApproval)
                 ApiResponse apiResponse = await _approvalService.DeleteDraftedItem(itemId.ToString());
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
@@ -306,7 +306,7 @@ namespace AdvanceAPI.Controllers
             {
                 string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                if (string.IsNullOrEmpty(employeeId) )
+                if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
@@ -405,7 +405,7 @@ namespace AdvanceAPI.Controllers
         }
         [HttpPost]
         [Route("edit-approval-details/{referenceNo}")]
-        public async Task<IActionResult> EditApprovalDetails([FromRoute] string? referenceNo,UpdateApprovalEditDetails details)
+        public async Task<IActionResult> EditApprovalDetails([FromRoute] string? referenceNo, UpdateApprovalEditDetails details)
         {
             try
             {
@@ -423,7 +423,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                ApiResponse apiResponse = await _approvalService.UpdateApprovalNote(referenceNo,details,employee);
+                ApiResponse apiResponse = await _approvalService.EditApprovalDetails(referenceNo, details, employee);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -450,10 +450,10 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-               
-              
 
-                ApiResponse apiResponse = await _approvalService.GetPurchaseApproval(employee,"",details);
+
+
+                ApiResponse apiResponse = await _approvalService.GetPurchaseApproval(employee, "", details);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -483,7 +483,7 @@ namespace AdvanceAPI.Controllers
 
 
 
-                ApiResponse apiResponse = await _approvalService.ValidateRepairWarrnty(details.CampusCode,details.SRNo);
+                ApiResponse apiResponse = await _approvalService.ValidateRepairWarrnty(details.CampusCode, details.SRNo);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
