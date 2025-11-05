@@ -21,5 +21,10 @@ namespace AdvanceAPI.IServices.Approval
         Task<ApiResponse> UpdateApprovalNote(string? employeeId, string? referenceNo, string? note);
         Task<ApiResponse> GetEditApprovalDetails(string? referenceNo);
         Task<ApiResponse> UpdateApprovalNote(string referenceNo, UpdateApprovalEditDetails details, string EmpCode);
+        Task<ApiResponse> GetPurchaseApproval(string EmpCode, string EmpCodeAdd, AprrovalsListRequest details);
+        Task<ApiResponse> ValidateRepairWarrnty(string CampusCode, string SRNo);
+        Task<ApiResponse> PassPurchaseApproval(string? employeeCode, PassApprovalRequest? passRequest);
+        Task<ApiResponse> RejectPurchaseApproval(string? employeeCode, RejectACancelpprovalRequest? rejectRequest);
+        Task<ApiResponse> CancelPurchaseApproval(string? employeeCode, RejectACancelpprovalRequest? cancelRequest);
     }
 }

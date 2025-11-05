@@ -321,7 +321,7 @@ namespace AdvanceAPI.Repository
             sqlParametersList.Add(new SQLParameters("@FirmEmail",FermEmail));
             sqlParametersList.Add(new SQLParameters("@FirmAlternateContactNo",FermAlter));
             sqlParametersList.Add(new SQLParameters("@TotalItem",generatePurchaseApprovalRequest.DraftedItems.Count));
-            sqlParametersList.Add(new SQLParameters("@Amount",generatePurchaseApprovalRequest.DraftedItems.Sum(x=>Convert.ToInt32(x.ActualAmount))));
+            sqlParametersList.Add(new SQLParameters("@Amount",generatePurchaseApprovalRequest.DraftedItems.Sum(x=>Convert.ToDouble(x.ActualAmount))));
             sqlParametersList.Add(new SQLParameters("@VatPer",generatePurchaseApprovalRequest.OverAllGST));
             sqlParametersList.Add(new SQLParameters("@TotalAmount",generatePurchaseApprovalRequest.AmountInDigit));
             sqlParametersList.Add(new SQLParameters("@CashPer",generatePurchaseApprovalRequest.OverAllDiscount));
@@ -822,7 +822,7 @@ namespace AdvanceAPI.Repository
                 string FermAlter = "";
                 string FermAdd = "";
                
-                using (DataTable dt=await _dbContext.SelectAsync(ApprovalSql.GET_VENDER_REGISTER,DBConnections.Advance))
+                using (DataTable dt=await _dbContext.SelectAsync(ApprovalSql.GET_VENDER_REGISTER,sqlParametersList,DBConnections.Advance))
                 {
                     if (dt != null && dt.Rows.Count > 0)
                     {
@@ -862,6 +862,7 @@ namespace AdvanceAPI.Repository
                 sqlParametersList2.Add(new SQLParameters("@Type", details.MyType??string.Empty));
                 sqlParametersList2.Add(new SQLParameters("@ChangeUniqueNo", referenceNo));
                 sqlParametersList2.Add(new SQLParameters("@ChangeIn",details.MyType));
+                sqlParametersList2.Add(new SQLParameters("@Operation","Update Approval"));
                 sqlParametersList2.Add(new SQLParameters("@FromData", ""));
                 sqlParametersList2.Add(new SQLParameters("@ToData", ""));
                 sqlParametersList2.Add(new SQLParameters("@DoneBy", EmpCode));
@@ -877,7 +878,7 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<DataTable> GetApprovalDetails(string EmpCode,string EmpCodeAdd,GetApprovalRequest details)
+        public async Task<DataTable> GetApprovalDetails(string EmpCode,string EmpCodeAdd,AprrovalsListRequest details)
         {
             try
             {
@@ -886,26 +887,29 @@ namespace AdvanceAPI.Repository
                 sqlParametersList.Add(new SQLParameters("@Session", details.Session));
                 sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode));
                 sqlParametersList.Add(new SQLParameters("@EmpCodeAdd", EmpCodeAdd));
-                sqlParametersList.Add(new SQLParameters("@Limit", details.Limit));
-                sqlParametersList.Add(new SQLParameters("@Offset", details.Page));
+                sqlParametersList.Add(new SQLParameters("@Limit", details.NoOfItems));
+                sqlParametersList.Add(new SQLParameters("@Offset", details.ItemsFrom));
+                if (!string.IsNullOrEmpty(details.ReferenceNo))
+                {
+                    Condition += " and `ReferenceNo`=@ReferenceNo";
+                    sqlParametersList.Add(new SQLParameters("@ReferenceNo", details.ReferenceNo));
+                }
                 if (!string.IsNullOrEmpty(details.CampusCode.ToString())) //camppus code
                 {
                     Condition += " AND CampusCode=@CampusCode";
-                    sqlParametersList.Add(new SQLParameters("@CampusCode", EmpCode));
+                    sqlParametersList.Add(new SQLParameters("@CampusCode", details.CampusCode));
                 }
-
                 if (!string.IsNullOrEmpty(details.Department))
                 {
                     Condition += " And ForDepartment==@Department";
                     sqlParametersList.Add(new SQLParameters("@Department", details.Department));
                 }
-
                 if (!string.IsNullOrEmpty(details.Status))
                 {
                     switch (details.Status)
                     {
                         case "Pending My":
-                            Condition += " And And `Status`='Pending' And ( (App1ID=@EmpCode && App1Status='Pending') || (App2ID=@EmpCode && App2Status='Pending')  || (App3ID=@EmpCode && App3Status='Pending')  || (App4ID=@EmpCode && App4Status='Pending') || (App1ID=@EmpCodeAdd && App1Status='Pending') || (App2ID=@EmpCodeAdd && App2Status='Pending')  || (App3ID=@EmpCodeAdd && App3Status='Pending')  || (App4ID=@EmpCodeAdd && App4Status='Pending') )";
+                            Condition += " And  `Status`='Pending' And ( (App1ID=@EmpCode && App1Status='Pending') || (App2ID=@EmpCode && App2Status='Pending')  || (App3ID=@EmpCode && App3Status='Pending')  || (App4ID=@EmpCode && App4Status='Pending') || (App1ID=@EmpCodeAdd && App1Status='Pending') || (App2ID=@EmpCodeAdd && App2Status='Pending')  || (App3ID=@EmpCodeAdd && App3Status='Pending')  || (App4ID=@EmpCodeAdd && App4Status='Pending') )";
                         break;
                         case "Pending All":
                             Condition += " And `Status`=@Status";
@@ -927,5 +931,190 @@ namespace AdvanceAPI.Repository
             }
         }
 
+        public async Task<DataTable> GetBaseUrl()
+        {
+            try
+            {
+                return await _dbContext.SelectAsync(ApprovalSql.GET_BASE_URL, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetBaseUrl.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckPassApprovalValidExists(string? employeeId, string? referenceNo, string? authorityNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                string passQueryPart = $"  App{authorityNo}ID=@AppById";
+                parameters.Add(new SQLParameters("@AppById", employeeId ?? string.Empty));
+
+                string query = ApprovalSql.CHECK_STATUS_ACTION_APPROVAL_VALID_EXISTS.Replace("@AppNumberCondition", passQueryPart);
+
+                return await _dbContext.SelectAsync(query, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CheckPassApprovalValidExists.");
+                throw;
+            }
+        }
+
+        public async Task<int> ApproveApprovalRequest(string? employeeId, string? employeeName, string? designation, PassApprovalRequest? passRequest)
+        {
+            try
+            {
+
+                if (passRequest != null && passRequest.AproveRemark != null && string.IsNullOrWhiteSpace(passRequest?.AproveRemark))
+                {
+                    passRequest.AproveRemark = "No";
+                }
+
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", passRequest?.ReferenceNo ?? string.Empty));
+
+                string passQueryPart = $"App{passRequest?.AuthorityNumber}Status='Approved',App{passRequest?.AuthorityNumber}DoneOn=now(),App{passRequest?.AuthorityNumber}ID=@AppById,App{passRequest?.AuthorityNumber}Name=@AppByName,App{passRequest?.AuthorityNumber}Designation=@AppByDesignation,IniFrom=IF(IniFrom is NULL, CONCAT('App-',@AppNumber,' : ', @Reason),CONCAT(IniFrom,'|','App-',@AppNumber,' : ', @Reason))";
+                parameters.Add(new SQLParameters("@AppById", employeeId ?? string.Empty));
+                parameters.Add(new SQLParameters("@AppByName", employeeName ?? string.Empty));
+                parameters.Add(new SQLParameters("@AppByDesignation", designation ?? string.Empty));
+                parameters.Add(new SQLParameters("@AppNumber", passRequest?.AuthorityNumber ?? string.Empty));
+                parameters.Add(new SQLParameters("@Reason", passRequest?.AproveRemark?.Trim() ?? string.Empty));
+
+                string query = ApprovalSql.APPROVE_REJECT_APPROVAL.Replace("@PassQueryPart", passQueryPart);
+
+                return await _dbContext.DeleteInsertUpdateAsync(query, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during ApproveApprovalRequest.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetStatusApprovalForFinalStatus(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_FINAL_STATUS_TO_PASS_APPROVAL, parameters, DBConnections.Advance);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e, "Error during GetStatusApprovalForFinalStatus.");
+                throw;
+            }
+        }
+
+        public async Task<int> UpdateApprovalFinalApproved(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                await _dbContext.SelectAsync(ApprovalSql.UPDATE_APPROVAL_SUMMARY_FINAL_STATUS_APPROVED, parameters, DBConnections.Advance);
+                await _dbContext.SelectAsync(ApprovalSql.UPDATE_APPROVAL_DETAIL_FINAL_STATUS_APPROVED, parameters, DBConnections.Advance);
+
+                return 1;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e, "Error during GetStatusApprovalForFinalStatus.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckIsVivekSirApprovedApproval(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_IS_VIVEK_SIR_APPROVED_APPROVAL, parameters, DBConnections.Advance);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e, "Error during CheckIsVivekSirApprovedApproval.");
+                throw;
+            }
+        }
+
+        public async Task<int> RejectApprovalRequest(string? employeeId, string? employeeName, string? designation, RejectACancelpprovalRequest? rejectRequest)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", rejectRequest?.ReferenceNo ?? string.Empty));
+
+                string passQueryPart = $"App{rejectRequest?.AuthorityNumber}Status='Rejected',App{rejectRequest?.AuthorityNumber}DoneOn=now(),App{rejectRequest?.AuthorityNumber}ID=@AppById,App{rejectRequest?.AuthorityNumber}Name=@AppByName,App{rejectRequest?.AuthorityNumber}Designation=@AppByDesignation,`Status`='Rejected',RejectionReason=@RejectionReason ";
+
+                parameters.Add(new SQLParameters("@AppById", employeeId ?? string.Empty));
+                parameters.Add(new SQLParameters("@AppByName", employeeName ?? string.Empty));
+                parameters.Add(new SQLParameters("@AppByDesignation", designation ?? string.Empty));
+                parameters.Add(new SQLParameters("@RejectionReason", rejectRequest?.Reason?.Trim() ?? string.Empty));
+
+                string query = ApprovalSql.APPROVE_REJECT_APPROVAL.Replace("@PassQueryPart", passQueryPart);
+
+                return await _dbContext.DeleteInsertUpdateAsync(query, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during RejectApprovalRequest.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckCanCancelApproval(string? employeeId, string? referenceNo, string? authorityNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                string passQueryPart = $" AND App{authorityNo}ID=@AppById";
+                parameters.Add(new SQLParameters("@AppById", employeeId ?? string.Empty));
+                parameters.Add(new SQLParameters("@MemberNumber", authorityNo ?? string.Empty));
+
+                string query = ApprovalSql.CHECK_CAN_CANCEL_APPROVAL.Replace("@AppNumberCondition", passQueryPart);
+
+                return await _dbContext.SelectAsync(query, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CheckCanCancelApproval.");
+                throw;
+            }
+        }
+
+        public async Task<int> CancelApprovalRequest(string? employeeId, string? employeeName, RejectACancelpprovalRequest? cancelRequest)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", cancelRequest?.ReferenceNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@EmployeeName", employeeName?.ToUpper() ?? string.Empty));
+                parameters.Add(new SQLParameters("@CancelledReason", cancelRequest?.Reason?.Replace("'", "")?.Trim() ?? string.Empty));
+                parameters.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
+
+
+                return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.CANCEL_APPROVAL, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CancelApprovalRequest.");
+                throw;
+            }
+        }
     }
 }

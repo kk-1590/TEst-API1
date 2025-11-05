@@ -15,11 +15,13 @@ namespace AdvanceAPI.Services.Approval
         private readonly IApprovalRepository _approvalRepository;
         private readonly IGeneral _generalService;
         private readonly IInclusiveService _inclusiveService;
-        public ApprovalService(IApprovalRepository approvalRepository, IGeneral generalService, IInclusiveService inclusiveService)
+        private readonly IAccountRepository _accountRepository;
+        public ApprovalService(IApprovalRepository approvalRepository, IGeneral generalService, IInclusiveService inclusiveService, IAccountRepository accountRepository)
         {
             _approvalRepository = approvalRepository;
             _generalService = generalService;
             _inclusiveService = inclusiveService;
+            _accountRepository = accountRepository;
         }
         public async Task<ApiResponse> AddItemDraft(AddStockItemRequest AddStockItem,string EmpCode)
         {
@@ -616,8 +618,16 @@ namespace AdvanceAPI.Services.Approval
             }
         }
 
-        public async Task<ApiResponse> GetPurchaseApproval( string EmpCode,string EmpCodeAdd,GetApprovalRequest details)
+        public async Task<ApiResponse> GetPurchaseApproval( string EmpCode,string EmpCodeAdd,AprrovalsListRequest details)
         {
+            //await _account.GetAdditionalEmployeeCode(loginRequest?.UserId);
+            DataTable d = await _accountRepository.GetAdditionalEmployeeCode(EmpCode);
+            if (d.Rows.Count > 0)
+            {
+                EmpCodeAdd = d.Rows[0][0].ToString();
+            }
+            
+            
             //Task<DataTable> GetApprovalDetails(string EmpCode,string EmpCodeAdd,GetApprovalRequest details)
             using (DataTable dt=await _approvalRepository.GetApprovalDetails(EmpCode,EmpCodeAdd,details))
             {
@@ -631,8 +641,24 @@ namespace AdvanceAPI.Services.Approval
                        pd.IsRejectable = false;
                     }
                     
+                    pd.AuthorityNumber = GetAuthNo(dr, EmpCode,EmpCodeAdd);
+                    pd.CanApproval = CanApprove(dr, EmpCode,EmpCodeAdd);
+                    pd.CanCancel = CanCancel(dr, EmpCode, EmpCodeAdd);
+                    if (_generalService.IsFileExists($"Uploads/Approvals/{dr["ReferenceNo"].ToString()}.xlsx"))
+                    {
+                        pd.IsExcelFile = true;
+                        pd.ExcelFileUrl= $"Uploads/Approvals/{dr["ReferenceNo"].ToString()}.xlsx";
+                    }
+                    else
+                    {
+                        pd.IsExcelFile = false;
+                        pd.ExcelFileUrl= "";
+                    }
+                    
                     pd.EncRelativePersonID = _generalService.Encrypt(dr["RelativePersonID"].ToString());
+                    pd.OtherDetails = dr["Test"].ToString();
                     string[] splt = dr["Test"].ToString().Split('$');
+                    pd.VendorName= splt[3];
                     pd.VendorId = splt[2];
                     pd.Department = splt[1];
                     pd.CampusName = dr["CampusName"].ToString();
@@ -643,9 +669,205 @@ namespace AdvanceAPI.Services.Approval
                     pd.TotalAmount = dr["TotalAmount"].ToString();
                     pd.BudgetStatus = dr["BudgetStatus"].ToString();
                     pd.UploadBy = dr["IniName"].ToString();
+                    pd.IniName=dr["RelativePersonName"].ToString();
+                    pd.ReferenceNo=dr["ReferenceNo"].ToString();
+                    pd.PreviousCancelRemark=dr["PreviousCancelRemark"].ToString();
+                    pd.CancelledOn = dr["CancelledOn"].ToString();
+                    pd.CancelledReason = dr["CancelledReason"].ToString();
+                    pd.RejectedReason = dr["RejectedReason"].ToString();
+                    pd.CloseOn = dr["CloseOn"].ToString();
+                    pd.CloseReason = dr["CloseReason"].ToString();
+                    pd.ByPass = dr["ByPass"].ToString();
+                    pd.BillId = dr["BillId"].ToString();
+                    
+                    pd.App1Name=dr["App1Name"].ToString();
+                    pd.App1On=dr["App1On"].ToString();
+                    pd.App1Id=dr["App1ID"].ToString();
+                    pd.App1Status=dr["App1Status"].ToString();
+                    
+                    pd.App2Name=dr["App2Name"].ToString();
+                    pd.App2On=dr["App2On"].ToString();
+                    pd.App2Id=dr["App2ID"].ToString();
+                    pd.App2Status=dr["App2Status"].ToString();
+                    
+                    pd.App3Name=dr["App3Name"].ToString();
+                    pd.App3On=dr["App3On"].ToString();
+                    pd.App3Id=dr["App3ID"].ToString();
+                    pd.App3Status=dr["App3Status"].ToString();
+                    
+                    pd.App4Name=dr["App4Name"].ToString();
+                    pd.App4On=dr["App4On"].ToString();
+                    pd.App4Id=dr["App4ID"].ToString();
+                    pd.App4Status=dr["App4Status"].ToString();
+
+                    pd.FinalStat = dr["FinalStat"].ToString();
+                    
+
+                    lst.Add(pd);
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
+            }
+            
+        }
+
+        public int GetAuthNo(DataRow dr,string EmpCode,string EmpCodeAdd)
+        {
+            if (!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App1ID"].ToString() == EmpCode || dr["App1ID"].ToString() == EmpCodeAdd ))
+            {
+                return 1;
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(dr["App2ID"].ToString()) &&(dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == EmpCodeAdd))
+                {
+                   return 2;
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(dr["App3ID"].ToString()) && (dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == EmpCodeAdd))
+                    {
+                        return 3;
+                    }
+                    else
+                    {
+                        if ( !string.IsNullOrEmpty(dr["App4ID"].ToString()) && (dr["App4ID"].ToString()==EmpCode || dr["App4ID"].ToString()==EmpCodeAdd))
+                        {
+                            return 4;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
                 }
             }
-            return new ApiResponse(StatusCodes.Status200OK, "", "");
+        }
+
+        public bool CanApprove(DataRow dr, string EmpCode,string EmpCodeAdd)
+        {
+            if (((dr["App1ID"].ToString() == EmpCode || dr["App1ID"].ToString() == EmpCodeAdd ) && dr["App1Status"].ToString() == "Pending") ||
+                ((dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString()==EmpCodeAdd) && dr["App2Status"].ToString() == "Pending") ||
+                ((dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString()==EmpCodeAdd) && dr["App3Status"].ToString() == "Pending") ||
+                ((dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString()==EmpCodeAdd) && dr["App4Status"].ToString() == "Pending"))
+            {
+                return true;
+            }
+
+            else
+            {
+                return false;   
+            }
+        }
+
+        public bool CanCancel(DataRow dr, string EmpCode,string AdditinalCode)
+        {
+            if (dr["Status"].ToString() == "Approved" && dr["BillId"].ToString().Length <= 0)
+            {
+                if (!(dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode ) && dr["ByPass"].ToString().Contains("Member2,"))
+                {
+                    return true;
+                }if (!(dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode ) && dr["ByPass"].ToString().Contains("Member2,"))
+                {
+                    return true;
+                }if (!(dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode ) && dr["ByPass"].ToString().Contains("Member2,"))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<ApiResponse> ValidateRepairWarrnty(string CampusCode,string SRNo)
+        {
+            string baseurl = "http://hostel.glauniversity.in:84/inventoryservices.asmx/warrentyservice";
+            using (DataTable d=await _approvalRepository.GetBaseUrl())
+            {
+                DataRow[] dr = d.Select("Type='WebService' and Tag='BaseUrlWarrenty'");
+                if (dr.Length > 0)
+                {
+                    baseurl = dr[0][1].ToString();
+                }
+
+                string result =  _inclusiveService.CallWebService(baseurl,  SRNo,"@1@","",CampusCode.ToString());
+                return new ApiResponse(StatusCodes.Status200OK, "Success",result);
+            }
+        }
+
+        public async Task<ApiResponse> PassPurchaseApproval(string? employeeCode, PassApprovalRequest? passRequest)
+        {
+
+            using (DataTable dtIsExist = await _approvalRepository.CheckPassApprovalValidExists(employeeCode, passRequest?.ReferenceNo, passRequest?.AuthorityNumber))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exist with given reference no to approve.");
+                }
+            }
+
+            EmployeeDetails employeeDetails = await _inclusiveService.GetEmployeeDetailsByEmployeeCode(employeeCode ?? string.Empty);
+
+            await _approvalRepository.ApproveApprovalRequest(employeeCode, employeeDetails?.Name, employeeDetails?.Designation, passRequest);
+
+            using (DataTable dt = await _approvalRepository.GetStatusApprovalForFinalStatus(passRequest?.ReferenceNo))
+            {
+                if (dt.Rows.Count > 0 && dt.Rows[0][0]?.ToString() == "Approved")
+                {
+                    await _approvalRepository.UpdateApprovalFinalApproved(passRequest?.ReferenceNo);
+                }
+            }
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success");
+        }
+
+        public async Task<ApiResponse> RejectPurchaseApproval(string? employeeCode, RejectACancelpprovalRequest? rejectRequest)
+        {
+
+            using (DataTable dtIsExist = await _approvalRepository.CheckPassApprovalValidExists(employeeCode, rejectRequest?.ReferenceNo, rejectRequest?.AuthorityNumber))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exist with given reference no to reject.");
+                }
+            }
+
+            using (DataTable dtVivekSirApproved = await _approvalRepository.CheckIsVivekSirApprovedApproval(rejectRequest?.ReferenceNo))
+            {
+                if (dtVivekSirApproved.Rows.Count > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! You cannot delete this record due to final approval, Approved by concerned authority.");
+                }
+            }
+
+            EmployeeDetails employeeDetails = await _inclusiveService.GetEmployeeDetailsByEmployeeCode(employeeCode ?? string.Empty);
+
+            await _approvalRepository.RejectApprovalRequest(employeeCode, employeeDetails?.Name, employeeDetails?.Designation, rejectRequest);
+
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success");
+        }
+
+        public async Task<ApiResponse> CancelPurchaseApproval(string? employeeCode, RejectACancelpprovalRequest? cancelRequest)
+        {
+            using (DataTable dtIsExist = await _approvalRepository.CheckCanCancelApproval(employeeCode, cancelRequest?.ReferenceNo, cancelRequest?.AuthorityNumber))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exist with given reference no to cancel.");
+                }
+            }
+
+            EmployeeDetails employeeDetails = await _inclusiveService.GetEmployeeDetailsByEmployeeCode(employeeCode ?? string.Empty);
+
+            await _approvalRepository.CancelApprovalRequest(employeeCode, employeeDetails?.Name, cancelRequest);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success");
         }
 
     }

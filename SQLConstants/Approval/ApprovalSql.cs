@@ -94,12 +94,29 @@ public class ApprovalSql
 
     public const string UPDATE_LOG =
         "insert into changeslog (Type,ChangeUniqueNo,ChangeIn,FromData,ToData,Operation,DoneOn,DoneBy,DoneFrom) values (@Type,@ChangeUniqueNo,@ChangeIn,@FromData,@ToData,@Operation,now(),@DoneBy,@IpAddress)";
-
+    public const string GET_BASE_URL="SELECT Tag,Site,Type from gla_student_management.siteurls where true ";
     #region PassApproval
 
-    public const string GET_APPROVAL_DETAILS = "Select PreviousCancelRemark,CAST(CONCAT(AdditionalName,'$',ForDepartment,'$',CAST(VendorID as CHAR),'$',FirmName,'$',RelativePersonID,'$',RelativePersonName)  as CHAR) as 'Test',IF(`Status`='Rejected',CONCAT('Rejected By : ',IF(App1Status='Rejected',App1Name,IF(App2Status='Rejected',App2Name,IF(App3Status='Rejected',App3Name,App4Name))),'<br/>Reason : ',IFNULL(RejectionReason,'N/A')),'') 'RejectedReason',RelativePersonID,RelativePersonName,ReferenceNo,`Session`,MyType,Purpose,TotalItem,TotalAmount,`Status`,DATE_FORMAT(ExtendedBillDate,'%d %b, %y') 'ExeOn',IniName,DATE_FORMAT(AppDate,'%d %b, %y') 'AppDate',DATE_FORMAT(IniOn,'%d %b, %y') 'IniOn',App1Name,CampusName, App2Name,App3Name,App4Name,App1Status,App2Status,App3Status,App4Status,IFNULL(DATE_FORMAT(App1DoneOn,'%d %b, %y'),'NA') 'App1On',IFNULL(DATE_FORMAT(App2DoneOn,'%d %b, %y'),'NA') 'App2On',IFNULL(DATE_FORMAT(App3DoneOn,'%d %b, %y'),'NA') 'App3On',IFNULL(DATE_FORMAT(App4DoneOn,'%d %b, %y'),'NA') 'App4On',App1ID,App2ID,App3ID,App4ID,ByPass,BillId,CancelledReason,DATE_FORMAT(CancelledOn,'%d %b, %y') 'CancelledOn',CancelledBy,CloseReason,DATE_FORMAT(CloseOn,'%d %b, %y') 'CloseOn',CloseBy,IF(`Status`='Pending' And HOUR(TIMEDIFF(now(),IniOn))>=0,'Y','N') 'FinalStat',BudgetRequired,BudgetAmount,PreviousTaken,CurStatus,BudgetStatus,BudgetReferenceNo from purchaseapprovalsummary where true @AdditinalQuery limit @Limit offset @Offset";
+    public const string GET_APPROVAL_DETAILS = "Select PreviousCancelRemark,CAST(CONCAT(AdditionalName,'$',ForDepartment,'$',CAST(VendorID as CHAR),'$',FirmName,'$',RelativePersonID,'$',RelativePersonName)  as CHAR) as 'Test',IF(`Status`='Rejected',CONCAT('Rejected By : ',IF(App1Status='Rejected',App1Name,IF(App2Status='Rejected',App2Name,IF(App3Status='Rejected',App3Name,App4Name))),'<br/>Reason : ',IFNULL(RejectionReason,'N/A')),'') 'RejectedReason',RelativePersonID,RelativePersonName,ReferenceNo,`Session`,MyType,Purpose,TotalItem,TotalAmount,`Status`,DATE_FORMAT(ExtendedBillDate,'%d %b, %y') 'ExeOn',IniName,DATE_FORMAT(AppDate,'%d %b, %y') 'AppDate',DATE_FORMAT(IniOn,'%d %b, %y') 'IniOn',App1Name,CampusName, App2Name,App3Name,App4Name,App1Status,App2Status,App3Status,App4Status,IFNULL(DATE_FORMAT(App1DoneOn,'%d %b, %y'),'NA') 'App1On',IFNULL(DATE_FORMAT(App2DoneOn,'%d %b, %y'),'NA') 'App2On',IFNULL(DATE_FORMAT(App3DoneOn,'%d %b, %y'),'NA') 'App3On',IFNULL(DATE_FORMAT(App4DoneOn,'%d %b, %y'),'NA') 'App4On',App1ID,App2ID,App3ID,App4ID,ByPass,BillId,CancelledReason,DATE_FORMAT(CancelledOn,'%d %b, %y') 'CancelledOn',CancelledBy,CloseReason,DATE_FORMAT(CloseOn,'%d %b, %y') 'CloseOn',CloseBy,IF(`Status`='Pending' And HOUR(TIMEDIFF(now(),IniOn))>=0,'Y','N') 'FinalStat',BudgetRequired,BudgetAmount,PreviousTaken,CurStatus,BudgetStatus,BudgetReferenceNo from purchaseapprovalsummary where true @AdditinalQuery ORDER BY IniOn,`Status` limit @Limit offset @Offset";
+
+    public const string CHECK_STATUS_ACTION_APPROVAL_VALID_EXISTS = "Select 1 from advances.purchaseapprovalsummary where ReferenceNo=@ReferenceNo AND `Status`='Pending' AND @AppNumberCondition";
+
+    public const string APPROVE_REJECT_APPROVAL = "update purchaseapprovalsummary set @PassQueryPart where  ReferenceNo=@ReferenceNo";
+
+    public const string CHECK_FINAL_STATUS_TO_PASS_APPROVAL = "Select if(App1ID is not NULL And App1Status='Pending','Pending',if(App2ID is not NULL And App2Status='Pending','Pending',if(App3ID is not NULL And App3Status='Pending','Pending',if(App4ID is not NULL And App4Status='Pending','Pending','Approved')))) As 'FinalStatus' from purchaseapprovalsummary where ReferenceNo=@ReferenceNo";
+
+    public const string UPDATE_APPROVAL_SUMMARY_FINAL_STATUS_APPROVED = "update purchaseapprovalsummary set `Status`='Approved'  where `Status`='Pending' And ReferenceNo=@ReferenceNo";
+
+    public const string UPDATE_APPROVAL_DETAIL_FINAL_STATUS_APPROVED = "update purchaseapprovalsummary set `Status`='Approved'  where `Status`='Pending' And ReferenceNo=@ReferenceNo";
+
+    public const string CHECK_IS_VIVEK_SIR_APPROVED_APPROVAL = "SELECT 1 from advances.purchaseapprovalsummary where ReferenceNo=@ReferenceNo AND App4ID='GLAVIVEK' AND App4Status='Approved'";
+
+    public const string CHECK_CAN_CANCEL_APPROVAL = "SELECT 1 FROM `purchaseapprovalsummary` WHERE ReferenceNo=@ReferenceNo AND `Status`='Approved' @AppNumberCondition AND (BillId IS NULL OR BillId='')  AND ( ByPass IS NULL OR  ByPass NOT LIKE CONCAT('%Member',@MemberNumber,'%') ) ";
+
+    public const string CANCEL_APPROVAL = "update purchaseapprovalsummary set Status='Cancelled',CancelledReason=@CancelledReason,CancelledOn=now(),CancelledBy=@EmployeeName,CancelledFrom=@IpAddress where  ReferenceNo=@ReferenceNo";
+
 
     #endregion
 
-    
+
 }

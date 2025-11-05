@@ -120,7 +120,7 @@ namespace AdvanceAPI.Controllers
         }
         [HttpPut]
         [Route("lock-details/{RefNo}")]
-        public async Task<IActionResult> SubmitVendorDetailsLock([FromForm] SubmitVenderDetailsModel model,[FromRoute]string RefNo)
+        public async Task<IActionResult> SubmitVendorDetailsLock(SubmitVenderDetailsModel model,[FromRoute]string RefNo)
         {
             try
             {
@@ -133,7 +133,7 @@ namespace AdvanceAPI.Controllers
                 // {
                 //     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 // }
-                if (model.File.Length > 0)
+                if (model.File!=null && model.File.Length > 0)
                 {
                     if (!_general.ValidatePdfFile(model.File))
                     {

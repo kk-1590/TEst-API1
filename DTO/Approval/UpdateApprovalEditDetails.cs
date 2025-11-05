@@ -4,7 +4,7 @@ namespace AdvanceAPI.DTO.Approval;
 
 public class UpdateApprovalEditDetails
 {
-    public IFormFile File { get; set; }
+     public IFormFile? File { get; set; }
     [Required]
     public string? Maad { get; set; }
     [Required]

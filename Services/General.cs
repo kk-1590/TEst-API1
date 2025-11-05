@@ -166,7 +166,7 @@ namespace AdvanceAPI.Services
                     clearText = Convert.ToBase64String(ms.ToArray());
                 }
             }
-            return clearText;
+            return clearText.Replace("|", "").Replace("\\", "").Replace("<", "").Replace(">", "").Replace("/", "").Replace(":", "").Replace("?", "").Replace("*", "").Replace("+", "");
         }
 
         public string ToTitleCase(string input)

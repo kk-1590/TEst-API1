@@ -382,5 +382,35 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+
+        public async Task<DataTable> GetApprovalCancellationReasons()
+        {
+            try
+            {
+                return await _dbContext.SelectAsync(InclusiveSql.GET_APPROVAL_CANCELLATION_REASONS, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalCancellationReasons.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetEmployeeDetails(string? employeeCode)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>()
+                {
+                    new SQLParameters("@EmployeeId", employeeCode ?? string.Empty),
+                };
+
+                return await _dbContext.SelectAsync(InclusiveSql.GET_EMPLOYEE_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetEmployeeDetails.");
+                throw;
+            }
+        }
     }
 }

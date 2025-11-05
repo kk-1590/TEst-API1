@@ -244,6 +244,21 @@ namespace AdvanceAPI.Controllers
             }
         }
 
-       
+        [HttpGet]
+        [Route("get-approval-cancellation-reasons")]
+        public async Task<IActionResult> GetApprovalCancellationReasons()
+        {
+            try
+            {
+                ApiResponse apiResponse = await _inclusiveService.GetApprovalCancellationReasons();
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-approval-cancellation-reasons....");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
     }
 }

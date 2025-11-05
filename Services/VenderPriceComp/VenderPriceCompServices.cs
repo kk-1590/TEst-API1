@@ -40,7 +40,7 @@ public class VenderPriceCompServices : IVenderPriceComparisionServices
                     if (chkDetails.Rows.Count > 0)
                     {
                        // myLock = chkDetails.Rows[0][0].ToString()??string.Empty;
-                       basicDetailsResponse.Url = chkDetails.Rows[0][1].ToString()??string.Empty;
+                       basicDetailsResponse.Url = "Reports/PriceComparison/"+ chkDetails.Rows[0][1].ToString()+".pdf"??string.Empty;
                     }
                 }
                 // basicDetailsResponse.Url = Details.Rows[0]["Url"].ToString();

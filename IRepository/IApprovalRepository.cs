@@ -47,6 +47,16 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetEditApprovalDetails(string? referenceNo);
         Task<DataTable> GetMyApprovalsCount(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search);
         Task<int> EditApprovalDetails(string? referenceNo, UpdateApprovalEditDetails details, string EmpCode);
-        Task<DataTable> GetApprovalDetails(string EmpCode, string EmpCodeAdd, GetApprovalRequest details);
+        Task<DataTable> GetApprovalDetails(string EmpCode, string EmpCodeAdd, AprrovalsListRequest details);
+        Task<DataTable> GetBaseUrl();
+
+        Task<int> ApproveApprovalRequest(string? employeeId, string? employeeName, string? designation, PassApprovalRequest? passRequest);
+        Task<DataTable> CheckPassApprovalValidExists(string? employeeId, string? referenceNo, string? authorityNo);
+        Task<DataTable> GetStatusApprovalForFinalStatus(string? referenceNo);
+        Task<int> UpdateApprovalFinalApproved(string? referenceNo);
+        Task<DataTable> CheckIsVivekSirApprovedApproval(string? referenceNo);
+        Task<int> RejectApprovalRequest(string? employeeId, string? employeeName, string? designation, RejectACancelpprovalRequest? rejectRequest);
+        Task<DataTable> CheckCanCancelApproval(string? employeeId, string? referenceNo, string? authorityNo);
+        Task<int> CancelApprovalRequest(string? employeeId, string? employeeName, RejectACancelpprovalRequest? cancelRequest);
     }
 }

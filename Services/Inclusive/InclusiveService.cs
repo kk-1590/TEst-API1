@@ -5,8 +5,7 @@ using AdvanceAPI.ENUMS.Inclusive;
 using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Inclusive;
-using AdvanceAPI.Services.Account;
-using System.Buffers.Text;
+
 using System.Data;
 using System.Net;
 using System.Web;
@@ -163,7 +162,7 @@ namespace AdvanceAPI.Services.Inclusive
             }
             return  new ApiResponse(StatusCodes.Status200OK,"Success",lst);
         }
-        private string CallWebService2(string url, string rno, string campusCode, string host, string mnth, string yr)
+        public string CallWebService2(string url, string rno, string campusCode, string host, string mnth, string yr)
         {
             string strPost = "itemcode=" + rno + "&Campus=" + campusCode;
             StreamWriter myWriter = null;
@@ -205,7 +204,48 @@ namespace AdvanceAPI.Services.Inclusive
         }
 
 
+        public string CallWebService(string url, string rno, string host, string mnth, string yr)
+        {
+            string result = "";
+            string strPost = "Serialno=" + rno+"&Campus="+yr;
+            StreamWriter myWriter = null;
+            HttpWebRequest objRequest = (HttpWebRequest)WebRequest.Create(url + "?" + strPost);
+            //BTN_SAVE.Text = url + "?" + strPost;
 
+            objRequest.Method = "POST";
+            objRequest.Timeout = 200000; // this should be greater than IIS / web server's timeout
+            objRequest.ContentLength = strPost.Length;
+            objRequest.ContentType = "application/x-www-form-urlencoded";
+            objRequest.KeepAlive = false;
+            try
+            {
+                myWriter = new StreamWriter(objRequest.GetRequestStream());
+                myWriter.Write(strPost);
+
+            }
+            catch (Exception e)
+            {
+                return "";
+            }
+            finally
+            {
+                myWriter.Close();
+            }
+            myWriter.Close();
+            HttpWebResponse objResponse = (HttpWebResponse)objRequest.GetResponse();
+            StreamReader sr = new StreamReader(objResponse.GetResponseStream());
+            {
+                result = sr.ReadToEnd();
+                result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?>", "").Replace("<string xmlns=\"http://tempuri.org/\">", "").Replace("</string>", "");
+
+                result = HttpUtility.HtmlDecode(result);
+                sr.Close();
+            }
+
+            //BTN_DISPLAY.Text = result;
+            return result;
+        }
+        
         public async Task<ApiResponse> GetAllMaad()
         {
             DataTable maadList = await _inclusive.GetAllMaad();
@@ -430,7 +470,32 @@ namespace AdvanceAPI.Services.Inclusive
                 throw;
             }
         }
+        public async Task<ApiResponse> GetApprovalCancellationReasons()
+        {
+            DataTable reasonsList = await _inclusive.GetApprovalCancellationReasons();
+            List<string> allReasons = new List<string>();
+            foreach (DataRow row in reasonsList.Rows)
+            {
+                string reason = row["Value"]?.ToString() ?? string.Empty;
+                allReasons.Add(reason);
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "Success", allReasons);
 
-        
+        }
+
+        public async Task<EmployeeDetails> GetEmployeeDetailsByEmployeeCode(string? employeeCode)
+        {
+            DataTable employeeTableList = await _inclusive.GetEmployeeDetails(employeeCode);
+            EmployeeDetails employeeDetails = new EmployeeDetails();
+            if (employeeTableList?.Rows.Count > 0)
+            {
+                employeeDetails = new EmployeeDetails(employeeTableList.Rows[0]);
+            }
+            return employeeDetails;
+
+        }
+
+
+
     }
 }

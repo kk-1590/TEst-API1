@@ -45,5 +45,10 @@
 
         public const string GET_FILE_ENC_KEY = "SELECT edkey from gla_student_management.barriers";
 
+        public const string GET_APPROVAL_CANCELLATION_REASONS = "Select Value from othervalues where Type='Cancel Approval' order by Value";
+
+        public const string GET_EMPLOYEE_DETAILS = "Select first_name,deisgnation,santioneddeptt from salary_management.emp_master where employee_code=@EmployeeId;";
+
+
     }
 }
