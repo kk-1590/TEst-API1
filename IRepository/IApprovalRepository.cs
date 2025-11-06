@@ -58,5 +58,8 @@ namespace AdvanceAPI.IRepository
         Task<int> RejectApprovalRequest(string? employeeId, string? employeeName, string? designation, RejectACancelpprovalRequest? rejectRequest);
         Task<DataTable> CheckCanCancelApproval(string? employeeId, string? referenceNo, string? authorityNo);
         Task<int> CancelApprovalRequest(string? employeeId, string? employeeName, RejectACancelpprovalRequest? cancelRequest);
+        Task<DataTable> GetApprovalSummaryAmountDetails(string? referenceNo);
+        Task<DataTable> GetApprovalTotalItemsAndAmount(string? referenceNo);
+        Task<int> UpdateApprovalSummaryItemsCountAmount(string? referenceNo, int? totalItems, double? itemsAmount, int? payableAmount);
     }
 }

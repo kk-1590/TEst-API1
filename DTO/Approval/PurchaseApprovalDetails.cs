@@ -51,7 +51,9 @@ public class PurchaseApprovalDetails
     public string CloseReason{get;set;}
     public string ByPass{get;set;}
     public string BillId{get;set;}
-   
-    
-    
+    public string IniOn { get; internal set; }
+    public string ApprovalDate { get; internal set; }
+    public string UpTo { get; internal set; }
+    public string Purpose { get; internal set; }
+    public string TotalItem { get; internal set; }
 }

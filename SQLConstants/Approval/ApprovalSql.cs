@@ -53,8 +53,8 @@ public class ApprovalSql
     
     public const string GETDRAFTEDITEM="select * from purchaseapprovaldetail_draft where id=@Id";
 
-    public const string GET_MY_APPROVALS = "Select PreviousCancelRemark,ReGenerated,IF(`Status`='Rejected',IF(App1Status='Rejected',App1Name,IF(App2Status='Rejected',App2Name,IF(App3Status='Rejected',App3Name,App4Name))),'') 'RejectBy',IF(`Status`='Rejected', IFNULL(RejectionReason,'N/A'),'') AS 'RejectReason' ,RelativePersonID,RelativePersonName,ReferenceNo,`Session`,CampusName,Purpose,TotalItem,DATE_FORMAT(ExtendedBillDate,'%d %b, %y') 'ExeOn',TotalAmount,`Status`,IniName,DATE_FORMAT(AppDate,'%d %b, %y') 'AppDate',DATE_FORMAT(IniOn,'%d %b, %y') 'IniOn',App1Name,App2Name,App3Name,App4Name,App1Status,App2Status,App3Status,App4Status,IFNULL(DATE_FORMAT(App1DoneOn,'%d %b, %y'),'NA') 'App1On',IFNULL(DATE_FORMAT(App2DoneOn,'%d %b, %y'),'NA') 'App2On',IFNULL(DATE_FORMAT(App3DoneOn,'%d %b, %y'),'NA') 'App3On',IFNULL(DATE_FORMAT(App4DoneOn,'%d %b, %y'),'NA') 'App4On',CancelledReason,DATE_FORMAT(CancelledOn,'%d %b, %y') 'CancelledOn',CancelledBy,CloseReason,DATE_FORMAT(CloseOn,'%d %b, %y') 'CloseOn',CloseBy,IF(`Status`='Pending' And HOUR(TIMEDIFF(now(),IniOn))>=48,'Y','N') 'FinalStat',BudgetRequired,BudgetAmount,PreviousTaken,CurStatus,BudgetStatus,BudgetReferenceNo,BillId,BillRequired,VendorID,ForDepartment,Note,MyType,ExtendedBillDate,AdditionalName,AppCat,CONCAT(IFNULL(CONCAT(App1Name,', '),''),IFNULL(CONCAT(App2Name,', '),''),IFNULL(CONCAT(App3Name,', '),''),IFNULL(CONCAT(App4Name,', '),'')) 'Auth',DATE_FORMAT(AppDate,'%m/%d/%Y') 'AD',DATE_FORMAT(ExtendedBillDate,'%m/%d/%Y') 'EBD' from purchaseapprovalsummary where true @Condition  ORDER BY IniOn,`Status`  LIMIT @LimitItems OFFSET @OffSetItems";
-    
+    public const string GET_MY_APPROVALS = "Select PreviousCancelRemark,ReGenerated,IF(`Status`='Rejected',IF(App1Status='Rejected',App1Name,IF(App2Status='Rejected',App2Name,IF(App3Status='Rejected',App3Name,App4Name))),'') 'RejectBy',IF(`Status`='Rejected', IFNULL(RejectionReason,'N/A'),'') AS 'RejectReason' ,RelativePersonID,RelativePersonName,ReferenceNo,`Session`,CampusName,Purpose,TotalItem,DATE_FORMAT(ExtendedBillDate,'%d %b, %y') 'ExeOn',TotalAmount,`Status`,IniName,DATE_FORMAT(AppDate,'%d %b, %y') 'AppDate',DATE_FORMAT(IniOn,'%d %b, %y') 'IniOn',App1Name,App2Name,App3Name,App4Name,App1Status,App2Status,App3Status,App4Status,IFNULL(DATE_FORMAT(App1DoneOn,'%d %b, %y'),'NA') 'App1On',IFNULL(DATE_FORMAT(App2DoneOn,'%d %b, %y'),'NA') 'App2On',IFNULL(DATE_FORMAT(App3DoneOn,'%d %b, %y'),'NA') 'App3On',IFNULL(DATE_FORMAT(App4DoneOn,'%d %b, %y'),'NA') 'App4On',CancelledReason,DATE_FORMAT(CancelledOn,'%d %b, %y') 'CancelledOn',CancelledBy,CloseReason,DATE_FORMAT(CloseOn,'%d %b, %y') 'CloseOn',CloseBy,IF(`Status`='Pending' And HOUR(TIMEDIFF(now(),IniOn))>=48,'Y','N') 'FinalStat',BudgetRequired,BudgetAmount,PreviousTaken,CurStatus,BudgetStatus,BudgetReferenceNo,BillId,BillRequired,VendorID,ForDepartment,Note,MyType,ExtendedBillDate,AdditionalName,AppCat,CONCAT(IFNULL(CONCAT(App1Name,', '),''),IFNULL(CONCAT(App2Name,', '),''),IFNULL(CONCAT(App3Name,', '),''),IFNULL(CONCAT(App4Name,', '),'')) 'Auth',DATE_FORMAT(AppDate,'%m/%d/%Y') 'AD',DATE_FORMAT(ExtendedBillDate,'%m/%d/%Y') 'EBD',FirmName,FirmPerson,FirmContactNo,ReferenceBillStatus,R_Status as 'RecievingStatus',DATE_FORMAT(R_LastRcvOn,'%d.%m.%Y %r')'LastRecieveOn' from purchaseapprovalsummary where true @Condition  ORDER BY IniOn,`Status`  LIMIT @LimitItems OFFSET @OffSetItems";
+
     public const string GET_MY_APPROVAL_COUNT=  "select count(*) from purchaseapprovalsummary where true @Condition  ORDER BY IniOn,`Status` ";
 
     
@@ -114,6 +114,14 @@ public class ApprovalSql
     public const string CHECK_CAN_CANCEL_APPROVAL = "SELECT 1 FROM `purchaseapprovalsummary` WHERE ReferenceNo=@ReferenceNo AND `Status`='Approved' @AppNumberCondition AND (BillId IS NULL OR BillId='')  AND ( ByPass IS NULL OR  ByPass NOT LIKE CONCAT('%Member',@MemberNumber,'%') ) ";
 
     public const string CANCEL_APPROVAL = "update purchaseapprovalsummary set Status='Cancelled',CancelledReason=@CancelledReason,CancelledOn=now(),CancelledBy=@EmployeeName,CancelledFrom=@IpAddress where  ReferenceNo=@ReferenceNo";
+
+
+
+    public const string GET_APPROVAL_SUMMARY_AMOUNT_DETAILS = "SELECT TotalItem,Amount,TotalAmount,CashPer AS 'Discount',Other AS 'OtherCharges' FROM `purchaseapprovalsummary` where ReferenceNo=@ReferenceNo;";
+
+    public const string GET_APPROVAL_ITEMS_SUMMARY_AMOUNT = "SELECT COUNT(*) AS 'TotalItems',SUM(TotalAmount) AS 'TotalAmount' FROM `purchaseapprovaldetail` where ReferenceNo=@ReferenceNo;";
+
+    public const string UPDATE_APPROVAL_ITEMS_SUMMARY_AMOUNT = "UPDATE purchaseapprovalsummary SET TotalItem=@TotalItem,Amount=@ItemsAmount,TotalAmount=@PayableAmount WHERE ReferenceNo=@ReferenceNo ;";
 
 
     #endregion

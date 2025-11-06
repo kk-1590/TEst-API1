@@ -885,17 +885,17 @@ namespace AdvanceAPI.Repository
             {
                 List<SQLParameters> sqlParametersList = new List<SQLParameters>();
                 string Condition = " And `Session`=@Session And ( App1ID=@EmpCode || App2ID=@EmpCode  || App3ID=@EmpCode  || App4ID=@EmpCode || App1ID=@EmpCodeAdd || App2ID=@EmpCodeAdd  || App3ID=@EmpCodeAdd  || App4ID=@EmpCodeAdd )";
-                sqlParametersList.Add(new SQLParameters("@Session", details.Session));
+                sqlParametersList.Add(new SQLParameters("@Session", details.Session!));
                 sqlParametersList.Add(new SQLParameters("@EmpCode", EmpCode));
                 sqlParametersList.Add(new SQLParameters("@EmpCodeAdd", EmpCodeAdd));
-                sqlParametersList.Add(new SQLParameters("@Limit", details.NoOfItems));
-                sqlParametersList.Add(new SQLParameters("@Offset", details.ItemsFrom));
+                sqlParametersList.Add(new SQLParameters("@Limit", details.NoOfItems!));
+                sqlParametersList.Add(new SQLParameters("@Offset", details.ItemsFrom!));
                 if (!string.IsNullOrEmpty(details.ReferenceNo))
                 {
                     Condition += " and `ReferenceNo`=@ReferenceNo";
                     sqlParametersList.Add(new SQLParameters("@ReferenceNo", details.ReferenceNo));
                 }
-                if (!string.IsNullOrEmpty(details.CampusCode.ToString())) //camppus code
+                if ( !string.IsNullOrEmpty(details.CampusCode)) //camppus code
                 {
                     Condition += " AND CampusCode=@CampusCode";
                     sqlParametersList.Add(new SQLParameters("@CampusCode", details.CampusCode));
@@ -1117,5 +1117,59 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+
+        public async Task<DataTable> GetApprovalSummaryAmountDetails(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_SUMMARY_AMOUNT_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalTotalItemsAndAmount.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetApprovalTotalItemsAndAmount(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                return await _dbContext.SelectAsync(ApprovalSql.GET_APPROVAL_ITEMS_SUMMARY_AMOUNT, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalTotalItemsAndAmount.");
+                throw;
+            }
+        }
+
+
+        public async Task<int> UpdateApprovalSummaryItemsCountAmount(string? referenceNo, int? totalItems, double? itemsAmount, int? payableAmount)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@TotalItem", totalItems ?? 0));
+                parameters.Add(new SQLParameters("@ItemsAmount", itemsAmount ?? 0));
+                parameters.Add(new SQLParameters("@PayableAmount", payableAmount ?? 0));
+
+
+                return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_APPROVAL_ITEMS_SUMMARY_AMOUNT, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during UpdateApprovalSummaryItemsCountAmount.");
+                throw;
+            }
+        }
+
     }
 }

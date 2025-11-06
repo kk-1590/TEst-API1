@@ -26,5 +26,6 @@ namespace AdvanceAPI.IServices.Approval
         Task<ApiResponse> PassPurchaseApproval(string? employeeCode, PassApprovalRequest? passRequest);
         Task<ApiResponse> RejectPurchaseApproval(string? employeeCode, RejectACancelpprovalRequest? rejectRequest);
         Task<ApiResponse> CancelPurchaseApproval(string? employeeCode, RejectACancelpprovalRequest? cancelRequest);
+        Task<ApiResponse> GetApprovalItems(string? referenceNo);
     }
 }

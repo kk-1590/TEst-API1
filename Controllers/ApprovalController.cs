@@ -433,7 +433,7 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
-        [HttpGet]
+        [HttpPost]
         [Route("get-purchase-approval-details")]
         public async Task<IActionResult> getappdetails(AprrovalsListRequest details)
         {
@@ -627,6 +627,29 @@ namespace AdvanceAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During reject-approval-request....");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+
+        [HttpGet]
+        [Route("get-approval-items/{referenceNo}")]
+        public async Task<IActionResult> GetApprovalItems([FromRoute] string? referenceNo)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(referenceNo))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Approval No Found..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.GetApprovalItems(referenceNo);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-approval-items");
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }

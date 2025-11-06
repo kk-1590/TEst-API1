@@ -58,12 +58,24 @@ namespace AdvanceAPI.DTO.Approval
         public string? Authorities { get; set; } = string.Empty;
         public string? ApprovalDate { get; set; } = string.Empty;
         public string? BillDateExtendedShow2 { get; set; } = string.Empty;
+
+        public string? VendorName { get; set; } = string.Empty;
+        public string? VendorPersonaName { get; set; } = string.Empty;
+        public string? VendorPersonaContactNo { get; set; } = string.Empty;
+        public string? ApprovalBillStatus { get; set; } = string.Empty;
+        public string? ReceivingStatus { get; set; } = string.Empty;
+        public string? LastReceiveOn { get; set; } = string.Empty;
+
+
+
         public bool? CanDeleteApproval { get; set; } = false;
         public bool? CanRegenerateApproval { get; set; } = false;
         public bool? CanEditApproval { get; set; } = false;
         public bool? OpenComparisionChart { get; set; } = false;
         public bool? CanLockBillStatus { get; set; } = false;
         public bool? CanOpenExcel { get; set; } = false;
+
+        public bool? CanEditItems { get; set; } = false;
 
         public MyApprovalReponse()
         {
@@ -126,8 +138,15 @@ namespace AdvanceAPI.DTO.Approval
             Authorities = dr["Auth"]?.ToString() ?? String.Empty;
             ApprovalDate = dr["AD"]?.ToString() ?? String.Empty;
             BillDateExtendedShow2 = dr["EBD"]?.ToString() ?? String.Empty;
+            VendorName = dr["FirmName"]?.ToString() ?? String.Empty;
+            VendorPersonaName = dr["FirmPerson"]?.ToString() ?? String.Empty;
+            VendorPersonaContactNo = dr["FirmContactNo"]?.ToString() ?? String.Empty;
+            ApprovalBillStatus = dr["ReferenceBillStatus"]?.ToString() ?? String.Empty;
+            ReceivingStatus = dr["RecievingStatus"]?.ToString() ?? String.Empty;
+            LastReceiveOn = dr["LastRecieveOn"]?.ToString() ?? String.Empty;
             CanDeleteApproval = this.Status == "Pending" && this.App1Status == "Pending" && this.App2Status == "Pending" && this.App3Status == "Pending" && this.App4Status == "Pending" && this.Status == "Pending";
             CanEditApproval = this.CanDeleteApproval == true;
+            CanEditItems = this.CanEditApproval == true;
             CanRegenerateApproval = this.Status == "Rejected" && this.IsReGenerated == "0";
         }
     }

@@ -299,6 +299,14 @@ namespace AdvanceAPI.Services.Approval
                 {
                     MyApprovalReponse approval = new MyApprovalReponse(row);
 
+
+                    approval.InitiatedByName = _generalService.ToTitleCase(approval.InitiatedByName ?? string.Empty);
+                    approval.App1Name = _generalService.ToTitleCase(approval.App1Name ?? string.Empty);
+                    approval.App2Name = _generalService.ToTitleCase(approval.App2Name ?? string.Empty);
+                    approval.App3Name = _generalService.ToTitleCase(approval.App3Name ?? string.Empty);
+                    approval.App4Name = _generalService.ToTitleCase(approval.App4Name ?? string.Empty);
+
+
                     DataTable dtIsComparisonDefined = await _approvalRepository.CheckIsApprovalComparisonDefined(approval.ReferenceNo ?? string.Empty);
 
                     if (dtIsComparisonDefined.Rows.Count > 0 || approval.CanDeleteApproval == true)
@@ -628,19 +636,23 @@ namespace AdvanceAPI.Services.Approval
 
 
             //Task<DataTable> GetApprovalDetails(string EmpCode,string EmpCodeAdd,GetApprovalRequest details)
-            using (DataTable dt = await _approvalRepository.GetApprovalDetails(EmpCode, EmpCodeAdd, details))
+            using (DataTable dt = await _approvalRepository.GetApprovalDetails(EmpCode, EmpCodeAdd!, details))
             {
                 List<PurchaseApprovalDetails> lst = new List<PurchaseApprovalDetails>();
                 foreach (DataRow dr in dt.Rows)
                 {
                     PurchaseApprovalDetails pd = new PurchaseApprovalDetails();
-                    pd.IsRejectable = true;
+                    pd.IsRejectable = false;
                     if (dr["App4ID"].ToString() == "GLAVIVEK" && dr["App4Status"].ToString() == "Approved") // If Vivek sir approved then no body can reject this approval
                     {
                         pd.IsRejectable = false;
                     }
+                    else
+                    {
+                        pd.IsRejectable = CanReject(dr, EmpCode, EmpCodeAdd);
+                    }
 
-                    pd.AuthorityNumber = GetAuthNo(dr, EmpCode, EmpCodeAdd);
+                        pd.AuthorityNumber = GetAuthNo(dr, EmpCode, EmpCodeAdd);
                     pd.CanApproval = CanApprove(dr, EmpCode, EmpCodeAdd);
                     pd.CanCancel = CanCancel(dr, EmpCode, EmpCodeAdd);
                     if (_generalService.IsFileExists($"Uploads/Approvals/{dr["ReferenceNo"].ToString()}.xlsx"))
@@ -654,52 +666,59 @@ namespace AdvanceAPI.Services.Approval
                         pd.ExcelFileUrl = "";
                     }
 
-                    pd.EncRelativePersonID = _generalService.Encrypt(dr["RelativePersonID"].ToString());
-                    pd.OtherDetails = dr["Test"].ToString();
-                    string[] splt = dr["Test"].ToString().Split('$');
+                    pd.EncRelativePersonID = _generalService.Encrypt(dr["RelativePersonID"].ToString() ?? string.Empty);
+                    pd.OtherDetails = dr["Test"].ToString()!;
+                    string[] splt = dr["Test"].ToString()!.Split('$');
                     pd.VendorName = splt[3];
                     pd.VendorId = splt[2];
                     pd.Department = splt[1];
-                    pd.CampusName = dr["CampusName"].ToString();
-                    pd.ApprovalType = dr["MyType"].ToString();
-                    pd.Status = dr["Status"].ToString();
-                    pd.BudgetAmount = dr["BudgetAmount"].ToString();
-                    pd.prevTaken = dr["PreviousTaken"].ToString();
-                    pd.TotalAmount = dr["TotalAmount"].ToString();
-                    pd.BudgetStatus = dr["BudgetStatus"].ToString();
-                    pd.UploadBy = dr["IniName"].ToString();
-                    pd.IniName = dr["RelativePersonName"].ToString();
-                    pd.ReferenceNo = dr["ReferenceNo"].ToString();
-                    pd.PreviousCancelRemark = dr["PreviousCancelRemark"].ToString();
-                    pd.CancelledOn = dr["CancelledOn"].ToString();
-                    pd.CancelledReason = dr["CancelledReason"].ToString();
-                    pd.RejectedReason = dr["RejectedReason"].ToString();
-                    pd.CloseOn = dr["CloseOn"].ToString();
-                    pd.CloseReason = dr["CloseReason"].ToString();
-                    pd.ByPass = dr["ByPass"].ToString();
-                    pd.BillId = dr["BillId"].ToString();
+                    pd.CampusName = dr["CampusName"].ToString() ?? string.Empty;
+                    pd.ApprovalType = dr["MyType"].ToString() ?? string.Empty;
+                    pd.Status = dr["Status"].ToString() ?? string.Empty;
+                    pd.BudgetAmount = dr["BudgetAmount"].ToString() ?? string.Empty;
+                    pd.prevTaken = dr["PreviousTaken"].ToString() ?? string.Empty;
+                    pd.TotalAmount = dr["TotalAmount"].ToString() ?? string.Empty;
+                    pd.BudgetStatus = dr["BudgetStatus"].ToString() ?? string.Empty;
+                    pd.UploadBy = dr["IniName"].ToString() ?? string.Empty;
+                    pd.IniName = dr["RelativePersonName"].ToString() ?? string.Empty;
+                    pd.ReferenceNo = dr["ReferenceNo"].ToString() ?? string.Empty;
+                    pd.PreviousCancelRemark = dr["PreviousCancelRemark"].ToString() ?? string.Empty;
+                    pd.CancelledOn = dr["CancelledOn"].ToString() ?? string.Empty;
+                    pd.CancelledReason = dr["CancelledReason"].ToString() ?? string.Empty;
+                    pd.RejectedReason = dr["RejectedReason"].ToString() ?? string.Empty;
+                    pd.CloseOn = dr["CloseOn"].ToString() ?? string.Empty;
+                    pd.CloseReason = dr["CloseReason"].ToString() ?? string.Empty;
+                    pd.ByPass = dr["ByPass"].ToString() ?? string.Empty;
+                    pd.BillId = dr["BillId"].ToString() ?? string.Empty;
 
-                    pd.App1Name = dr["App1Name"].ToString();
-                    pd.App1On = dr["App1On"].ToString();
-                    pd.App1Id = dr["App1ID"].ToString();
-                    pd.App1Status = dr["App1Status"].ToString();
+                    pd.App1Name = dr["App1Name"].ToString() ?? string.Empty;
+                    pd.App1On = dr["App1On"].ToString() ?? string.Empty;
+                    pd.App1Id = dr["App1ID"].ToString() ?? string.Empty;
+                    pd.App1Status = dr["App1Status"].ToString() ?? string.Empty;
 
-                    pd.App2Name = dr["App2Name"].ToString();
-                    pd.App2On = dr["App2On"].ToString();
-                    pd.App2Id = dr["App2ID"].ToString();
-                    pd.App2Status = dr["App2Status"].ToString();
+                    pd.App2Name = dr["App2Name"].ToString() ?? string.Empty;
+                    pd.App2On = dr["App2On"].ToString() ?? string.Empty;
+                    pd.App2Id = dr["App2ID"].ToString() ?? string.Empty;
+                    pd.App2Status = dr["App2Status"].ToString() ?? string.Empty;
 
-                    pd.App3Name = dr["App3Name"].ToString();
-                    pd.App3On = dr["App3On"].ToString();
-                    pd.App3Id = dr["App3ID"].ToString();
-                    pd.App3Status = dr["App3Status"].ToString();
+                    pd.App3Name = dr["App3Name"].ToString() ?? string.Empty;
+                    pd.App3On = dr["App3On"].ToString() ?? string.Empty;
+                    pd.App3Id = dr["App3ID"].ToString() ?? string.Empty;
+                    pd.App3Status = dr["App3Status"].ToString() ?? string.Empty;
 
-                    pd.App4Name = dr["App4Name"].ToString();
-                    pd.App4On = dr["App4On"].ToString();
-                    pd.App4Id = dr["App4ID"].ToString();
-                    pd.App4Status = dr["App4Status"].ToString();
+                    pd.App4Name = dr["App4Name"].ToString() ?? string.Empty;
+                    pd.App4On = dr["App4On"].ToString() ?? string.Empty;
+                    pd.App4Id = dr["App4ID"].ToString() ?? string.Empty;
+                    pd.App4Status = dr["App4Status"].ToString()??string.Empty;
 
-                    pd.FinalStat = dr["FinalStat"].ToString();
+                    pd.FinalStat = dr["FinalStat"].ToString()??string.Empty;
+                    //ExeOn,AppDate,IniOn
+                    pd.IniOn = dr["IniOn"].ToString()??string.Empty;
+                    pd.ApprovalDate = dr["AppDate"].ToString()??string.Empty;
+                    pd.UpTo = dr["ExeOn"].ToString()??string.Empty;
+                    pd.Purpose = dr["Purpose"].ToString()??string.Empty;
+                    pd.TotalItem = dr["TotalItem"].ToString()??string.Empty;
+                    
 
 
                     lst.Add(pd);
@@ -744,14 +763,14 @@ namespace AdvanceAPI.Services.Approval
 
         public static bool CanApprove(DataRow dr, string EmpCode, string EmpCodeAdd)
         {
-            if (((dr["App1ID"].ToString() == EmpCode || dr["App1ID"].ToString() == EmpCodeAdd) && dr["App1Status"].ToString() == "Pending") ||
-                ((dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == EmpCodeAdd) && dr["App2Status"].ToString() == "Pending") ||
-                ((dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == EmpCodeAdd) && dr["App3Status"].ToString() == "Pending") ||
-                ((dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == EmpCodeAdd) && dr["App4Status"].ToString() == "Pending"))
+            if ((!string.IsNullOrEmpty(dr["App1ID"].ToString()) && ( dr["App1ID"].ToString() == EmpCode || dr["App1ID"].ToString() == EmpCodeAdd) && dr["App1Status"].ToString() == "Pending") ||
+                (!string.IsNullOrEmpty(dr["App2ID"].ToString()) && (dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == EmpCodeAdd) && dr["App2Status"].ToString() == "Pending") ||
+                (!string.IsNullOrEmpty(dr["App3ID"].ToString()) && (dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == EmpCodeAdd) && dr["App3Status"].ToString() == "Pending") ||
+                (!string.IsNullOrEmpty(dr["App4ID"].ToString()) && (dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == EmpCodeAdd) && dr["App4Status"].ToString() == "Pending"))
             {
+               
                 return true;
             }
-
             else
             {
                 return false;
@@ -762,15 +781,15 @@ namespace AdvanceAPI.Services.Approval
         {
             if (dr["Status"].ToString() == "Approved" && dr["BillId"]?.ToString()?.Length <= 0)
             {
-                if (!(dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode) && dr["ByPass"].ToString()!.Contains("Member2,"))
+                if (!(!string.IsNullOrEmpty(dr["App2ID"].ToString()) &&( dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode)) && dr["ByPass"].ToString()!.Contains("Member2,"))
                 {
                     return true;
                 }
-                if (!(dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode) && dr["ByPass"].ToString()!.Contains("Member2,"))
+                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode)) && dr["ByPass"].ToString()!.Contains("Member2,"))
                 {
                     return true;
                 }
-                if (!(dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode) && dr["ByPass"].ToString()!.Contains("Member2,"))
+                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode)) && dr["ByPass"].ToString()!.Contains("Member2,"))
                 {
                     return true;
                 }
@@ -784,6 +803,36 @@ namespace AdvanceAPI.Services.Approval
                 return false;
             }
         }
+
+
+        public static bool CanReject(DataRow dr, string EmpCode, string AdditinalCode)
+        {
+           // if (dr["Status"].ToString() == "Approved" && dr["BillId"]?.ToString()?.Length <= 0)
+            {
+                if (!(!string.IsNullOrEmpty(dr["App2ID"].ToString()) && (dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode )) && (dr["App2Status"].ToString()=="Pending" || dr["FinalStat"].ToString()=="Y"  ))
+                {
+                    return true;
+                }
+                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode)) && (dr["App3Status"].ToString() == "Pending" || dr["FinalStat"].ToString() == "Y"))
+                {
+                    return true;
+                }
+                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode)) && (dr["App4Status"].ToString()=="Pending" ||  dr["FinalStat"].ToString() == "Y"))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            //else
+            //{
+            //    return false;
+            //}
+        }
+
+
 
         public async Task<ApiResponse> ValidateRepairWarrnty(string CampusCode, string SRNo)
         {
@@ -869,6 +918,60 @@ namespace AdvanceAPI.Services.Approval
             await _approvalRepository.CancelApprovalRequest(employeeCode, employeeDetails?.Name, cancelRequest);
 
             return new ApiResponse(StatusCodes.Status200OK, "Success");
+        }
+
+        public async Task<ApiResponse> GetApprovalItems(string? referenceNo)
+        {
+            using (DataTable dtItems = await _approvalRepository.GetApprovalItems(referenceNo))
+            {
+
+                List<ApprovalItemDetails>? items = new List<ApprovalItemDetails>();
+                foreach (DataRow row in dtItems.Rows)
+                {
+                    ApprovalItemDetails item = new ApprovalItemDetails(row);
+
+                    item.ItemName = _generalService.ToTitleCase(item.ItemName ?? string.Empty);
+                    item.Unit = _generalService.ToTitleCase(item.Unit ?? string.Empty);
+
+                    item.TotalAmount = _generalService.ConvertToTwoDecimalPlaces(item.TotalAmount ?? "0.00");
+                    item.VatPer = _generalService.ConvertToTwoDecimalPlaces(item.VatPer ?? "0.00");
+                    item.DisPer = _generalService.ConvertToTwoDecimalPlaces(item.DisPer ?? "0.00");
+                    items.Add(item);
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", items);
+            }
+
+
+        }
+
+        public async Task UpdatePurchaseApprovalSummaryDetailsAfterEditItem(string? referenceNo)
+        {
+            using (DataTable dtSummary = await _approvalRepository.GetApprovalSummaryAmountDetails(referenceNo))
+            {
+                if (dtSummary.Rows.Count > 0)
+                {
+                    double discountOverAll = _generalService.ConvertToDouble(dtSummary.Rows[0]["Discount"]?.ToString() ?? "0");
+                    double OtherCharges = _generalService.ConvertToDouble(dtSummary.Rows[0]["OtherCharges"]?.ToString() ?? "0");
+
+                    using (DataTable dtNewItemsDetails = await _approvalRepository.GetApprovalTotalItemsAndAmount(referenceNo))
+                    {
+                        if (dtNewItemsDetails.Rows.Count > 0)
+                        {
+                            int newTotalItems = Convert.ToInt32(dtNewItemsDetails.Rows[0]["TotalItems"]?.ToString() ?? "0");
+                            double newItemsAmount = _generalService.ConvertToDouble(dtNewItemsDetails.Rows[0]["TotalAmount"]?.ToString() ?? "0");
+                            int newPayableAmount = (int)Math.Round((newItemsAmount + OtherCharges) - discountOverAll);
+
+                            if (newPayableAmount < 0)
+                            {
+                                newPayableAmount = 0;
+                            }
+                            await _approvalRepository.UpdateApprovalSummaryItemsCountAmount(referenceNo, newTotalItems, newItemsAmount, newPayableAmount);
+                        }
+                    }
+
+                }
+            }
+
         }
 
     }
