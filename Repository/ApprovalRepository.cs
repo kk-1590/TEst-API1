@@ -1,5 +1,6 @@
 ﻿using AdvanceAPI.DTO.Approval;
 using AdvanceAPI.DTO.DB;
+using AdvanceAPI.DTO.Inclusive;
 using AdvanceAPI.ENUMS.DB;
 using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices;
@@ -60,7 +61,7 @@ namespace AdvanceAPI.Repository
                 List<SQLParameters> parametersList = new List<SQLParameters>();
                 //@ReferenceNo,@AppType,@ItemCode,@ItemName,@Make,@Size,@Unit,@Balance,@Quantity,@PrevRate,@CurRate,@ChangeReason,@TotalAmount,NOW(),@IniId,'Pending',@WarIn,@WarType,@ActualAmount,@VatPer,@R_Total,@R_Pending,'Pending',@SerialNo,@DisPer,@CampusCode
                 parametersList.Add(new SQLParameters("@ReferenceNo", AddStock.RefNo ?? string.Empty));
-                parametersList.Add(new SQLParameters("@AppType", AddStock.ApprovalType));
+                parametersList.Add(new SQLParameters("@AppType", AddStock.ApprovalType!));
                 parametersList.Add(new SQLParameters("@ItemCode", AddStock.ItemCode));
                 parametersList.Add(new SQLParameters("@ItemName", AddStock.ItemName));
                 parametersList.Add(new SQLParameters("@Make", AddStock.Make));
@@ -70,16 +71,16 @@ namespace AdvanceAPI.Repository
                 parametersList.Add(new SQLParameters("@Quantity", AddStock.Quantity));
                 parametersList.Add(new SQLParameters("@PrevRate", AddStock.PrevRate));
                 parametersList.Add(new SQLParameters("@CurRate", AddStock.CurrentRate));
-                parametersList.Add(new SQLParameters("@ChangeReason", AddStock.ChangeReason));
+                parametersList.Add(new SQLParameters("@ChangeReason", AddStock.ChangeReason!));
                 parametersList.Add(new SQLParameters("@TotalAmount", AddStock.TotalAmount));
                 parametersList.Add(new SQLParameters("@IniId", EmpCode));
                 parametersList.Add(new SQLParameters("@WarIn", AddStock.Warranty));
-                parametersList.Add(new SQLParameters("@WarType", AddStock.WarrantyType));
+                parametersList.Add(new SQLParameters("@WarType", AddStock.WarrantyType!));
                 parametersList.Add(new SQLParameters("@ActualAmount", AddStock.ActualAmount));
-                parametersList.Add(new SQLParameters("@VatPer", AddStock.GstPer));
+                parametersList.Add(new SQLParameters("@VatPer", AddStock.GstPer!));
                 parametersList.Add(new SQLParameters("@R_Total", "0.00"));
                 parametersList.Add(new SQLParameters("@R_Pending", AddStock.Quantity));
-                parametersList.Add(new SQLParameters("@SerialNo", string.Empty));
+                parametersList.Add(new SQLParameters("@SerialNo", AddStock.SNo!));
                 parametersList.Add(new SQLParameters("@DisPer", AddStock.DiscountPercent));
                 parametersList.Add(new SQLParameters("@CampusCode", AddStock.CampusCode));
                 parametersList.Add(new SQLParameters("@DraftName", AddStock.DraftName));
@@ -372,7 +373,7 @@ namespace AdvanceAPI.Repository
             sqlParametersList.Add(new SQLParameters("@BudgetStatus", BudgetStatus));
             sqlParametersList.Add(new SQLParameters("@BudgetReferenceNo", generatePurchaseApprovalRequest.BudgetRefNo));
             sqlParametersList.Add(new SQLParameters("@CampusCode", generatePurchaseApprovalRequest.campus));
-            sqlParametersList.Add(new SQLParameters("@CampusName", await _general.CampusNameByCode(generatePurchaseApprovalRequest.campus.ToString())));
+            sqlParametersList.Add(new SQLParameters("@CampusName", _general.CampusNameByCode(generatePurchaseApprovalRequest.campus.ToString())));
 
             try
             {
@@ -1167,6 +1168,139 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during UpdateApprovalSummaryItemsCountAmount.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetApprovalIsCompletePending(string? referenceNo)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_IS_APPROVAL_COMPLETE_PENDING, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalIsCompletePending.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetApprovalHasItemCode(string? referenceNo, string? itemCode)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@ItemCode", itemCode ?? string.Empty));
+
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_APPROVAL_HAS_ITEM_CODE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalHasItemCode.");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetApprovalHasOtherItems(string? referenceNo, string? itemCode)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@ItemCode", itemCode ?? string.Empty));
+
+                return await _dbContext.SelectAsync(ApprovalSql.CHECK_APPROVAL_HAS_OTHER_ITEM_CODE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetApprovalHasOtherItems.");
+                throw;
+            }
+        }
+
+        public async Task<int> DeleteItemFromApproval(string? employeeId, DeleteApprovalItemRequest? deleteRequest)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", deleteRequest?.ReferenceNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@ItemCode", deleteRequest?.ItemCode ?? string.Empty));
+                parameters.Add(new SQLParameters("@EmployeeId", employeeId ?? string.Empty));
+                parameters.Add(new SQLParameters("@IpAddress", _general.GetIpAddress() ?? string.Empty));
+                parameters.Add(new SQLParameters("@Reason", deleteRequest?.Reason ?? string.Empty));
+
+                return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.DELETE_ITEM_FROM_APPROVAL, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during DeleteItemFromApproval.");
+                throw;
+            }
+        }
+
+        public async Task<int> AddItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? addRequest, ItemDetails itemDetails)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", addRequest?.ReferenceNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@ItemCode", addRequest?.ItemCode ?? string.Empty));
+                parameters.Add(new SQLParameters("@ItemName", itemDetails?.ItemName ?? string.Empty));
+                parameters.Add(new SQLParameters("@Make", itemDetails?.Make ?? string.Empty));
+                parameters.Add(new SQLParameters("@Size", itemDetails?.Size ?? string.Empty));
+                parameters.Add(new SQLParameters("@Unit", itemDetails?.Unit ?? string.Empty));
+                parameters.Add(new SQLParameters("@Balance", addRequest?.Balance ?? 0.0));
+                parameters.Add(new SQLParameters("@Quantity", addRequest?.Quantity ?? 0.0));
+                parameters.Add(new SQLParameters("@PrevRate", addRequest?.PrevRate ?? 0.0));
+                parameters.Add(new SQLParameters("@CurRate", addRequest?.CurRate ?? 0.0));
+                parameters.Add(new SQLParameters("@ChangeReason", addRequest?.ChangeReason ?? string.Empty));
+                parameters.Add(new SQLParameters("@WarIn", addRequest?.Warranty ?? 0));
+                parameters.Add(new SQLParameters("@WarType", addRequest?.WarrantyType ?? "Day"));
+                parameters.Add(new SQLParameters("@ActualAmount", addRequest?.ActualAmount ?? 0.0));
+                parameters.Add(new SQLParameters("@DisPer", addRequest?.DiscountPer ?? 0.0));
+                parameters.Add(new SQLParameters("@VatPer", addRequest?.GSTPer ?? 0.0));
+                parameters.Add(new SQLParameters("@TotalAmount", addRequest?.TotalAmount ?? 0.0));
+                parameters.Add(new SQLParameters("@SerialNo", addRequest?.SerialNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@EmployeeId", employeeId ?? string.Empty));
+
+                return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.ADD_ITEM_IN_CREATED_APPROVAL, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during AddItemInCreatedApproval.");
+                throw;
+            }
+        }
+
+        public async Task<int> UpdateItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? updateRequest)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", updateRequest?.ReferenceNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@ItemCode", updateRequest?.ItemCode ?? string.Empty));
+                parameters.Add(new SQLParameters("@Balance", updateRequest?.Balance ?? 0.0));
+                parameters.Add(new SQLParameters("@Quantity", updateRequest?.Quantity ?? 0.0));
+                parameters.Add(new SQLParameters("@PrevRate", updateRequest?.PrevRate ?? 0.0));
+                parameters.Add(new SQLParameters("@CurRate", updateRequest?.CurRate ?? 0.0));
+                parameters.Add(new SQLParameters("@ChangeReason", updateRequest?.ChangeReason ?? string.Empty));
+                parameters.Add(new SQLParameters("@WarIn", updateRequest?.Warranty ?? 0));
+                parameters.Add(new SQLParameters("@WarType", updateRequest?.WarrantyType ?? "Day"));
+                parameters.Add(new SQLParameters("@ActualAmount", updateRequest?.ActualAmount ?? 0.0));
+                parameters.Add(new SQLParameters("@DisPer", updateRequest?.DiscountPer ?? 0.0));
+                parameters.Add(new SQLParameters("@VatPer", updateRequest?.GSTPer ?? 0.0));
+                parameters.Add(new SQLParameters("@TotalAmount", updateRequest?.TotalAmount ?? 0.0));
+                parameters.Add(new SQLParameters("@SerialNo", updateRequest?.SerialNo ?? string.Empty));
+                parameters.Add(new SQLParameters("@EmployeeId", employeeId ?? string.Empty));
+
+                return await _dbContext.DeleteInsertUpdateAsync(ApprovalSql.UPDATE_ITEM_IN_CREATED_APPROVAL, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during UpdateItemInCreatedApproval.");
                 throw;
             }
         }

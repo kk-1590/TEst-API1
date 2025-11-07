@@ -35,6 +35,9 @@ namespace AdvanceAPI.DTO.Approval
         [Required]
        // [RegularExpression(@"^\d$", ErrorMessage = "integer value Is Required")]
         public int Quantity { get; set; }
+
+        public string? SNo { get;set; }
+
         [Required]
         public string? Size { get; set; }
         [Required]

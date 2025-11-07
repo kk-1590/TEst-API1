@@ -493,6 +493,18 @@ namespace AdvanceAPI.Services.Inclusive
             }
             return employeeDetails;
 
+
+        }
+
+        public async Task<ItemDetails> GetItemDetailsByItemCode(string? itemCode)
+        {
+            DataTable itemDetailsList = await _inclusive.GetItemDetailsByItemCode(itemCode);
+            ItemDetails itemDetail = new ItemDetails();
+            if (itemDetailsList?.Rows.Count > 0)
+            {
+                itemDetail = new ItemDetails(itemDetailsList.Rows[0]);
+            }
+            return itemDetail;
         }
 
 

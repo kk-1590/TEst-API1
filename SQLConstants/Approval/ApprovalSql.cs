@@ -124,6 +124,18 @@ public class ApprovalSql
     public const string UPDATE_APPROVAL_ITEMS_SUMMARY_AMOUNT = "UPDATE purchaseapprovalsummary SET TotalItem=@TotalItem,Amount=@ItemsAmount,TotalAmount=@PayableAmount WHERE ReferenceNo=@ReferenceNo ;";
 
 
+    public const string CHECK_IS_APPROVAL_COMPLETE_PENDING = "SELECT 1 FROM `purchaseapprovalsummary` where `Status`='Pending' AND App1Status='Pending' AND App2Status='Pending' AND App3Status='Pending' AND App4Status='Pending' AND ReferenceNo=@ReferenceNo; ;";
+
+    public const string CHECK_APPROVAL_HAS_ITEM_CODE = "SELECT 1 FROM `purchaseapprovaldetail` where ReferenceNo=@ReferenceNo AND ItemCode=@ItemCode AND `Status`!='Deleted';";
+
+    public const string CHECK_APPROVAL_HAS_OTHER_ITEM_CODE = "SELECT 1 FROM `purchaseapprovaldetail` where ReferenceNo=@ReferenceNo AND ItemCode!=@ItemCode AND `Status`!='Deleted';";
+
+    public const string DELETE_ITEM_FROM_APPROVAL = "UPDATE `purchaseapprovaldetail` SET `Status`='Deleted',ChangeReason=IF(ChangeReason IS NULL,CONCAT('Deleted By: `',@EmployeeId,'` On: `',NOW(),'` From: `',@IpAddress,'` Reason: `',@Reason,'`'),CONCAT(ChangeReason,' $$$ Deleted By: `',@EmployeeId,'` On: `',NOW(),'` From: `',@IpAddress,'` Reason: `',@Reason,'`')) where ReferenceNo=@ReferenceNo AND ItemCode=@ItemCode AND `Status`!='Deleted';";
+    public const string ADD_ITEM_IN_CREATED_APPROVAL = "INSERT INTO `purchaseapprovaldetail` ( ReferenceNo,ItemCode,ItemName,Make,Size,Unit,Balance,Quantity,PrevRate,CurRate,ChangeReason,WarIn,WarType,ActualAmount,DisPer,VatPer,TotalAmount,SerialNo,IniOn,IniId,`Status`,R_Total,R_Pending,R_Status) VALUES (@ReferenceNo,@ItemCode,@ItemName,@Make,@Size,@Unit,@Balance,@Quantity,@PrevRate,@CurRate,@ChangeReason,@WarIn,@WarType,@ActualAmount,@DisPer,@VatPer,@TotalAmount,@SerialNo,NOW(),@EmployeeId,'Pending','0.00',@Quantity,'Pending')";
+
+    public const string UPDATE_ITEM_IN_CREATED_APPROVAL = "UPDATE  purchaseapprovaldetail  SET Balance=@Balance,Quantity=@Quantity,R_Pending=@Quantity,PrevRate=@PrevRate,CurRate=@CurRate,ChangeReason=@ChangeReason,WarIn=@WarIn,WarType=@WarType,ActualAmount=@ActualAmount,DisPer=@DisPer,VatPer=@VatPer,TotalAmount=@TotalAmount,SerialNo=@SerialNo,IniOn=NOW(),IniId=@EmployeeId  where ReferenceNo=@ReferenceNo AND ItemCode=@ItemCode AND `Status`!='Deleted';";
+
+
     #endregion
 
 

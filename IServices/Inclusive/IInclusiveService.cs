@@ -26,5 +26,6 @@ namespace AdvanceAPI.IServices.Inclusive
         string CallWebService(string url, string rno, string host, string mnth, string yr);
         Task<ApiResponse> GetApprovalCancellationReasons();
         Task<EmployeeDetails> GetEmployeeDetailsByEmployeeCode(string? employeeCode);
+        Task<ItemDetails> GetItemDetailsByItemCode(string? itemCode);
     }
 }

@@ -21,6 +21,8 @@ using AdvanceAPI.IServices.Inclusive;
 using AdvanceAPI.IServices.VenderPriceComp;
 using AdvanceAPI.Services.Approval;
 using AdvanceAPI.Services.VenderPriceCompServices;
+using AdvanceAPI.IServices.Budget;
+using AdvanceAPI.Services.Budget;
 
 namespace AdvanceAPI
 {
@@ -119,6 +121,7 @@ namespace AdvanceAPI
             services.AddScoped<IIncusiveRepository, IncusiveRepository>();
             services.AddScoped<IApprovalRepository, ApprovalRepository>();
             services.AddScoped<IVenderPriceCompRepository, VenderPriceCompRepository>();
+            services.AddScoped<IBudgetRepository, BudgetRepository>();
 
             //Services Setup
             services.AddScoped<IGeneral, General>();
@@ -127,6 +130,7 @@ namespace AdvanceAPI
             services.AddScoped<IInclusiveService, InclusiveService>();
             services.AddScoped<IApprovalService, ApprovalService>();
             services.AddScoped<IVenderPriceComparisionServices, VenderPriceCompServices>();
+            services.AddScoped<IBudget,BudgetService>();
         }
 
     }

@@ -10,6 +10,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using AdvanceAPI.IServices.Inclusive;
+using AdvanceAPI.Classes;
 
 namespace AdvanceAPI.Services
 {
@@ -52,19 +53,33 @@ namespace AdvanceAPI.Services
             }
         }
 
-        public async Task<string> CampusNameByCode(string CampusCode)
+        public string CampusNameByCode(string CampusCode)
         {
-            List<SQLParameters> sqlParameters = new List<SQLParameters>();
-            sqlParameters.Add(new SQLParameters("@CampusCode", CampusCode));
-            DataTable getCampusCame = await _dBOperations.SelectAsync(GeneralSql.GET_CAMPUS_NAME, sqlParameters, DBConnections.Advance);
-            if (getCampusCame.Rows.Count > 0)
+            //List<SQLParameters> sqlParameters = new List<SQLParameters>();
+            //sqlParameters.Add(new SQLParameters("@CampusCode", CampusCode));
+            //DataTable getCampusCame = await _dBOperations.SelectAsync(GeneralSql.GET_CAMPUS_NAME, sqlParameters, DBConnections.Advance);
+            //if (getCampusCame.Rows.Count > 0)
+            //{
+            //    return getCampusCame.Rows[0][0]?.ToString() ?? string.Empty;
+            //}
+            //else
+            //{
+            //    return string.Empty;
+            //}
+            switch (CampusCode)
             {
-                return getCampusCame.Rows[0][0]?.ToString() ?? string.Empty;
+                case "101":
+                    return "Mathura Campus";
+                    break;
+                case "102":
+                    return "Noida Campus";
+                    break;
+                case "103":
+                    return "Online Campus";
+                    break;
+                default: return string.Empty;
             }
-            else
-            {
-                return string.Empty;
-            }
+
         }
 
         public string GetFinancialSession(DateTime dateTime)
@@ -208,7 +223,7 @@ namespace AdvanceAPI.Services
 
         public string AmountInWords(string amount)
         {
-            return Spell.SpellAmount.InWrods(Convert.ToDecimal(amount)).Replace("Taka ", "").Replace("Only", "Rupees Only");
+            return SpellAmount.InWrods(Convert.ToDecimal(amount)).Replace("Taka ", "").Replace("Only", "Rupees Only");
         }
 
         public bool ViewCurrentStock(string? type)

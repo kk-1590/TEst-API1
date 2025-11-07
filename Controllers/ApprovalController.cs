@@ -654,6 +654,118 @@ namespace AdvanceAPI.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("add-created-approval-item")]
+        public async Task<IActionResult> AddCreatedItemApproval([FromBody] AddUpdateItemInApprovalRequest? addRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (employeeId == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                if (addRequest == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.AddItemInCreatedApproval(employeeId, addRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During delete-approval-item");
+
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpPut]
+        [Route("update-created-approval-item")]
+        public async Task<IActionResult> UpdateCreatedItemApproval([FromBody] AddUpdateItemInApprovalRequest? updateRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (employeeId == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                if (updateRequest == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.UpdateItemInCreatedApproval(employeeId, updateRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During update-created-approval-item");
+
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpDelete]
+        [Route("delete-created-approval-item")]
+        public async Task<IActionResult> DeleteCreatedApprovalItem([FromBody] DeleteApprovalItemRequest? deleteRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (employeeId == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                if (deleteRequest == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                if (string.IsNullOrWhiteSpace(deleteRequest.ReferenceNo))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Reference No is required..."));
+                }
+                if (string.IsNullOrWhiteSpace(deleteRequest.ItemCode))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Item Code is required..."));
+                }
+                if (string.IsNullOrWhiteSpace(deleteRequest.Reason))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Reason is required..."));
+                }
+
+                ApiResponse apiResponse = await _approvalService.DeleteItemFromApproval(employeeId, deleteRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During delete-approval-item");
+
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+
     }
 
 }

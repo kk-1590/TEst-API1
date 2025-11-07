@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using AdvanceAPI.DTO.Approval;
+using AdvanceAPI.DTO.Inclusive;
 
 namespace AdvanceAPI.IRepository
 {
@@ -61,5 +62,13 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetApprovalSummaryAmountDetails(string? referenceNo);
         Task<DataTable> GetApprovalTotalItemsAndAmount(string? referenceNo);
         Task<int> UpdateApprovalSummaryItemsCountAmount(string? referenceNo, int? totalItems, double? itemsAmount, int? payableAmount);
+        Task<DataTable> GetApprovalIsCompletePending(string? referenceNo);
+
+        Task<DataTable> GetApprovalHasItemCode(string? referenceNo, string? itemCode);
+        Task<DataTable> GetApprovalHasOtherItems(string? referenceNo, string? itemCode);
+
+        Task<int> DeleteItemFromApproval(string? employeeId, DeleteApprovalItemRequest? deleteRequest);
+        Task<int> AddItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? addRequest, ItemDetails itemDetails);
+        Task<int> UpdateItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? updateRequest);
     }
 }

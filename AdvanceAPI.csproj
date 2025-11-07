@@ -22,10 +22,4 @@
     <Folder Include="ENUMS\Inclusive\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="SpellNumber">
-      <HintPath>..\..\AdvanceConvert\Advance Money\Bin\SpellNumber.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

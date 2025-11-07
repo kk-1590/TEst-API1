@@ -143,7 +143,7 @@ namespace AdvanceAPI.Repository
                 parameters.Add(new SQLParameters("@itemcode", ItemName));
                 parameters.Add(new SQLParameters("@make", Make));
                 
-                return await _dbContext.SelectAsync(InclusiveSql.GET_ITEM_DETAILS, parameters,DBConnections.Advance);
+                return await _dbContext.SelectAsync(InclusiveSql.GET_ADVANCE_ITEM_DETAILS, parameters,DBConnections.Advance);
             }
             catch (Exception ex) 
             {
@@ -409,6 +409,23 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during GetEmployeeDetails.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetItemDetailsByItemCode(string? itemCode)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>()
+                {
+                    new SQLParameters("@ItemCode", itemCode ?? string.Empty),
+                };
+
+                return await _dbContext.SelectAsync(InclusiveSql.GET_ITEM_DETAILS_BY_ITEM_CODE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetItemDetailsByItemCode.");
                 throw;
             }
         }

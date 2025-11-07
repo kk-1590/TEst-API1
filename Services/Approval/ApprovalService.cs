@@ -376,7 +376,7 @@ namespace AdvanceAPI.Services.Approval
                         ItemCount = Convert.ToInt32(dr["ItemCount"].ToString()),
                         Balance = (dr["TotalBalance"].ToString()),
                         ReferenceNo = (dr["ReferenceNo"].ToString()),
-                        CampusName = await _generalService.CampusNameByCode(dr["CampusCode"].ToString()!)
+                        CampusName =  _generalService.CampusNameByCode(dr["CampusCode"].ToString()!)
 
                     });
                 return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
@@ -781,15 +781,15 @@ namespace AdvanceAPI.Services.Approval
         {
             if (dr["Status"].ToString() == "Approved" && dr["BillId"]?.ToString()?.Length <= 0)
             {
-                if (!(!string.IsNullOrEmpty(dr["App2ID"].ToString()) &&( dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode)) && dr["ByPass"].ToString()!.Contains("Member2,"))
+                if ( !string.IsNullOrEmpty(dr["App2ID"].ToString()) &&(( dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode)) && !dr["ByPass"].ToString()!.Contains("Member2,"))
                 {
                     return true;
                 }
-                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode)) && dr["ByPass"].ToString()!.Contains("Member2,"))
+                if ( !string.IsNullOrEmpty(dr["App3ID"].ToString()) && ((dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode)) && !dr["ByPass"].ToString()!.Contains("Member2,"))
                 {
                     return true;
                 }
-                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode)) && dr["ByPass"].ToString()!.Contains("Member2,"))
+                if ( !string.IsNullOrEmpty(dr["App4ID"].ToString()) && ((dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode)) && !dr["ByPass"].ToString()!.Contains("Member2,"))
                 {
                     return true;
                 }
@@ -809,15 +809,15 @@ namespace AdvanceAPI.Services.Approval
         {
            // if (dr["Status"].ToString() == "Approved" && dr["BillId"]?.ToString()?.Length <= 0)
             {
-                if (!(!string.IsNullOrEmpty(dr["App2ID"].ToString()) && (dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode )) && (dr["App2Status"].ToString()=="Pending" || dr["FinalStat"].ToString()=="Y"  ))
+                if (!string.IsNullOrEmpty(dr["App2ID"].ToString()) &&( (dr["App2ID"].ToString() == EmpCode || dr["App2ID"].ToString() == AdditinalCode )) && (dr["App2Status"].ToString()=="Pending"   ) && dr["Status"].ToString()=="Pending")
                 {
                     return true;
                 }
-                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode)) && (dr["App3Status"].ToString() == "Pending" || dr["FinalStat"].ToString() == "Y"))
+                if (!string.IsNullOrEmpty(dr["App3ID"].ToString()) && ((dr["App3ID"].ToString() == EmpCode || dr["App3ID"].ToString() == AdditinalCode)) && (dr["App3Status"].ToString() == "Pending" ) && dr["Status"].ToString() == "Pending")
                 {
                     return true;
                 }
-                if (!(!string.IsNullOrEmpty(dr["App1ID"].ToString()) && (dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode)) && (dr["App4Status"].ToString()=="Pending" ||  dr["FinalStat"].ToString() == "Y"))
+                if (!string.IsNullOrEmpty(dr["App4ID"].ToString()) && ((dr["App4ID"].ToString() == EmpCode || dr["App4ID"].ToString() == AdditinalCode)) && (dr["App4Status"].ToString() == "Pending") && dr["Status"].ToString() == "Pending")
                 {
                     return true;
                 }
@@ -972,6 +972,94 @@ namespace AdvanceAPI.Services.Approval
                 }
             }
 
+        }
+
+        public async Task<ApiResponse> DeleteItemFromApproval(string? employeeId, DeleteApprovalItemRequest? deleteRequest)
+        {
+            using (DataTable dtIsExist = await _approvalRepository.GetApprovalIsCompletePending(deleteRequest?.ReferenceNo))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exists with given reference no to delete item.");
+                }
+            }
+
+            using (DataTable dtIsItemExist = await _approvalRepository.GetApprovalHasItemCode(deleteRequest?.ReferenceNo, deleteRequest?.ItemCode))
+            {
+                if (dtIsItemExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid item exists with given item code in the approval to delete.");
+                }
+            }
+
+            using (DataTable dtIsOtherItemsExist = await _approvalRepository.GetApprovalHasOtherItems(deleteRequest?.ReferenceNo, deleteRequest?.ItemCode))
+            {
+                if (dtIsOtherItemsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Approval has no other items. So you cannot delete this last item.");
+                }
+            }
+
+            await _approvalRepository.DeleteItemFromApproval(employeeId, deleteRequest);
+
+            await UpdatePurchaseApprovalSummaryDetailsAfterEditItem(deleteRequest?.ReferenceNo);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Item deleted successfully from approval.");
+        }
+        public async Task<ApiResponse> AddItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? addRequest)
+        {
+            using (DataTable dtIsExist = await _approvalRepository.GetApprovalIsCompletePending(addRequest?.ReferenceNo))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exists with given reference no to add item.");
+                }
+            }
+
+            using (DataTable dtIsItemExist = await _approvalRepository.GetApprovalHasItemCode(addRequest?.ReferenceNo, addRequest?.ItemCode))
+            {
+                if (dtIsItemExist.Rows.Count > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Item already exists in the approval.");
+                }
+            }
+
+            ItemDetails itemDetails = await _inclusiveService.GetItemDetailsByItemCode(addRequest?.ItemCode ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(itemDetails?.ItemCode))
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid item code provided to add item in approval.");
+            }
+
+            await _approvalRepository.AddItemInCreatedApproval(employeeId, addRequest, itemDetails);
+
+            await UpdatePurchaseApprovalSummaryDetailsAfterEditItem(addRequest?.ReferenceNo);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Item added successfully in approval.");
+        }
+
+        public async Task<ApiResponse> UpdateItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? updateRequest)
+        {
+            using (DataTable dtIsExist = await _approvalRepository.GetApprovalIsCompletePending(updateRequest?.ReferenceNo))
+            {
+                if (dtIsExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! No Valid approval exists with given reference no to update item.");
+                }
+            }
+
+            using (DataTable dtIsItemExist = await _approvalRepository.GetApprovalHasItemCode(updateRequest?.ReferenceNo, updateRequest?.ItemCode))
+            {
+                if (dtIsItemExist.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Approval does not contain the specified item.");
+                }
+            }
+
+            await _approvalRepository.UpdateItemInCreatedApproval(employeeId, updateRequest);
+
+            await UpdatePurchaseApprovalSummaryDetailsAfterEditItem(updateRequest?.ReferenceNo);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Item updated successfully in approval.");
         }
 
     }

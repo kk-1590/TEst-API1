@@ -16,7 +16,7 @@
 
         public const string GET_ITEM_MAKE_CODE = "Select DISTINCT Make,ItemCode from advances.purchaseapprovaldetail where ItemName=@itemname AND Size=@size AND Unit=@unit And `Status` ='Approved'  ORDER BY  ItemName,Make"; 
       
-        public const string GET_ITEM_DETAILS = "Select ItemCode,ItemName,Make,Size,Unit,CurRate,DATE_FORMAT(IniOn,'%d.%m.%Y') 'LastPur' from advances.purchaseapprovaldetail where ItemCode=@itemcode AND Make=@make And `Status` ='Approved'  ORDER BY  IniOn DESC LIMIT 1";
+        public const string GET_ADVANCE_ITEM_DETAILS = "Select ItemCode,ItemName,Make,Size,Unit,CurRate,DATE_FORMAT(IniOn,'%d.%m.%Y') 'LastPur' from advances.purchaseapprovaldetail where ItemCode=@itemcode AND Make=@make And `Status` ='Approved'  ORDER BY  IniOn DESC LIMIT 1";
 
 
         public const string GET_ALLOWED_CAMPUS_CODES = "SELECT DISTINCT A.CampusCode  from gla_student_management.employee_campus_master A, gla_student_management.campus_master B WHERE A.CampusCode=B.CampusCode AND A.EmployeeCode=@EmployeeCode AND A.ApplicationType='FINANCE' AND B.IsActive=1 ORDER BY A.CampusCode;";
@@ -49,6 +49,6 @@
 
         public const string GET_EMPLOYEE_DETAILS = "Select first_name,deisgnation,santioneddeptt from salary_management.emp_master where employee_code=@EmployeeId;";
 
-
+        public const string GET_ITEM_DETAILS_BY_ITEM_CODE = "SELECT ItemCode,ItemName,Make,Size,Unit from purchase.itemregister where ItemCode=@ItemCode;";
     }
 }

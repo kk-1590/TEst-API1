@@ -9,8 +9,9 @@ namespace AdvanceAPI.DTO.Budget
         public int CampusCode {  get; set; }
         [Required]
         public string? Maad { get; set; }
-        [Required]
+        
         [AllowedValues(0,1)]
+        [Required]
         public int BusgetRequired { get; set; }
     }
 }

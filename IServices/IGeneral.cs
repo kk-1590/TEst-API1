@@ -3,7 +3,7 @@
     public interface IGeneral
     {
         string EncryptOrDecrypt(string text);
-        Task<string> CampusNameByCode(string code);
+        string CampusNameByCode(string code);
 
         string GetFinancialSession(DateTime dateTime);
         long StringToLong(string? input);
