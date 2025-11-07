@@ -53,10 +53,10 @@ namespace AdvanceAPI.Services.Account
                 DataTable mainPassword = await _account.GetMainPassword();
                 if (mainPassword != null && mainPassword.Rows.Count > 0)
                 {
-                    masterPassword = mainPassword.Rows[0][0]?.ToString() ?? string.Empty;
+                    masterPassword =mainPassword.Rows[0][0]?.ToString() ?? string.Empty;
                 }
 
-                if (_general.EncryptOrDecrypt(result.Rows[0][1]?.ToString() ?? string.Empty) == password || masterPassword == _general.EncryptOrDecrypt(password))
+                if (_general.EncryptOrDecrypt(result.Rows[0][1]?.ToString() ?? string.Empty) == loginRequest?.Password || _general.EncryptOrDecrypt( masterPassword) == loginRequest?.Password)
                 {
                     if ((result.Rows[0]["currentstatus"]?.ToString()?.ToUpper() ?? string.Empty) == "ACTIVE")
                     {
