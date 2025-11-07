@@ -55,9 +55,9 @@ namespace AdvanceAPI.Services.Budget
                 return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Record Not Update/Invelid Access");
             }
         }
-        public async Task<ApiResponse> GetRecord(int Limit, int Offset)
+        public async Task<ApiResponse> GetRecord(int Limit, int Offset,string CampusCode,string Session,int BudgetRequired)
         {
-            using (DataTable dt = await _budgetRepository.GetMaadBudgetDetails(Limit, Offset))
+            using (DataTable dt = await _budgetRepository.GetMaadBudgetDetails(Limit, Offset,CampusCode,Session,BudgetRequired))
             {
                 List<MapDetailsResponse> lst = new List<MapDetailsResponse>();
                 foreach (DataRow dr in dt.Rows)

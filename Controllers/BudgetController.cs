@@ -91,7 +91,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _Ibudget.GetRecord  (limitRequest.NoOfItems,limitRequest.ItemsFrom);
+                ApiResponse apiResponse = await _Ibudget.GetRecord  (limitRequest.NoOfItems,limitRequest.ItemsFrom,limitRequest.CampusCode,limitRequest.Session,Convert.ToInt32(limitRequest.BudgetRequired));
 
                 return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }

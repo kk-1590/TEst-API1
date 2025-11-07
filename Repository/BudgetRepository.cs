@@ -91,14 +91,22 @@ namespace AdvanceAPI.Repository
 
         }
 
-        public async Task<DataTable> GetMaadBudgetDetails(int Limit, int OffSet)
+        public async Task<DataTable> GetMaadBudgetDetails(int Limit, int OffSet, string CampusCode, string Session,int BudgetRequired)
         {
             try
             {
                 List<SQLParameters> sqlParameters = new List<SQLParameters>();
                 sqlParameters.Add(new SQLParameters("@Limit", Limit));
                 sqlParameters.Add(new SQLParameters("@OffSet", OffSet));
-                return await _dbOperations.SelectAsync(BudgetSql.GET_BUDGET_MAAD,sqlParameters,DBConnections.Advance);
+                sqlParameters.Add(new SQLParameters("@CampusCode", CampusCode));
+                sqlParameters.Add(new SQLParameters("@Session",Session));
+                string Cond = "";
+                if (BudgetRequired>=0) 
+                {
+                    Cond += " And IsBudgetRequired=@IsBudgetRequired";
+                    sqlParameters.Add(new SQLParameters("@IsBudgetRequired", BudgetRequired));
+                }
+                return await _dbOperations.SelectAsync(BudgetSql.GET_BUDGET_MAAD.Replace("@Condition",Cond),sqlParameters,DBConnections.Advance);
             }
             catch (Exception ex) 
             {
