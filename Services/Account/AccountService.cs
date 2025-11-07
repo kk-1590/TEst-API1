@@ -78,6 +78,7 @@ namespace AdvanceAPI.Services.Account
                             createTokenRequest.MyRoles = advanceAccess.Rows[0][1]?.ToString();
                             createTokenRequest.AgainstRoles = advanceAccess.Rows[0][2]?.ToString();
                             createTokenRequest.Application = advanceAccess.Rows[0]["applicationupload"]?.ToString();
+                            createTokenRequest.CampusCode = await GetEmployeeCampusCode(loginRequest?.UserId!);
 
                             TokenResponse? tokenResponse = await _token.GenerateJSONWebToken(createTokenRequest);
 
@@ -162,6 +163,32 @@ namespace AdvanceAPI.Services.Account
             {
                 _logger.LogError(ex, "Invalid logout token details found. Parameters: Parameters: {Request}", token);
                 return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time...");
+            }
+        }
+
+
+        public async Task<string> GetEmployeeCampusCode(string? employeeId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return string.Empty;
+                }
+
+                using (DataTable dtEmployeeCampus = await _account.GetEmployeeCampusCode(employeeId))
+                {
+                    if (dtEmployeeCampus != null && dtEmployeeCampus.Rows.Count > 0)
+                    {
+                        return dtEmployeeCampus.Rows[0]["CampusCode"]?.ToString() ?? string.Empty;
+                    }
+                }
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetEmployeeCampusCode. Parameters: Parameters: {Request}", employeeId);
+                return string.Empty;
             }
         }
 

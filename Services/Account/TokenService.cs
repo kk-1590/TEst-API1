@@ -12,11 +12,11 @@ using System.Text;
 
 namespace AdvanceAPI.Services.Account
 {
-    public class TokenService(IConfiguration configuration, ILogger<TokenService> logger, IAccountRepository procedures) : ITokenService
+    public class TokenService(IConfiguration configuration, ILogger<TokenService> logger, IAccountRepository accountRepository) : ITokenService
     {
         private readonly IConfiguration _config = configuration;
         private readonly ILogger<TokenService> _logger = logger;
-        private readonly IAccountRepository _procedures = procedures;
+        private readonly IAccountRepository _accountRepository = accountRepository;
 
         public async Task<TokenResponse?> GenerateJSONWebToken(CreateTokenRequest? tokenRequest)
         {
@@ -52,7 +52,7 @@ namespace AdvanceAPI.Services.Account
             string refreshToken = GenerateRefreshToken();
             string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            await _procedures.SaveToken(tokenRequest?.EmployeeCode, tokenRequest?.Name, tokenRequest?.Type, tokenString, DateTime.Now.AddMinutes(Convert.ToInt32(expirationMinutes)).ToString("yyyy-MM-dd HH:mm:ss"), refreshToken, DateTime.Now.AddMinutes(Convert.ToInt32(refreshExpirationMinutes)).ToString("yyyy-MM-dd HH:mm:ss"), tokenRequest?.RefreshTokenId);
+            await _accountRepository.SaveToken(tokenRequest?.EmployeeCode, tokenRequest?.Name, tokenRequest?.Type, tokenString, DateTime.Now.AddMinutes(Convert.ToInt32(expirationMinutes)).ToString("yyyy-MM-dd HH:mm:ss"), refreshToken, DateTime.Now.AddMinutes(Convert.ToInt32(refreshExpirationMinutes)).ToString("yyyy-MM-dd HH:mm:ss"), tokenRequest?.RefreshTokenId);
 
             return new TokenResponse
             {
@@ -64,6 +64,7 @@ namespace AdvanceAPI.Services.Account
                 MyRoles = tokenRequest?.MyRoles!,
                 AgainstRoles = tokenRequest?.AgainstRoles!,
                 Application = tokenRequest?.Application!,
+                CampusCode = tokenRequest?.CampusCode!,
                 Token = tokenString,
                 Expires = token.ValidTo.Ticks,
                 RefreshToken = refreshToken,
@@ -98,21 +99,21 @@ namespace AdvanceAPI.Services.Account
                 return null;
             }
 
-            DataTable dt = await _procedures.ValidateToken(userId, token, refreshToken);
+            DataTable dt = await _accountRepository.ValidateToken(userId, token, refreshToken);
 
             if (dt == null || dt.Rows.Count == 0)
             {
                 return null;
             }
 
-            await _procedures.UseToken(dt.Rows[0]["TokenId"]?.ToString()!);
+            await _accountRepository.UseToken(dt.Rows[0]["TokenId"]?.ToString()!);
 
-            DataTable advanceAccess = await _procedures.GetAdvanceAccess(userId);
+            DataTable advanceAccess = await _accountRepository.GetAdvanceAccess(userId);
 
             CreateTokenRequest createTokenRequest = new CreateTokenRequest();
             createTokenRequest.EmployeeCode = userId;
             createTokenRequest.AdditionalEmployeeCode = string.Empty;
-            DataTable additionalEmployeeCode = await _procedures.GetAdditionalEmployeeCode(userId);
+            DataTable additionalEmployeeCode = await _accountRepository.GetAdditionalEmployeeCode(userId);
             if (additionalEmployeeCode != null && additionalEmployeeCode.Rows.Count > 0)
             {
                 createTokenRequest.AdditionalEmployeeCode = additionalEmployeeCode.Rows[0][0]?.ToString();
@@ -125,6 +126,17 @@ namespace AdvanceAPI.Services.Account
             createTokenRequest.Application = advanceAccess.Rows[0]["applicationupload"]?.ToString();
             createTokenRequest.RefreshTokenId = dt.Rows[0]["TokenId"]?.ToString();
 
+            using (DataTable dtEmployeeCampus = await _accountRepository.GetEmployeeCampusCode(userId))
+            {
+                if (dtEmployeeCampus != null && dtEmployeeCampus.Rows.Count > 0)
+                {
+                    createTokenRequest.CampusCode = dtEmployeeCampus.Rows[0]["CampusCode"]?.ToString() ?? string.Empty;
+                }
+                else
+                {
+                    createTokenRequest.CampusCode = string.Empty;
+                }
+            }
 
             return await GenerateJSONWebToken(createTokenRequest);
         }

@@ -8,6 +8,7 @@ namespace AdvanceAPI.IServices.Account
         Task<ApiResponse> Login(UserLoginRequest? loginRequest);
         Task<ApiResponse> RefreshToken(RefreshTokenRequest? refreshTokenRequest);
         Task<ApiResponse> Logout(string? token);
+        Task<string> GetEmployeeCampusCode(string? employeeId);
 
     }
 }

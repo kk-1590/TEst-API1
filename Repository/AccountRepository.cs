@@ -182,5 +182,23 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+
+        public async Task<DataTable> GetEmployeeCampusCode(string? employeeId)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>(1)
+                {
+                    new SQLParameters("@EmployeeId", employeeId ?? string.Empty),
+                };
+
+                return await _dbContext.SelectAsync(AccountSql.GET_EMPLOYEE_CAMPUS_CODE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting GetEmployeeCampusCode.");
+                throw;
+            }
+        }
     }
 }

@@ -10,6 +10,7 @@
         public string? MyRoles { get; set; }
         public string? AgainstRoles { get; set; }
         public string? Application { get; set; }
+        public string? CampusCode { get; set; }
 
 
         public string? Token { get; set; }

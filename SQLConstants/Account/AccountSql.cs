@@ -20,5 +20,7 @@
 
         public const string LOGOUT_TOKEN = "UPDATE `login_tokens` SET IsLoggedOut=1,LogoutOn=NOW(),LogoutFrom=@LogoutFrom where Token=@Token AND IsLoggedOut=0;";
 
+        public const string GET_EMPLOYEE_CAMPUS_CODE = "SELECT CampusCode FROM salary_management.emp_master where employee_code=@EmployeeId";
+
     }
 }

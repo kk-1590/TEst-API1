@@ -13,5 +13,6 @@ namespace AdvanceAPI.IRepository
         Task UseToken(string? token);
         Task<DataTable> IsTokenNotLoggedout(string? token);
         Task LogoutToken(string? token);
+        Task<DataTable> GetEmployeeCampusCode(string? employeeId);
     }
 }
