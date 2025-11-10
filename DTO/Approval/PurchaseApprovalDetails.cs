@@ -31,6 +31,7 @@ public class PurchaseApprovalDetails
     public string VendorPersonName { get; set; }
     public string VendorContactNo { get; set; }
     public string Maad { get; set; }
+    public string LastRecieveOn { get; set; }
     public string ReferenceNo { get; set; }
     public string App1Status { get; set; }
     public string App2Status { get; set; }

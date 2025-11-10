@@ -39,6 +39,34 @@ namespace AdvanceAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("get-budget-session-amount-summary")]
+        public async Task<IActionResult> GetBudgetSessionAmountSummary(BudgetSessionAmountSummaryRequest? summaryRequest)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (summaryRequest == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.GetBudgetSessionAmountSummary(summaryRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-budget-session-amount-summary");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
 
     }
 }

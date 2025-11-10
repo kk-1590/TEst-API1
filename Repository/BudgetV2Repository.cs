@@ -9,6 +9,7 @@ using AdvanceAPI.SQLConstants.Budget;
 using Microsoft.Extensions.Logging;
 using NuGet.Protocol;
 using System.Data;
+using System.Text;
 
 namespace AdvanceAPI.Repository
 {
@@ -35,6 +36,38 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During GetBudgetFilterSessions");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetBudgetSessionAmountSummary(BudgetSessionAmountSummaryRequest? summaryRequest)
+        {
+            try
+            {
+                StringBuilder changeCondition = new StringBuilder("");
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                if (!string.IsNullOrEmpty(summaryRequest?.CampusCode))
+                {
+                    changeCondition.Append(" AND A.CampusCode=@CampusCode ");
+                    sqlParameters.Add(new SQLParameters("@CampusCode", summaryRequest?.CampusCode ?? string.Empty));
+                }
+                if (!string.IsNullOrEmpty(summaryRequest?.Session))
+                {
+                    changeCondition.Append(" AND A.Session=@Session ");
+                    sqlParameters.Add(new SQLParameters("@Session", summaryRequest?.Session ?? string.Empty));
+                }
+
+                sqlParameters.Add(new SQLParameters("@OffSetItems", summaryRequest?.RecordFrom ?? 0));
+                sqlParameters.Add(new SQLParameters("@LimitItems", summaryRequest?.NoOfRecords ?? 0));
+
+
+                string query = BudgetV2Sql.GET_BUDGET_SESSIONS_AMOUNT_SUMMARY.Replace("@ChangeCondition", changeCondition.ToString());
+
+                return await _dbOperations.SelectAsync(query, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetBudgetSessionAmountSummary");
                 throw;
             }
         }

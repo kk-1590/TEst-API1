@@ -679,7 +679,7 @@ namespace AdvanceAPI.Services.Approval
                     pd.prevTaken = dr["PreviousTaken"].ToString() ?? string.Empty;
                     pd.TotalAmount = dr["TotalAmount"].ToString() ?? string.Empty;
                     pd.BudgetStatus = dr["BudgetStatus"].ToString() ?? string.Empty;
-                    pd.IniName = dr["IniName"].ToString() ?? string.Empty;
+                    pd.UploadBy = dr["IniName"].ToString() ?? string.Empty;
 
                     pd.RelativePersonName = dr["RelativePersonName"].ToString() ?? string.Empty;
                     pd.RelativePersonID = dr["RelativePersonID"].ToString() ?? string.Empty;
@@ -690,6 +690,7 @@ namespace AdvanceAPI.Services.Approval
                     pd.VendorPersonName = dr["FirmPerson"].ToString() ?? string.Empty;
                     pd.VendorContactNo = dr["FirmContactNo"].ToString() ?? string.Empty;
                     pd.Maad = dr["Maad"].ToString() ?? string.Empty;
+                    pd.LastRecieveOn = dr["LastRecieveOn"].ToString() ?? string.Empty;
 
                     pd.ReferenceNo = dr["ReferenceNo"].ToString() ?? string.Empty;
                     pd.PreviousCancelRemark = dr["PreviousCancelRemark"].ToString() ?? string.Empty;

@@ -35,6 +35,22 @@ namespace AdvanceAPI.Services.Budget
                 return new ApiResponse(StatusCodes.Status200OK, "Success", sessions);
             }
         }
+        public async Task<ApiResponse> GetBudgetSessionAmountSummary(BudgetSessionAmountSummaryRequest? summaryRequest)
+        {
+            if (summaryRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Request Is Required");
+            }
 
+            using (DataTable d = await _budgetRepository.GetBudgetSessionAmountSummary(summaryRequest))
+            {
+                List<BudgetSessionAmountSummaryResponse> summaryResponses = new List<BudgetSessionAmountSummaryResponse>();
+                foreach (DataRow summaryRow in d.Rows)
+                {
+                    summaryResponses.Add(new BudgetSessionAmountSummaryResponse(summaryRow));
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", summaryResponses);
+            }
+        }
     }
 }

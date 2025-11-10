@@ -7,5 +7,6 @@ namespace AdvanceAPI.IRepository
     public interface IBudgetV2Repository
     {
         Task<DataTable> GetBudgetFilterSessions(string? campusCode);
+        Task<DataTable> GetBudgetSessionAmountSummary(BudgetSessionAmountSummaryRequest? summaryRequest);
     }
 }
