@@ -101,5 +101,194 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
+        [HttpPost]
+        [Route("get-budget-required-maad")]
+        public async Task<IActionResult> GetRequiredBudgerMaad([FromBody] LimitRequest limitRequest)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+              
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse apiResponse = await _Ibudget.GetMaadBudgetRequired(limitRequest);
+
+                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-budget-required-maad");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpPost]
+        [Route("get-budget-non-required-maad")]
+        public async Task<IActionResult> GetRequiredNonBudgerMaad([FromBody] LimitRequest limitRequest)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+              
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse apiResponse = await _Ibudget.GetMaadNonBudgetRequired(limitRequest);
+
+                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-budget-non-required-maad");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpGet]
+        [Route("get-added-budget-maad-details/{RefNo}")]
+        public async Task<IActionResult> GetSummaryDetails(string RefNo)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+              
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse apiResponse = await _Ibudget.GetAddedMaad(RefNo);
+
+                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-added-budget-maad-details/refno");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpPut]
+        [Route("update-budget-maad-details")]
+        public async Task<IActionResult> UpdateDetails(UpdateBudgetDetails updateBudgetDetails)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+              
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse apiResponse = await _Ibudget.UpdateaadDetails(employeeId,updateBudgetDetails);
+
+                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During update-budget-maad-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpDelete]
+        [Route("Delete-budget-maad-details")]
+        public async Task<IActionResult> DeleteDetails(UpdateBudgetDetails updateBudgetDetails)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+              
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                //Task<ApiResponse> DeleteaadDetails( UpdateBudgetDetails updateBudgetDetails)
+                ApiResponse apiResponse = await _Ibudget.DeleteaadDetails(updateBudgetDetails);
+
+                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During update-budget-maad-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+
+        [HttpGet]
+        [Route("get-budget-create-departments/{campusCode}")]
+        public async Task<IActionResult> GetBudgetDepartments([FromRoute] string? campusCode)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                if (string.IsNullOrEmpty(campusCode))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _Ibudget.GetCreateBudgetSummaryDepartments(employeeId, campusCode);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-budget-create-departments");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpPost]
+        [Route("create-department-budget-summary")]
+        public async Task<IActionResult> CreateDepartmentBudgetSummary([FromBody] CreateDepartmentBudgetSummaryRequest? budgetRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _Ibudget.CreateBudgetSummary(employeeId, budgetRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During create-department-budget-summary");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+
     }
 }

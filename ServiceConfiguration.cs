@@ -122,6 +122,7 @@ namespace AdvanceAPI
             services.AddScoped<IApprovalRepository, ApprovalRepository>();
             services.AddScoped<IVenderPriceCompRepository, VenderPriceCompRepository>();
             services.AddScoped<IBudgetRepository, BudgetRepository>();
+            services.AddScoped<IBudgetV2Repository, BudgetV2Repository>();
 
             //Services Setup
             services.AddScoped<IGeneral, General>();
@@ -131,6 +132,7 @@ namespace AdvanceAPI
             services.AddScoped<IApprovalService, ApprovalService>();
             services.AddScoped<IVenderPriceComparisionServices, VenderPriceCompServices>();
             services.AddScoped<IBudget,BudgetService>();
+            services.AddScoped<IBudgetV2, BudgetV2Service>();
         }
 
     }

@@ -122,16 +122,17 @@ namespace AdvanceAPI.Services
             }
             var r = Dns.GetHostAddresses(Dns.GetHostName());
 
+
             for (int i = 0; i < r.Length; i++)
             {
                 string s = r[i].ToString();
-                if (s.Contains("172.16.13.244"))
+                if (s.Contains("172.16.13.244") || s.Contains("172.16.13.250") || s.Contains("::1"))
                 {
-                    return _httpAccessor.HttpContext.Connection.RemoteIpAddress.ToString() ?? "";
+                    return _httpAccessor?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "";
                 }
             }
 
-            return _httpAccessor.HttpContext.Request.Headers["X-Forwarded-For"].ToString() ?? "";
+            return _httpAccessor?.HttpContext?.Request.Headers["X-Forwarded-For"].ToString() ?? "";
         }
 
         public async Task<string> GetEmpName(string empCode)

@@ -77,6 +77,170 @@ namespace AdvanceAPI.Services.Budget
                 return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
             }
         }
+        public async Task<ApiResponse> GetMaadBudgetRequired(LimitRequest limitRequest)
+        {
+            List<string> list = new List<string>();
+            using (DataTable dt = await _budgetRepository.GetRequiredBudget(limitRequest.CampusCode!,limitRequest.Session!))
+            {
+                foreach (DataRow dr in dt.Rows)
+                {
+                    list.Add(dr[0].ToString() ?? string.Empty);
+                }
+                return new ApiResponse(StatusCodes.Status200OK,"Success",list);
+            }
+        }
+        public async Task<ApiResponse> GetMaadNonBudgetRequired(LimitRequest limitRequest)
+        {
+            List<string> list = new List<string>();
+            using (DataTable dt = await _budgetRepository.GetRequiredBudget(limitRequest.CampusCode!,limitRequest.Session!))
+            {
+                foreach (DataRow dr in dt.Rows)
+                {
+                    list.Add(dr[0].ToString() ?? string.Empty);
+                }
+                return new ApiResponse(StatusCodes.Status200OK,"Success",list);
+            }
+        }
+        public async Task<ApiResponse> GetAddedMaad(string RefNo)
+        {
+            using(DataTable dt=await _budgetRepository.GetMaadAddedDetails(RefNo))
+            {
+                List< AddedMaadResponse > lst= new List< AddedMaadResponse >();
+                foreach(DataRow dr in dt.Rows)
+                {
+                    lst.Add(new AddedMaadResponse(dr));
+                }
+                return new ApiResponse(StatusCodes.Status200OK,"Success",lst);
+            }
+        }
+        public async Task<ApiResponse> UpdateaadDetails(string EmpCode, UpdateBudgetDetails updateBudgetDetails)
+        {
+            // Task<int> UpdateBudgetDetails(string EmpCode,UpdateBudgetDetails updateBudgetDetails)
+            int ins=await _budgetRepository.UpdateBudgetDetails(EmpCode,updateBudgetDetails);
+            if(ins>0)
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Updated Successfully");
+            }
+            else
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", $"Sorry Some Error Occured During This Operation");
+
+            }
+        }
+        public async Task<ApiResponse> DeleteaadDetails( UpdateBudgetDetails updateBudgetDetails)
+        {
+            int ins =await _budgetRepository.DeleteDetails(updateBudgetDetails);
+            if(ins>0)
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Delete Successfully");
+            }
+            else
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", $"Sorry Some Error Occured During This Operation");
+
+            }
+        }
+        public async Task<ApiResponse> CheckAlreadyAddedMaadDetails(List<AddBudgetDetailsRequest> Adddetails)
+        {
+            //  Task<DataTable> CheckAllreadyAddedDetails(List<AddBudgetDetailsRequest> add)
+           
+            using(DataTable dt=await _budgetRepository.CheckAllreadyAddedDetails(Adddetails))
+            {
+                string str = string.Empty;
+                if (dt.Rows.Count > 0) 
+                {
+                    foreach (DataRow row in dt.Rows) 
+                    {
+
+                        str += row["Maad"].ToString()+" , ";
+                    }
+                }
+                if(str.Length > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", str+="\n Maad Already Added");
+                }
+                else
+                {
+                    return new ApiResponse(StatusCodes.Status200OK, "Success", "");
+                }
+                
+
+            }
+        }
+        public async Task<ApiResponse> GetCreateBudgetSummaryDepartments(string? employeeId, string? campusCode)
+        {
+            if (!_general.IsValidCampusCode(campusCode))
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Campus Found...");
+            }
+
+            bool alldepartments = (await _budgetRepository.CheckAllDepartmentBudgetAllowed(employeeId)).Rows.Count > 0;
+
+            using (DataTable dt = await _budgetRepository.GetBudgetDepartments(employeeId, campusCode, alldepartments))
+            {
+                List<string> departments = new List<string>();
+                foreach (DataRow dr in dt.Rows)
+                {
+                    departments.Add(dr["name"]?.ToString() ?? string.Empty);
+                }
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", departments);
+            }
+
+
+
+        }
+
+        public async Task<ApiResponse> CreateBudgetSummary(string? employeeId, CreateDepartmentBudgetSummaryRequest? budgetRequest)
+        {
+
+            if (budgetRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Budget Details Found...");
+            }
+
+            if (budgetRequest?.BudgetAmount <= 0)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Budget Amount Must Be Greater Than Zero...");
+            }
+
+            using (DataTable dtDepartmentExists = await _budgetRepository.CheckIsValidDepartmentBudgetDepartment(budgetRequest))
+            {
+                if (dtDepartmentExists.Rows.Count == 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Department Found For Budget Summary...");
+                }
+            }
+
+            using (DataTable dtExists = await _budgetRepository.CheckIsDepartmentBudgetSummaryExists(budgetRequest))
+            {
+
+                if (dtExists.Rows.Count > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", $"Sorry!! Budget Details Already Exists.");
+                }
+
+                string newBudgetReferenceNo = string.Empty;
+
+                using (DataTable dtNewBudgetNo = await _budgetRepository.GetNewDepartmentBudgetSummaryReferenceNo())
+                {
+                    if (dtNewBudgetNo.Rows.Count > 0)
+                    {
+                        newBudgetReferenceNo = dtNewBudgetNo.Rows[0]["ReferenceNo"]?.ToString() ?? string.Empty;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(newBudgetReferenceNo))
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", $"Sorry!! Unable to generate Budget Reference No at this moment. Please try again.");
+                }
+
+                await _budgetRepository.CreateNewBudgetSummary(employeeId, newBudgetReferenceNo, _general.GetIpAddress(), budgetRequest);
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", newBudgetReferenceNo);
+
+            }
+        }
 
     }
 }
