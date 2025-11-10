@@ -66,6 +66,7 @@ namespace AdvanceAPI.DTO.Approval
         public string? ReceivingStatus { get; set; } = string.Empty;
         public string? LastReceiveOn { get; set; } = string.Empty;
         public string? CampusCode { get; set; } = string.Empty;
+        public string? Maad { get; set; } = string.Empty;
 
 
 
@@ -146,6 +147,7 @@ namespace AdvanceAPI.DTO.Approval
             ReceivingStatus = dr["RecievingStatus"]?.ToString() ?? String.Empty;
             LastReceiveOn = dr["LastRecieveOn"]?.ToString() ?? String.Empty;
             CampusCode = dr["CampusCode"]?.ToString() ?? String.Empty;
+            Maad = dr["Maad"]?.ToString() ?? String.Empty;
             CanDeleteApproval = this.Status == "Pending" && this.App1Status == "Pending" && this.App2Status == "Pending" && this.App3Status == "Pending" && this.App4Status == "Pending" && this.Status == "Pending";
             CanEditApproval = this.CanDeleteApproval == true;
             CanEditItems = this.CanEditApproval == true;

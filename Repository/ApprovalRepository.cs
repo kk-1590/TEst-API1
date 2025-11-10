@@ -896,7 +896,7 @@ namespace AdvanceAPI.Repository
                     Condition += " and `ReferenceNo`=@ReferenceNo";
                     sqlParametersList.Add(new SQLParameters("@ReferenceNo", details.ReferenceNo));
                 }
-                if ( !string.IsNullOrEmpty(details.CampusCode)) //camppus code
+                if (!string.IsNullOrEmpty(details.CampusCode)) //camppus code
                 {
                     Condition += " AND CampusCode=@CampusCode";
                     sqlParametersList.Add(new SQLParameters("@CampusCode", details.CampusCode));
