@@ -1,6 +1,7 @@
 using AdvanceAPI;
 using AdvanceAPI.Middlewares;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.DotNet.Scaffolding.Shared;
 using Serilog;
 using Serilog.Context;
 
@@ -41,17 +42,27 @@ app.UseCors(builder =>
 {
     app.UseSwagger();
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
     app.UseSwaggerUI(options =>
     {
-        for (int i = 0; i < provider.ApiVersionDescriptions.Count; i++)
+        app.UseSwaggerUI(options =>
         {
-            ApiVersionDescription? description = provider.ApiVersionDescriptions[i];
-            options.SwaggerEndpoint(
-                $"/swagger/{description.GroupName}/swagger.json",
-                description.GroupName.ToUpperInvariant());
-        }
+            for (int i = 0; i < provider.ApiVersionDescriptions.Count; i++)
+            {
+                ApiVersionDescription? description = provider.ApiVersionDescriptions[i];
+                options.SwaggerEndpoint(
+                    $"/swagger/{description.GroupName}/swagger.json",
+                    description.GroupName.ToUpperInvariant());
+            }
+            options.RoutePrefix = string.Empty; // Serve Swagger UI at root
+        });
+        options.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
     });
+
     app.MapOpenApi();
+
+    app.MapFallbackToFile("/swagger");
+
 }
 
 app.UseHttpsRedirection();
@@ -62,16 +73,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Enable serving Swagger UI at the root URL
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
-    options.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
-});
-
-app.MapFallbackToFile("/swagger");
-
-
 
 await app.RunAsync();
