@@ -21,11 +21,12 @@ namespace AdvanceAPI.IServices.Inclusive
         Task<ApiResponse> GetBudget(GetFirmBudgetRequest? firm);
         Task<bool> IsUserAllowed(string? employeeId, UserRolePermission userRolePermission);
         Task<string> GetEnCryptedKey();
-        Task<string> SaveFile(string FileName, string FilePath, IFormFile file,string Ext);
+        Task<string> SaveFile(string FileName, string FilePath, IFormFile file, string Ext);
         string CallWebService2(string url, string rno, string campusCode, string host, string mnth, string yr);
         string CallWebService(string url, string rno, string host, string mnth, string yr);
         Task<ApiResponse> GetApprovalCancellationReasons();
         Task<EmployeeDetails> GetEmployeeDetailsByEmployeeCode(string? employeeCode);
         Task<ItemDetails> GetItemDetailsByItemCode(string? itemCode);
+        Task<string> GetEmployeePhotoUrl(string? employeeId);
     }
 }

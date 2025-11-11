@@ -57,60 +57,60 @@ namespace AdvanceAPI.Services.Inclusive
                 }
                 return new ApiResponse(StatusCodes.Status200OK, "Success", approvalTypeResponses);
             }
-                
+
         }
 
         public async Task<ApiResponse> GetPurchaseDepartment()
         {
-            using (DataTable department=await _inclusive.GetPurchaseDepartment())
+            using (DataTable department = await _inclusive.GetPurchaseDepartment())
             {
                 List<PurchaseDepartmentResponse> purchaseDepartmentResponses = new List<PurchaseDepartmentResponse>();
-                foreach(DataRow row in department.Rows)
+                foreach (DataRow row in department.Rows)
                 {
                     purchaseDepartmentResponses.Add(new PurchaseDepartmentResponse
                     {
-                        DepartmentName=row[0].ToString() ?? string.Empty,
+                        DepartmentName = row[0].ToString() ?? string.Empty,
                     });
                 }
-                return new ApiResponse(StatusCodes.Status200OK,"Success",purchaseDepartmentResponses);
+                return new ApiResponse(StatusCodes.Status200OK, "Success", purchaseDepartmentResponses);
             }
         }
         public async Task<ApiResponse> GetItems(GetPurchaseItemRequest getPurchaseItemRequest)
         {
-            
-            List< ItemListResponse > itemslst = new List< ItemListResponse >();
-            using (DataTable Items=await _inclusive.GetItems(getPurchaseItemRequest))
+
+            List<ItemListResponse> itemslst = new List<ItemListResponse>();
+            using (DataTable Items = await _inclusive.GetItems(getPurchaseItemRequest))
             {
-                foreach (DataRow row in Items.Rows) 
+                foreach (DataRow row in Items.Rows)
                 {
                     itemslst.Add(new ItemListResponse
                     {
                         //ItemCode,ItemName,Size,Make,Unit,DepartmentCode
-                        ItemCode =( row["ItemCode"].ToString()),
+                        ItemCode = (row["ItemCode"].ToString()),
                         ItemName = row["ItemName"].ToString() ?? string.Empty,
-                        Size =( row["Size"].ToString()),
+                        Size = (row["Size"].ToString()),
                         Make = row["Make"].ToString(),
-                        Unit =( row["Unit"].ToString()),
+                        Unit = (row["Unit"].ToString()),
                         DeptCode = row["DepartmentCode"].ToString()
                     });
                 }
-                return new ApiResponse(StatusCodes.Status200OK,"Success",itemslst);
+                return new ApiResponse(StatusCodes.Status200OK, "Success", itemslst);
             }
         }
 
-        public async Task<ApiResponse> GetStock(string itemCode,string CampusCode)
+        public async Task<ApiResponse> GetStock(string itemCode, string CampusCode)
         {
             string BaseUrl = "http://hostel.glauniversity.in:84/inventoryservices.asmx/currentstock";
-            using(DataTable dt=await _inclusive.GetBaseUrlFromTable())
+            using (DataTable dt = await _inclusive.GetBaseUrlFromTable())
             {
                 DataRow[] dr = dt.Select("Type='WebService' and Tag='BaseUrlStock'");
                 if (dr.Length > 0)
                 {
-                    BaseUrl = dr[0][1].ToString()??"";
+                    BaseUrl = dr[0][1].ToString() ?? "";
                 }
             }
-            List< StockDetailsResponse > lst= new List< StockDetailsResponse >();
-            using(DataTable dt=await _inclusive.GetItemDetails(itemCode))
+            List<StockDetailsResponse> lst = new List<StockDetailsResponse>();
+            using (DataTable dt = await _inclusive.GetItemDetails(itemCode))
             {
                 if (dt.Rows.Count > 0)
                 {
@@ -136,11 +136,11 @@ namespace AdvanceAPI.Services.Inclusive
                                 Stock = stock.Replace("\r\n", "")
                             });
                         }
-                        
+
 
                     }
 
-                    if (MakeCode.Rows.Count <= 0 && lst.Count <= 0) 
+                    if (MakeCode.Rows.Count <= 0 && lst.Count <= 0)
                     {
                         string stock = CallWebService2(BaseUrl, itemCode, CampusCode,
                             "@1@", "", "");
@@ -153,14 +153,14 @@ namespace AdvanceAPI.Services.Inclusive
                             Size = dt.Rows[0]["Size"]?.ToString() ?? string.Empty,
                             PrevPurchase = "0.00",
                             PrevRate = "0.00",
-                            Unit =dt.Rows[0]["Unit"]?.ToString() ?? string.Empty,
+                            Unit = dt.Rows[0]["Unit"]?.ToString() ?? string.Empty,
                             Stock = stock.Replace("\r\n", "")
                         });
                     }
                 }
-               
+
             }
-            return  new ApiResponse(StatusCodes.Status200OK,"Success",lst);
+            return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
         }
         public string CallWebService2(string url, string rno, string campusCode, string host, string mnth, string yr)
         {
@@ -207,7 +207,7 @@ namespace AdvanceAPI.Services.Inclusive
         public string CallWebService(string url, string rno, string host, string mnth, string yr)
         {
             string result = "";
-            string strPost = "Serialno=" + rno+"&Campus="+yr;
+            string strPost = "Serialno=" + rno + "&Campus=" + yr;
             StreamWriter myWriter = null;
             HttpWebRequest objRequest = (HttpWebRequest)WebRequest.Create(url + "?" + strPost);
             //BTN_SAVE.Text = url + "?" + strPost;
@@ -245,7 +245,7 @@ namespace AdvanceAPI.Services.Inclusive
             //BTN_DISPLAY.Text = result;
             return result;
         }
-        
+
         public async Task<ApiResponse> GetAllMaad()
         {
             DataTable maadList = await _inclusive.GetAllMaad();
@@ -436,37 +436,37 @@ namespace AdvanceAPI.Services.Inclusive
             DataTable dt = await _inclusive.GetFileKey();
             if (dt.Rows.Count > 0)
             {
-                return dt.Rows[0][0].ToString()??string.Empty;
+                return dt.Rows[0][0].ToString() ?? string.Empty;
             }
             else
             {
                 return string.Empty;
             }
         }
-        public async Task<string> SaveFile(string FileName,string FilePath, IFormFile file,string Ext)
+        public async Task<string> SaveFile(string FileName, string FilePath, IFormFile file, string Ext)
         {
             try
             {
-                string path=Directory.GetCurrentDirectory();
-                
-             //   FileName =_general.EncryptWithKey(FileName,await GetEnCryptedKey());
+                string path = Directory.GetCurrentDirectory();
+
+                //   FileName =_general.EncryptWithKey(FileName,await GetEnCryptedKey());
                 path = Path.Combine(path, FilePath);
                 if (!Path.Exists(path))
                 {
                     Directory.CreateDirectory(path);
                 }
-                path = Path.Combine(path, FileName+Ext);
+                path = Path.Combine(path, FileName + Ext);
                 using (var stream = new FileStream(path, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
-                
+
                 return "Success";
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                _logger.LogError(e.Message,"Error During saving file");
+                _logger.LogError(e.Message, "Error During saving file");
                 throw;
             }
         }
@@ -507,7 +507,20 @@ namespace AdvanceAPI.Services.Inclusive
             return itemDetail;
         }
 
+        public async Task<string> GetEmployeePhotoUrl(string? employeeId)
+        {
+            using (DataTable dtEmployeeEncryptedId = await _inclusive.GetEmployeeEncryptedId(employeeId))
+            {
+                if (dtEmployeeEncryptedId.Rows.Count > 0)
+                {
+                    return $" https://glauniversity.in:8088/assets/profiles/{dtEmployeeEncryptedId.Rows[0]["EncID"].ToString() ?? string.Empty}.jpg";
+                }
+                else
+                {
+                    return string.Empty;
 
-
+                }
+            }
+        }
     }
 }

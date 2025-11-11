@@ -14,8 +14,8 @@
 
         public const string GET_ITEM_BY_CODE = "SELECT ItemName,Size,Unit,Make FROM purchase.itemregister WHERE ItemCode=@itemcode LIMIT 1";
 
-        public const string GET_ITEM_MAKE_CODE = "Select DISTINCT Make,ItemCode from advances.purchaseapprovaldetail where ItemName=@itemname AND Size=@size AND Unit=@unit And `Status` ='Approved'  ORDER BY  ItemName,Make"; 
-      
+        public const string GET_ITEM_MAKE_CODE = "Select DISTINCT Make,ItemCode from advances.purchaseapprovaldetail where ItemName=@itemname AND Size=@size AND Unit=@unit And `Status` ='Approved'  ORDER BY  ItemName,Make";
+
         public const string GET_ADVANCE_ITEM_DETAILS = "Select ItemCode,ItemName,Make,Size,Unit,CurRate,DATE_FORMAT(IniOn,'%d.%m.%Y') 'LastPur' from advances.purchaseapprovaldetail where ItemCode=@itemcode AND Make=@make And `Status` ='Approved'  ORDER BY  IniOn DESC LIMIT 1";
 
 
@@ -50,5 +50,7 @@
         public const string GET_EMPLOYEE_DETAILS = "Select first_name,deisgnation,santioneddeptt from salary_management.emp_master where employee_code=@EmployeeId;";
 
         public const string GET_ITEM_DETAILS_BY_ITEM_CODE = "SELECT ItemCode,ItemName,Make,Size,Unit from purchase.itemregister where ItemCode=@ItemCode;";
+
+        public const string GET_EMPLOYEE_ENCRYPTED_ID = "SELECT EncID FROM salary_management.`emp_master` where employee_code=@EmployeeCode;";
     }
 }

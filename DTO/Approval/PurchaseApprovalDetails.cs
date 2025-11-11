@@ -66,4 +66,15 @@ public class PurchaseApprovalDetails
     public string UpTo { get; internal set; }
     public string Purpose { get; internal set; }
     public string TotalItem { get; internal set; }
+
+    public string? InitiatedById { get; set; } = string.Empty;
+
+    public string? InitByPhoto { get; set; } = string.Empty;
+    public string? RelativePersonPhoto { get; set; } = string.Empty;
+    public string? App1Photo { get; set; } = string.Empty;
+    public string? App2Photo { get; set; } = string.Empty;
+    public string? App3Photo { get; set; } = string.Empty;
+    public string? App4Photo { get; set; } = string.Empty;
+
+
 }

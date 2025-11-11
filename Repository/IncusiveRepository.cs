@@ -42,7 +42,7 @@ namespace AdvanceAPI.Repository
             {
                 return await _dbContext.SelectAsync(InclusiveSql.GET_APPROVAL_TYPE, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during GetApprovalType.");
                 throw;
@@ -54,7 +54,7 @@ namespace AdvanceAPI.Repository
             {
                 return await _dbContext.SelectAsync(InclusiveSql.Get_Purchase_Department, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during GetPurchaseDepartment.");
                 throw;
@@ -65,26 +65,26 @@ namespace AdvanceAPI.Repository
             try
             {
                 StringBuilder stringBuilder = new StringBuilder(string.Empty);
-                List<SQLParameters> parameters = new List<SQLParameters>();   
-                if(getPurchaseItemRequest.DeptCode!="All")
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                if (getPurchaseItemRequest.DeptCode != "All")
                 {
                     stringBuilder.Append($" and DepartmentCode=@DeptCode");
-                    parameters.Add(new SQLParameters("@DeptCode",getPurchaseItemRequest.DeptCode!));
+                    parameters.Add(new SQLParameters("@DeptCode", getPurchaseItemRequest.DeptCode!));
                 }
-                if(getPurchaseItemRequest.SearchBy!="All")
+                if (getPurchaseItemRequest.SearchBy != "All")
                 {
-                    stringBuilder.Append($" and "+getPurchaseItemRequest.SearchBy!.Replace(" ","")+" like   '%"+ getPurchaseItemRequest.ItemName + "%'");
+                    stringBuilder.Append($" and " + getPurchaseItemRequest.SearchBy!.Replace(" ", "") + " like   '%" + getPurchaseItemRequest.ItemName + "%'");
                     //parameters.Add(new SQLParameters("@ItemName", getPurchaseItemRequest.ItemName!));
                 }
                 else
                 {
-                    stringBuilder.Append($" and (ItemName LIKE '%"+ getPurchaseItemRequest.ItemName + "%' OR Size LIKE '%"+ getPurchaseItemRequest.ItemName + "%' OR Make LIKE '%"+ getPurchaseItemRequest.ItemName + "%')");
+                    stringBuilder.Append($" and (ItemName LIKE '%" + getPurchaseItemRequest.ItemName + "%' OR Size LIKE '%" + getPurchaseItemRequest.ItemName + "%' OR Make LIKE '%" + getPurchaseItemRequest.ItemName + "%')");
                     //parameters.Add(new SQLParameters("@ItemNames", getPurchaseItemRequest.ItemName!));
                 }
 
-                return await _dbContext.SelectAsync(InclusiveSql.Get_ITEM_NAME.Replace("@Condition", stringBuilder.ToString()),parameters, DBConnections.Advance);
+                return await _dbContext.SelectAsync(InclusiveSql.Get_ITEM_NAME.Replace("@Condition", stringBuilder.ToString()), parameters, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during GetItems.");
                 throw;
@@ -94,10 +94,10 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                return await _dbContext.SelectAsync(InclusiveSql.Get_Base_Url_Table,DBConnections.Advance);
-                
+                return await _dbContext.SelectAsync(InclusiveSql.Get_Base_Url_Table, DBConnections.Advance);
+
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during GetBaseUrlFromTable.");
                 throw;
@@ -108,16 +108,16 @@ namespace AdvanceAPI.Repository
             try
             {
                 List<SQLParameters> parameters = new List<SQLParameters>();
-                parameters.Add(new SQLParameters( "@itemcode",ItemCode));
-                return await _dbContext.SelectAsync(InclusiveSql.GET_ITEM_BY_CODE,parameters,DBConnections.Advance);
+                parameters.Add(new SQLParameters("@itemcode", ItemCode));
+                return await _dbContext.SelectAsync(InclusiveSql.GET_ITEM_BY_CODE, parameters, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During GetItemDetails");
                 throw;
             }
         }
-        public async Task<DataTable> GetItemMakeCode(string ItemName,string Size,string Unit)
+        public async Task<DataTable> GetItemMakeCode(string ItemName, string Size, string Unit)
         {
             try
             {
@@ -126,15 +126,15 @@ namespace AdvanceAPI.Repository
                 parameters.Add(new SQLParameters("@itemname", ItemName));
                 parameters.Add(new SQLParameters("@size", Size));
                 parameters.Add(new SQLParameters("@unit", Unit));
-                return await _dbContext.SelectAsync(InclusiveSql.GET_ITEM_MAKE_CODE,parameters,DBConnections.Advance);
+                return await _dbContext.SelectAsync(InclusiveSql.GET_ITEM_MAKE_CODE, parameters, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During GetItemMakeCode");
                 throw;
             }
         }
-        public async Task<DataTable> GetItemsDetails(string ItemName,string Make)
+        public async Task<DataTable> GetItemsDetails(string ItemName, string Make)
         {
             try
             {
@@ -142,10 +142,10 @@ namespace AdvanceAPI.Repository
                 //itemcode,make
                 parameters.Add(new SQLParameters("@itemcode", ItemName));
                 parameters.Add(new SQLParameters("@make", Make));
-                
-                return await _dbContext.SelectAsync(InclusiveSql.GET_ADVANCE_ITEM_DETAILS, parameters,DBConnections.Advance);
+
+                return await _dbContext.SelectAsync(InclusiveSql.GET_ADVANCE_ITEM_DETAILS, parameters, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During GetItemsDetails");
                 throw;
@@ -374,7 +374,7 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                return await _dbContext.SelectAsync(InclusiveSql.GET_FILE_ENC_KEY,  DBConnections.Advance);
+                return await _dbContext.SelectAsync(InclusiveSql.GET_FILE_ENC_KEY, DBConnections.Advance);
             }
             catch (Exception ex)
             {
@@ -426,6 +426,23 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during GetItemDetailsByItemCode.");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetEmployeeEncryptedId(string? employeeId)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>()
+                {
+                    new SQLParameters("@EmployeeCode", employeeId ?? string.Empty),
+                };
+
+                return await _dbContext.SelectAsync(InclusiveSql.GET_EMPLOYEE_ENCRYPTED_ID, parameters, DBConnections.Salary);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetEmployeeEncryptedId.");
                 throw;
             }
         }

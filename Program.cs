@@ -38,7 +38,7 @@ app.UseCors(builder =>
 });
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
@@ -62,7 +62,6 @@ app.UseCors(builder =>
     app.MapOpenApi();
 
     app.MapFallbackToFile("/swagger");
-
 }
 
 app.UseHttpsRedirection();

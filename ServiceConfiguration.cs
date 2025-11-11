@@ -131,7 +131,7 @@ namespace AdvanceAPI
             services.AddScoped<IInclusiveService, InclusiveService>();
             services.AddScoped<IApprovalService, ApprovalService>();
             services.AddScoped<IVenderPriceComparisionServices, VenderPriceCompServices>();
-            services.AddScoped<IBudget,BudgetService>();
+            services.AddScoped<IBudget, BudgetService>();
             services.AddScoped<IBudgetV2, BudgetV2Service>();
         }
 

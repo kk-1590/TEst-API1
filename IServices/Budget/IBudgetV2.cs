@@ -7,5 +7,10 @@ namespace AdvanceAPI.IServices.Budget
     {
         Task<ApiResponse> GetBudgetFilterSessions(string? campus);
         Task<ApiResponse> GetBudgetSessionAmountSummary(BudgetSessionAmountSummaryRequest? summaryRequest);
+        Task<ApiResponse> UpdateBudgetSessionAmountSummary(UpdateBudgetSessionAmountRequest? updateRequest, string? employeeId);
+        Task<ApiResponse> AddBudgetSessionAmountSummary(CreateNewBudgetSessionAmountSummaryRequest? createRequest, string? employeeId);
+        Task<ApiResponse> DeleteBudgetSessionAmountSummary(DeleteBudgetSessionSummaryAmountRequest? deleteRequest, string? employeeId);
+        Task<ApiResponse> LockBudgetSessionAmountSummary(string? budgetId, string? employeeId);
+        Task<ApiResponse> GetMaadForfilter(string Maad);
     }
 }

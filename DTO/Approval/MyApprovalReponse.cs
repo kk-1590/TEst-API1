@@ -18,9 +18,16 @@ namespace AdvanceAPI.DTO.Approval
         public string? BillDateExtendedShow1 { get; set; } = string.Empty;
         public string? TotalAmount { get; set; } = string.Empty;
         public string? Status { get; set; } = string.Empty;
+        public string? InitiatedById { get; set; } = string.Empty;
         public string? InitiatedByName { get; set; } = string.Empty;
         public string? AppDate { get; set; } = string.Empty;
         public string? InitiatedOn { get; set; } = string.Empty;
+
+        public string? App1Id { get; set; } = string.Empty;
+        public string? App2Id { get; set; } = string.Empty;
+        public string? App3Id { get; set; } = string.Empty;
+        public string? App4Id { get; set; } = string.Empty;
+
         public string? App1Name { get; set; } = string.Empty;
         public string? App2Name { get; set; } = string.Empty;
         public string? App3Name { get; set; } = string.Empty;
@@ -69,6 +76,14 @@ namespace AdvanceAPI.DTO.Approval
         public string? Maad { get; set; } = string.Empty;
 
 
+        public string? InitByPhoto { get; set; } = string.Empty;
+        public string? RelativePersonPhoto { get; set; } = string.Empty;
+        public string? App1Photo { get; set; } = string.Empty;
+        public string? App2Photo { get; set; } = string.Empty;
+        public string? App3Photo { get; set; } = string.Empty;
+        public string? App4Photo { get; set; } = string.Empty;
+
+
 
         public bool? CanDeleteApproval { get; set; } = false;
         public bool? CanRegenerateApproval { get; set; } = false;
@@ -100,9 +115,14 @@ namespace AdvanceAPI.DTO.Approval
             BillDateExtendedShow1 = dr["ExeOn"]?.ToString() ?? String.Empty;
             TotalAmount = dr["TotalAmount"]?.ToString() ?? String.Empty;
             Status = dr["Status"]?.ToString() ?? String.Empty;
+            InitiatedById = dr["IniId"]?.ToString() ?? String.Empty;
             InitiatedByName = dr["IniName"]?.ToString() ?? String.Empty;
             AppDate = dr["AppDate"]?.ToString() ?? String.Empty;
             InitiatedOn = dr["IniOn"]?.ToString() ?? String.Empty;
+            App1Id = dr["App1ID"]?.ToString() ?? String.Empty;
+            App2Id = dr["App2ID"]?.ToString() ?? String.Empty;
+            App3Id = dr["App3ID"]?.ToString() ?? String.Empty;
+            App4Id = dr["App4ID"]?.ToString() ?? String.Empty;
             App1Name = dr["App1Name"]?.ToString() ?? String.Empty;
             App2Name = dr["App2Name"]?.ToString() ?? String.Empty;
             App3Name = dr["App3Name"]?.ToString() ?? String.Empty;
@@ -115,6 +135,7 @@ namespace AdvanceAPI.DTO.Approval
             App2On = dr["App2On"]?.ToString() ?? String.Empty;
             App3On = dr["App3On"]?.ToString() ?? String.Empty;
             App4On = dr["App4On"]?.ToString() ?? String.Empty;
+
             CancelledReason = dr["CancelledReason"]?.ToString() ?? String.Empty;
             CancelledOn = dr["CancelledOn"]?.ToString() ?? String.Empty;
             CancelledBy = dr["CancelledBy"]?.ToString() ?? String.Empty;

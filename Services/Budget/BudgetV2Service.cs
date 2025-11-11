@@ -39,7 +39,7 @@ namespace AdvanceAPI.Services.Budget
         {
             if (summaryRequest == null)
             {
-                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Request Is Required");
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
             }
 
             using (DataTable d = await _budgetRepository.GetBudgetSessionAmountSummary(summaryRequest))
@@ -52,5 +52,124 @@ namespace AdvanceAPI.Services.Budget
                 return new ApiResponse(StatusCodes.Status200OK, "Success", summaryResponses);
             }
         }
+
+        public async Task<ApiResponse> UpdateBudgetSessionAmountSummary(UpdateBudgetSessionAmountRequest? updateRequest, string? employeeId)
+        {
+            if (updateRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.GetBudgetSessionEditableSummaryExists(updateRequest.BudgetId))
+            {
+                if (dtIsExists.Rows.Count == 0)
+                {
+                    return new ApiResponse(StatusCodes.Status404NotFound, "Error", "Sorry!! No Valid Budget Details Found To Update...");
+                }
+
+                long existingAmount = _general.StringToLong(dtIsExists.Rows[0]["BudgetAmount"]?.ToString() ?? "0");
+
+                if (existingAmount == updateRequest.BudgetAmount)
+                {
+                    return new ApiResponse(StatusCodes.Status200OK, "Success", "Sorry!! No Changes Detected In Budget Amount...");
+                }
+
+                await _budgetRepository.UpdateBudgetSessionSummaryAmount(updateRequest, existingAmount, employeeId);
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", "Budget Amount Updated Successfully...");
+            }
+
+        }
+
+        public async Task<ApiResponse> AddBudgetSessionAmountSummary(CreateNewBudgetSessionAmountSummaryRequest? createRequest, string? employeeId)
+        {
+            if (createRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.CheckIsBudgetSessionAmountSummaryExists(createRequest.Session, createRequest.CampusCode))
+            {
+                if (dtIsExists.Rows.Count > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status409Conflict, "Error", "Sorry!! Budget Details Already Exists For The Selected Session And Campus...");
+                }
+            }
+
+            await _budgetRepository.AddBudgetSessionSummaryAmount(createRequest, employeeId);
+
+            return new ApiResponse(StatusCodes.Status201Created, "Success", "Budget Details Added Successfully...");
+
+        }
+
+        public async Task<ApiResponse> DeleteBudgetSessionAmountSummary(DeleteBudgetSessionSummaryAmountRequest? deleteRequest, string? employeeId)
+        {
+            if (deleteRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.GetBudgetSessionEditableSummaryExists(deleteRequest.BudgetId))
+            {
+                if (dtIsExists.Rows.Count == 0)
+                {
+                    return new ApiResponse(StatusCodes.Status404NotFound, "Error", "Sorry!! No Valid Budget Details Found To Delete...");
+                }
+                await _budgetRepository.DeleteBudgetSessionSummaryAmount(deleteRequest, employeeId);
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", "Budget Details Deleted Successfully...");
+            }
+
+        }
+
+        public async Task<ApiResponse> LockBudgetSessionAmountSummary(string? budgetId, string? employeeId)
+        {
+            if (string.IsNullOrWhiteSpace(budgetId))
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.GetBudgetSessionEditableSummaryExists(budgetId))
+            {
+                if (dtIsExists.Rows.Count == 0)
+                {
+                    return new ApiResponse(StatusCodes.Status404NotFound, "Error", "Sorry!! No Valid Budget Details Found To Lock...");
+                }
+
+                await _budgetRepository.LockBudgetSessionSummaryAmount(budgetId, employeeId);
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", "Budget Locked Successfully...");
+            }
+
+        }
+
+        public async Task<ApiResponse> GetMaadForfilter(string Maad)
+        {
+            using (DataTable dt = await _budgetRepository.GetBudgetMaadListFilter(Maad))
+            {
+                List<string> filters = new List<string>();
+                foreach (DataRow filterRow in dt.Rows)
+                {
+                    filters.Add(filterRow[0].ToString() ?? string.Empty);
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", filters);
+            }
+        }
+
+        public async Task<ApiResponse> AddDepartmentDetails(AddDepartmentSummaryRequest request)
+        {
+            using (DataTable dt = await _budgetRepository.CheckAlreadyDepartmentBudgetDetails(request))
+            {
+                if (dt.Rows.Count > 0)
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Record Already Exists");
+            }
+            //add maad in list if not add
+            using (DataTable dt = await _budgetRepository.CheckMaadListRecord(request.BudgetMaad))
+            {
+
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "", "");
+        }
+
     }
 }

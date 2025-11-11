@@ -306,6 +306,13 @@ namespace AdvanceAPI.Services.Approval
                     approval.App3Name = _generalService.ToTitleCase(approval.App3Name ?? string.Empty);
                     approval.App4Name = _generalService.ToTitleCase(approval.App4Name ?? string.Empty);
 
+                    approval.InitByPhoto = await _inclusiveService.GetEmployeePhotoUrl(approval.InitiatedById ?? string.Empty);
+                    approval.RelativePersonPhoto = await _inclusiveService.GetEmployeePhotoUrl(approval.RelativePersonID ?? string.Empty);
+                    approval.App1Photo = await _inclusiveService.GetEmployeePhotoUrl(approval.App1Id ?? string.Empty);
+                    approval.App2Photo = await _inclusiveService.GetEmployeePhotoUrl(approval.App2Id ?? string.Empty);
+                    approval.App3Photo = await _inclusiveService.GetEmployeePhotoUrl(approval.App3Id ?? string.Empty);
+                    approval.App4Photo = await _inclusiveService.GetEmployeePhotoUrl(approval.App4Id ?? string.Empty);
+
 
                     DataTable dtIsComparisonDefined = await _approvalRepository.CheckIsApprovalComparisonDefined(approval.ReferenceNo ?? string.Empty);
 
@@ -729,7 +736,14 @@ namespace AdvanceAPI.Services.Approval
                     pd.UpTo = dr["ExeOn"].ToString() ?? string.Empty;
                     pd.Purpose = dr["Purpose"].ToString() ?? string.Empty;
                     pd.TotalItem = dr["TotalItem"].ToString() ?? string.Empty;
+                    pd.InitiatedById = dr["IniId"].ToString() ?? string.Empty;
 
+                    pd.InitByPhoto = await _inclusiveService.GetEmployeePhotoUrl(pd.InitiatedById ?? string.Empty);
+                    pd.RelativePersonPhoto = await _inclusiveService.GetEmployeePhotoUrl(pd.RelativePersonID ?? string.Empty);
+                    pd.App1Photo = await _inclusiveService.GetEmployeePhotoUrl(pd.App1Id ?? string.Empty);
+                    pd.App2Photo = await _inclusiveService.GetEmployeePhotoUrl(pd.App2Id ?? string.Empty);
+                    pd.App3Photo = await _inclusiveService.GetEmployeePhotoUrl(pd.App3Id ?? string.Empty);
+                    pd.App4Photo = await _inclusiveService.GetEmployeePhotoUrl(pd.App4Id ?? string.Empty);
 
 
                     lst.Add(pd);
