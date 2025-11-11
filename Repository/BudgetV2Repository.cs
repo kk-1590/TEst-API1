@@ -313,5 +313,169 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+        public async Task<DataTable> GetDepartmentDetails(string RefNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@RefNo",RefNo));
+                return await _dbOperations.SelectAsync(BudgetV2Sql.GET_DEPARMENT_BUDGET_DETAILS,parameters,DBConnections.Advance);
+            }
+            catch (Exception ex) {
+                _logger.LogError(ex, "Error During GetDepartmentDetails");
+                throw;
+            }
+        }
+        public async Task<int> UpdateDepartmentDetails(string EmpCode, AddDepartmentSummaryUpdateRequest request)
+        {
+            //UPDATE department_budget_details SET BudgetType=@BudgetType,BudgetHead=@BudgetHead,BudgetMaad=@BudgetMaad,BudgetAmount=@BudgetAmount,AllowOverBudgetApproval=@AllowOverBudgetApproval,UpdatedBy=@UpdateBy,UpdatedOn=NOW(),UpdatedFrom=@IP WHERE Id=@Id
+            try
+            {
+                List<SQLParameters> param=new List<SQLParameters>();
+                param.Add(new SQLParameters("@BudgetType", request.BudgetType ?? string.Empty));
+                param.Add(new SQLParameters("@BudgetHead", request.BudgetHead ?? string.Empty));
+                param.Add(new SQLParameters("@BudgetMaad", request.BudgetMaad ?? string.Empty));
+                param.Add(new SQLParameters("@BudgetAmount", request.BudgetAmount.ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@AllowOverBudgetApproval", request.AllowOverBudgetApproval));
+                param.Add(new SQLParameters("@IP", _general.GetIpAddress()));
+                param.Add(new SQLParameters("@UpdateBy", EmpCode));
+                param.Add(new SQLParameters("@Id", request.Id));
+                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.UPDATE_DEPARTMENT_BUDGET_DETAILS,param,DBConnections.Advance );
+
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "Error During UpdateDepartmentDetails");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetBudgetTypeHeadMapping(BudgetHeadMappingRequest? mappingRequest)
+        {
+            try
+            {
+                string extraCondition = "";
+
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@Session", mappingRequest?.Session ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@CampusCode", mappingRequest?.CampusCode ?? string.Empty));
+
+                if (!string.IsNullOrEmpty(mappingRequest?.BudgetType))
+                {
+                    extraCondition = " AND A.BudgetType=@BudgetType ";
+                    sqlParameters.Add(new SQLParameters("@BudgetType", mappingRequest?.BudgetType ?? string.Empty));
+                }
+
+                sqlParameters.Add(new SQLParameters("@OffSetItems", mappingRequest?.RecordFrom ?? 0));
+                sqlParameters.Add(new SQLParameters("@LimitItems", mappingRequest?.NoOfRecords ?? 0));
+
+                string query = BudgetV2Sql.GET_BUDGET_TYPE_HEAD_MAPPING.Replace("@ExtraCondition", extraCondition);
+
+                return await _dbOperations.SelectAsync(query, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetBudgetTypeHeadMapping");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckBudgetTypeHeadMappingAlreadyExists(AddBudgetTypeHeadRequest? addRequest)
+        {
+            try
+            {
+
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@Session", addRequest?.Session ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@CampusCode", addRequest?.CampusCode ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@BudgetType", addRequest?.BudgetType ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@BudgetHead", addRequest?.BudgetHead ?? string.Empty));
+
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.CHECK_BUDGET_TYPE_HEAD_MAPPING_ALREADY_EXISTS, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckBudgetTypeHeadMappingAlreadyExists");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> AddBudgetTypeHeadMappingAlreadyExists(AddBudgetTypeHeadRequest? addRequest, string? employeeId)
+        {
+            try
+            {
+
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@Session", addRequest?.Session ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@CampusCode", addRequest?.CampusCode ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@BudgetType", addRequest?.BudgetType ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@BudgetHead", addRequest?.BudgetHead ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@AddedBy", employeeId ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@AddedFrom", _general.GetIpAddress() ?? string.Empty));
+
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.ADD_BUDGET_TYPE_HEAD_MAPPING, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During AddBudgetTypeHeadMappingAlreadyExists");
+                throw;
+            }
+        }
+
+
+        public async Task<DataTable> CheckBudgetTypeHeadMappingAlreadyExistsByid(string? headMapId)
+        {
+            try
+            {
+
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@HeadMappingId", headMapId ?? string.Empty));
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.CHECK_BUDGET_TYPE_HEAD_MAPPING_EXISTS_BY_ID, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckBudgetTypeHeadMappingAlreadyExistsByid");
+                throw;
+            }
+        }
+        public async Task<DataTable> CheckBudgetTypeHeadMappingUsedOrNOtByid(string? headMapId)
+        {
+            try
+            {
+
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@HeadMappingId", headMapId ?? string.Empty));
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.CHECK_BUDGET_TYPE_HEAD_MAPPING_USED_OR_NOT, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckBudgetTypeHeadMappingUsedOrNOtByid");
+                throw;
+            }
+        }
+        public async Task<DataTable> DeleteBudgetTypeHeadMappingAlreadyExists(DeleteBudgetHeadMappingRequest? deleteRequest, string? employeeId)
+        {
+            try
+            {
+                string updateRemark = $"Budget Head Mapping Deleted By: {employeeId} On: {DateTime.Now.ToString("F")} From: {_general.GetIpAddress()} With Reason: {deleteRequest?.Reason}";
+
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@DeletedBy", employeeId ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@DeletedFrom", _general.GetIpAddress() ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@UpdateRemark", updateRemark ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@HeadMapId", deleteRequest?.HeadMappingId ?? string.Empty));
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.DELETE_BUDGET_TYPE_HEAD_MAPPING, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckBudgetTypeHeadMappingUsedOrNOtByid");
+                throw;
+            }
+        }
     }
 }

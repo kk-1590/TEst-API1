@@ -201,5 +201,90 @@ namespace AdvanceAPI.Services.Budget
             return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Insert Successfully");
         }
 
+        public async Task<ApiResponse> GetDepartmentBudgetDetails(string RefNo)
+        {
+            using(DataTable dt=await _budgetRepository.GetDepartmentDetails(RefNo))
+            {
+                List< DepartmentDetailsResponse > lst= new List< DepartmentDetailsResponse >();
+                foreach(DataRow row in dt.Rows)
+                {
+                    lst.Add(new DepartmentDetailsResponse(row));
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
+            }
+        }
+        public async Task<ApiResponse> UpdateDepartmentBudgetDetails(string EmpCode, AddDepartmentSummaryUpdateRequest request)
+        {
+            // Task<int> UpdateDepartmentDetails(string EmpCode, AddDepartmentSummaryUpdateRequest request)
+            int ins=await _budgetRepository.UpdateDepartmentDetails(EmpCode,request);
+            return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Update Successfully");
+        }
+
+        public async Task<ApiResponse> GetBudgetHeadMapping(BudgetHeadMappingRequest? mappingRequest)
+        {
+            if (mappingRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.GetBudgetTypeHeadMapping(mappingRequest))
+            {
+                List<BudgetHeadMappingResponse> mappingResponses = new List<BudgetHeadMappingResponse>();
+                foreach (DataRow mappingRow in dtIsExists.Rows)
+                {
+                    mappingResponses.Add(new BudgetHeadMappingResponse(mappingRow));
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", mappingResponses);
+            }
+        }
+
+        public async Task<ApiResponse> AddBudgetHeadMapping(AddBudgetTypeHeadRequest? addRequest, string? employeeId)
+        {
+            if (addRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.CheckBudgetTypeHeadMappingAlreadyExists(addRequest))
+            {
+                if (dtIsExists.Rows.Count > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status409Conflict, "Error", "Sorry!! Budget Type Head Mapping Already Exists...");
+                }
+
+                await _budgetRepository.AddBudgetTypeHeadMappingAlreadyExists(addRequest, employeeId);
+
+                return new ApiResponse(StatusCodes.Status201Created, "Success", "Budget Type Head Mapping Added Successfully...");
+
+            }
+        }
+        public async Task<ApiResponse> DeleteBudgetHeadMapping(DeleteBudgetHeadMappingRequest? deleteRequest, string? employeeId)
+        {
+            if (deleteRequest == null)
+            {
+                return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Sorry!! Invalid Request Found...");
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.CheckBudgetTypeHeadMappingAlreadyExistsByid(deleteRequest?.HeadMappingId))
+            {
+                if (dtIsExists.Rows.Count == 0)
+                {
+                    return new ApiResponse(StatusCodes.Status404NotFound, "Error", "Sorry!! No Valid Budget Type Head Mapping Found To Delete...");
+                }
+            }
+
+            using (DataTable dtIsExists = await _budgetRepository.CheckBudgetTypeHeadMappingUsedOrNOtByid(deleteRequest?.HeadMappingId))
+            {
+                if (dtIsExists.Rows.Count > 0)
+                {
+                    return new ApiResponse(StatusCodes.Status409Conflict, "Error", "Sorry!! Budget Type Head Mapping Is Used By Departments And Cannot Be Deleted...");
+                }
+            }
+
+            await _budgetRepository.DeleteBudgetTypeHeadMappingAlreadyExists(deleteRequest, employeeId);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Budget Type Head Mapping Deleted Successfully...");
+        }
+
     }
 }

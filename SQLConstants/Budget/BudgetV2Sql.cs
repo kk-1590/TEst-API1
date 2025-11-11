@@ -30,5 +30,22 @@
 
         public const string GET_ALL_BUDGET_SESSION_SUMMARY_AMOUNT_SESSIONS = "SELECT DISTINCT `Session` FROM `budget_session_amount_summary` WHERE `Status`='Active' ORDER BY `Session` DESC;";
 
+        public const string GET_DEPARMENT_BUDGET_DETAILS = "SELECT Id,ReferenceNo,BudgetType,BudgetHead,BudgetMaad,BudgetAmount,AllowOverBudgetApproval FROM department_budget_details WHERE ReferenceNo=@RefNo and Status='Active'";
+
+        public const string UPDATE_DEPARTMENT_BUDGET_DETAILS = "UPDATE department_budget_details SET BudgetType=@BudgetType,BudgetHead=@BudgetHead,BudgetMaad=@BudgetMaad,BudgetAmount=@BudgetAmount,AllowOverBudgetApproval=@AllowOverBudgetApproval,UpdatedBy=@UpdateBy,UpdatedOn=NOW(),UpdatedFrom=@IP WHERE Id=@Id;";
+
+
+        public const string GET_BUDGET_TYPE_HEAD_MAPPING = "SELECT A.Id,A.`Session`,A.CampusCode,B.CampusName,A.BudgetType,A.BudgetHead FROM `budget_type_head_mapping` A, gla_student_management.campus_master B WHERE A.CampusCode=B.CampusCode AND B.IsActive=1 AND A.`Status`='Active' AND A.`Session`=@Session AND A.CampusCode=@CampusCode @ExtraCondition ORDER BY A.Id LIMIT @LimitItems OFFSET @OffSetItems ;";
+
+        public const string CHECK_BUDGET_TYPE_HEAD_MAPPING_ALREADY_EXISTS = "SELECT * from budget_type_head_mapping where `Session`=@Session AND CampusCode=@CampusCode AND BudgetType=@BudgetType AND BudgetHead=@BudgetHead";
+
+        public const string ADD_BUDGET_TYPE_HEAD_MAPPING = "INSERT INTO `budget_type_head_mapping` ( `Session`,CampusCode,BudgetType,BudgetHead,AddedBy,AddedOn,AddedFrom) VALUES ( @Session,@CampusCode,@BudgetType,@BudgetHead,@AddedBy,NOW(),@AddedFrom)";
+
+        public const string CHECK_BUDGET_TYPE_HEAD_MAPPING_EXISTS_BY_ID = "SELECT * FROM `budget_type_head_mapping` WHERE Id=@HeadMappingId and `Status`='Active'";
+
+        public const string CHECK_BUDGET_TYPE_HEAD_MAPPING_USED_OR_NOT = "SELECT 1 FROM `department_budget_summary` A, department_budget_details B , budget_type_head_mapping C WHERE A.ReferenceNo=B.ReferenceNo AND A.`Status`='Active' AND A.`Session`=C.`Session` AND B.BudgetType=C.BudgetType AND B.BudgetHead=C.BudgetHead AND A.CampusCode=C.CampusCode AND C.Id=@HeadMappingId ";
+
+        public const string DELETE_BUDGET_TYPE_HEAD_MAPPING = "UPDATE `budget_type_head_mapping` SET `Status`='Deleted',DeletedBy=@DeletedBy,DeletedOn=NOW(),DeletedFrom=@DeletedFrom,UpdateRemark=IF(UpdateRemark IS NULL,@UpdateRemark,CONCAT(UpdateRemark,' $$$ ',@UpdateRemark)) WHERE Id=@HeadMapId ";
+
     }
 }

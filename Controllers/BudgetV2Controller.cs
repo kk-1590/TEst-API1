@@ -248,7 +248,6 @@ namespace AdvanceAPI.Controllers
 
         [HttpPut]
         [Route("add-budget-department-details")]
-        [AllowAnonymous]
         public async Task<IActionResult> AddBudgetDepartment(AddDepartmentSummaryRequest request)
         {
             try
@@ -258,26 +257,172 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-
-                //Task<ApiResponse> AddDepartmentDetails(string EmpCode,AddDepartmentSummaryRequest request)
-                //string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //if (string.IsNullOrEmpty(employeeId))
-                //{
-                //    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
-                //}
-                string employeeId = "GLA108236";
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
                 ApiResponse apiResponse = await _iBudget.AddDepartmentDetails(employeeId,request);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error During get-budget-session-amount-summary");
+                _logger.LogError(ex, "Error During add-budget-department-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpGet]
+        [Route("get-budget-department-details/{RefNo}")]
+        public async Task<IActionResult> GetBudgetDepartment(string RefNo)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse apiResponse = await _iBudget.GetDepartmentBudgetDetails (RefNo);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error During get-budget-department-details/{RefNo}");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpPut]
+        [Route("update-budget-department-details/{RefNo}")]
+        public async Task<IActionResult> PutBudgetDepartment(AddDepartmentSummaryUpdateRequest request)
+        {
+            try
+            {
+                //Task<ApiResponse> UpdateDepartmentBudgetDetails(string EmpCode, AddDepartmentSummaryUpdateRequest request)
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse apiResponse = await _iBudget.UpdateDepartmentBudgetDetails(employeeId, request);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error During update-budget-department-details");
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
 
 
+        [HttpPost]
+        [Route("get-budget-head-mapping")]
+        public async Task<IActionResult> GetBudgetHeadMapping(BudgetHeadMappingRequest? mappingRequest)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (mappingRequest == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.GetBudgetHeadMapping(mappingRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-budget-head-mapping");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+
+        [HttpPost]
+        [Route("add-budget-head-mapping")]
+        public async Task<IActionResult> AddBudgetHeadMapping(AddBudgetTypeHeadRequest? addRequest)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (addRequest == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (employeeId == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.AddBudgetHeadMapping(addRequest, employeeId);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During add-budget-head-mapping");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+
+        [HttpDelete]
+        [Route("delete-budget-head-mapping")]
+        public async Task<IActionResult> DeleteBudgetHeadMapping(DeleteBudgetHeadMappingRequest? deleteRequest)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (deleteRequest == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (employeeId == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.DeleteBudgetHeadMapping(deleteRequest, employeeId);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During delete-budget-head-mapping");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
 
 
 

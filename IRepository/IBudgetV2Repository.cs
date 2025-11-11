@@ -20,5 +20,14 @@ namespace AdvanceAPI.IRepository
         Task<int> AddMaadInList(string EmpCode, string Maad);
         Task<int> AddDepartmentList(string EmpCode, AddDepartmentSummaryRequest request);
         Task<DataTable> GetAllSessionsOfBudgetSessionSummary();
+        Task<DataTable> GetDepartmentDetails(string RefNo);
+        Task<int> UpdateDepartmentDetails(string EmpCode, AddDepartmentSummaryUpdateRequest request);
+
+        Task<DataTable> GetBudgetTypeHeadMapping(BudgetHeadMappingRequest? mappingRequest);
+        Task<DataTable> CheckBudgetTypeHeadMappingAlreadyExists(AddBudgetTypeHeadRequest? addRequest);
+        Task<DataTable> AddBudgetTypeHeadMappingAlreadyExists(AddBudgetTypeHeadRequest? addRequest, string? employeeId);
+        Task<DataTable> CheckBudgetTypeHeadMappingAlreadyExistsByid(string? headMapId);
+        Task<DataTable> CheckBudgetTypeHeadMappingUsedOrNOtByid(string? headMapId);
+        Task<DataTable> DeleteBudgetTypeHeadMappingAlreadyExists(DeleteBudgetHeadMappingRequest? deleteRequest, string? employeeId);
     }
 }
