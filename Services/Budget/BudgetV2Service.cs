@@ -4,6 +4,7 @@ using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Budget;
 using System.Data;
+using System.Reflection.Emit;
 
 namespace AdvanceAPI.Services.Budget
 {
@@ -142,7 +143,32 @@ namespace AdvanceAPI.Services.Budget
             }
 
         }
+        public async Task<ApiResponse> GetBudgetSummaryNewSessions()
+        {
+            List<string> sessions = new List<string>();
+            using (DataTable d = await _budgetRepository.GetAllSessionsOfBudgetSessionSummary())
+            {
+                foreach (DataRow session in d.Rows)
+                {
+                    sessions.Add(session["Session"]?.ToString() ?? string.Empty);
+                }
 
+                string? financeSession = _general.GetFinancialSession(DateTime.Now);
+
+                if (!sessions.Contains(financeSession))
+                {
+                    sessions.Add(financeSession);
+                }
+                string? NextFinanceSession = _general.GetFinancialSession(DateTime.Now.AddMonths(12));
+                if (!sessions.Contains(NextFinanceSession))
+                {
+                    sessions.Add(NextFinanceSession);
+                }
+                sessions = sessions.OrderByDescending(s => s).ToList();
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", sessions);
+            }
+        }
         public async Task<ApiResponse> GetMaadForfilter(string Maad)
         {
             using (DataTable dt = await _budgetRepository.GetBudgetMaadListFilter(Maad))
@@ -156,7 +182,7 @@ namespace AdvanceAPI.Services.Budget
             }
         }
 
-        public async Task<ApiResponse> AddDepartmentDetails(AddDepartmentSummaryRequest request)
+        public async Task<ApiResponse> AddDepartmentDetails(string EmpCode,AddDepartmentSummaryRequest request)
         {
             using (DataTable dt = await _budgetRepository.CheckAlreadyDepartmentBudgetDetails(request))
             {
@@ -164,11 +190,15 @@ namespace AdvanceAPI.Services.Budget
                     return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Record Already Exists");
             }
             //add maad in list if not add
-            using (DataTable dt = await _budgetRepository.CheckMaadListRecord(request.BudgetMaad))
+            using (DataTable dt = await _budgetRepository.CheckMaadListRecord(request.BudgetMaad??string.Empty))
             {
-
+                if (dt.Rows.Count <= 0)
+                    await _budgetRepository.AddMaadInList(EmpCode, request.BudgetMaad ?? string.Empty);
             }
-            return new ApiResponse(StatusCodes.Status200OK, "", "");
+            //Task<int> AddDepartmentList(string EmpCode, AddDepartmentSummaryRequest request)
+            int ins =await _budgetRepository.AddDepartmentList(EmpCode,request);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Insert Successfully");
         }
 
     }

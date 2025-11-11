@@ -24,6 +24,11 @@
 
         public const string CHECK_ALREADY_ADDED_DEPARTMENT_DETAILS = "SELECT * FROM department_budget_details WHERE ReferenceNo=@RefNo AND BudgetHead=@BudgetHead AND BudgetMaad=@BudgetMaad AND BudgetType=@BudgetType;";
         public const string GET_ALREADY_ADDED_MAAD = "SELECT * from budget_maad_list WHERE BudgetMaad=@BudgetMaad and `Status`='Active';";
+        public const string ADD_MAAD_IN_LIST = "INSERT INTO budget_maad_list(BudgetMaad,AddedOn,AddedFrom,AddedBy) VALUES (@Maad,NOW(),@IpAddress,@AddBy);";
+
+        public const string ADD_DEPARTMENT_BUDGET_DETAILS = "INSERT INTO department_budget_details (ReferenceNo,BudgetType,BudgetHead,BudgetMaad,BudgetAmount,AllowOverBudgetApproval,AddedOn,AddedFrom,AddedBy) VALUES \r\n(@ReferenceNo,@BudgetType,@BudgetHead,@BudgetMaad,@BudgetAmount,@AllowOverBudgetApproval,NOW(),@AddedFrom,@AddedBy)";
+
+        public const string GET_ALL_BUDGET_SESSION_SUMMARY_AMOUNT_SESSIONS = "SELECT DISTINCT `Session` FROM `budget_session_amount_summary` WHERE `Status`='Active' ORDER BY `Session` DESC;";
 
     }
 }

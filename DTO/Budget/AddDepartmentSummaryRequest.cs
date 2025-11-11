@@ -15,6 +15,8 @@ namespace AdvanceAPI.DTO.Budget
         public string? BudgetMaad { get;set; }
         [Required]
         public int BudgetAmount {  get;set; }
+        [Required]
+        public int AllowOverBudgetApproval { get;set; }
 
 
     }

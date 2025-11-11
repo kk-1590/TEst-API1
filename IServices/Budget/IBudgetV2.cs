@@ -12,5 +12,7 @@ namespace AdvanceAPI.IServices.Budget
         Task<ApiResponse> DeleteBudgetSessionAmountSummary(DeleteBudgetSessionSummaryAmountRequest? deleteRequest, string? employeeId);
         Task<ApiResponse> LockBudgetSessionAmountSummary(string? budgetId, string? employeeId);
         Task<ApiResponse> GetMaadForfilter(string Maad);
+        Task<ApiResponse> AddDepartmentDetails(string EmpCode, AddDepartmentSummaryRequest request);
+        Task<ApiResponse> GetBudgetSummaryNewSessions();
     }
 }

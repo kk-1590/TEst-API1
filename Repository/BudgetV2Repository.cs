@@ -9,6 +9,7 @@ using AdvanceAPI.SQLConstants.Budget;
 using Microsoft.Extensions.Logging;
 using NuGet.Protocol;
 using System.Data;
+using System.Security.Cryptography.Xml;
 using System.Text;
 
 namespace AdvanceAPI.Repository
@@ -257,18 +258,58 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+        public async Task<DataTable> GetAllSessionsOfBudgetSessionSummary()
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(BudgetV2Sql.GET_ALL_BUDGET_SESSION_SUMMARY_AMOUNT_SESSIONS, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAllSessionsOfBudgetSessionSummary");
+                throw;
+            }
+        }
 
-
-        public async Task<int> AddMaadInList()
+        public async Task<int> AddMaadInList(string EmpCode,string Maad)
         {
 
             try
             {
+                List<SQLParameters> param= new List<SQLParameters>();
+                //@Maad,NOW(),@IpAddress,@AddBy
+                param.Add(new SQLParameters("@Maad", Maad));
+                param.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
+                param.Add(new SQLParameters("@AddBy", EmpCode));
+                
+                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.ADD_MAAD_IN_LIST,param,DBConnections.Advance);
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During AddMaadInList");
+                throw;
+            }
+        }
+        public async Task<int> AddDepartmentList(string EmpCode, AddDepartmentSummaryRequest request)
+        {
+            try
+            {
+                List<SQLParameters> param=new List<SQLParameters>();
+                // (@ReferenceNo, @BudgetType, @BudgetHead, @BudgetMaad, @BudgetAmount, @AllowOverBudgetApproval, NOW(), @AddedFrom, @AddedBy)
+                param.Add(new SQLParameters("@ReferenceNo",request.ReferenceNo??string.Empty));
+                param.Add(new SQLParameters("@BudgetType", request.BudgetType??string.Empty));
+                param.Add(new SQLParameters("@BudgetHead", request.BudgetHead??string.Empty));
+                param.Add(new SQLParameters("@BudgetMaad", request.BudgetMaad??string.Empty));
+                param.Add(new SQLParameters("@BudgetAmount", request.BudgetAmount.ToString()??string.Empty));
+                param.Add(new SQLParameters("@AllowOverBudgetApproval", request.AllowOverBudgetApproval));
+                param.Add(new SQLParameters("@AddedFrom", _general.GetIpAddress()));
+                param.Add(new SQLParameters("@AddedBy", EmpCode));
+                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.ADD_DEPARTMENT_BUDGET_DETAILS, param, DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "Error During AddDepartmentList");
                 throw;
             }
         }
