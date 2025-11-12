@@ -9,7 +9,7 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> CheckAlreadyAdded(MapNewMaad mapNewMaad);
 
         Task<int> UpdateMaadForBudget(string EmpCode, UpdateMaadBudegtRequest updateMaadBudegtRequest);
-        Task<DataTable> GetMaadBudgetDetails(int Limit, int OffSet,string Campus,string Session, int BudgetRequired);
+        Task<DataTable> GetMaadBudgetDetails(int Limit, int OffSet, string Campus, string Session, int BudgetRequired);
         Task<DataTable> GetRequiredBudget(string CampusCode, string Session);
         Task<DataTable> GetNonRequiredBudget(string CampusCode, string Session);
         Task<DataTable> GetMaadAddedDetails(string RefNo);

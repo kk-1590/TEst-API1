@@ -47,5 +47,24 @@
 
         public const string DELETE_BUDGET_TYPE_HEAD_MAPPING = "UPDATE `budget_type_head_mapping` SET `Status`='Deleted',DeletedBy=@DeletedBy,DeletedOn=NOW(),DeletedFrom=@DeletedFrom,UpdateRemark=IF(UpdateRemark IS NULL,@UpdateRemark,CONCAT(UpdateRemark,' $$$ ',@UpdateRemark)) WHERE Id=@HeadMapId ";
 
+        public const string CHECK_ALL_DEPARTMENT_BUDGET_ALLOWED = "SELECT 1 FROM advances.`othervalues` where Type='All Department Budget Allowed' AND FIND_IN_SET(@EmployeeId,`Value`);";
+
+        public const string GET_ALL_BUGDET_DEPARTMENT = "select DISTINCT `name` from salary_management.emp_department WHERE FIND_IN_SET(@CampusCode,CampusCodes) ORDER BY `name`;";
+
+        public const string GET_ALLOWED_BUGDET_DEPARTMENT = "SELECT DISTINCT A.`name` from salary_management.emp_department A, salary_management.departmenthod B WHERE A.`name`=B.Department AND B.EmployeeCode=@EmployeeId AND FIND_IN_SET(@CampusCode,A.CampusCodes) ORDER BY A.`name`;";
+
+
+        public const string CHECK_IS_DEPARTMENT_BUDGET_SUMMARY_EXISTS = "SELECT ReferenceNo FROM department_budget_summary where `Session`=@Session AND CampusCode=@CampusCode AND Department=@Department AND `Status`!='Deleted';;";
+
+        public const string GET_NEW_DEPARTMENT_BUDGET_SUMMARY_REFERENCE_NO = "SELECT CAST(IFNULL(MAX(ReferenceNo),  CONCAT(DATE_FORMAT(NOW(),'%y%m%d'),'0001')) AS UNSIGNED ) 'ReferenceNo' FROM `department_budget_summary` WHERE ReferenceNo LIKE CONCAT(DATE_FORMAT(NOW(),'%y%m%d'),'%');";
+
+        public const string CREATE_NEW_BUDGET_SUMMARY = "INSERT INTO `department_budget_summary` (ReferenceNo,`Session`,CampusCode,Department,BudgetName,InitiatedBy,InitiatedOn,InitiatedFrom) VALUES (@ReferenceNo,@Session,@CampusCode,@Department,@BudgetName,@InitiatedBy,NOW(),@InitiatedFrom);;";
+
+        public const string GET_IS_VALID_BUGDET_DEPARTMENT = "select DISTINCT `name` from salary_management.emp_department WHERE FIND_IN_SET(@CampusCode,CampusCodes)  AND name=@Department;";
+
+        public const string GET_DEPARTMENT_BUDGET_SUMMARY = "SELECT A.ReferenceNo,A.`Session`,B.CampusName,A.CampusCode,A.Department,A.BudgetName,A.BudgetAmount,A.RecurringBudgetAmount,A.NonRecurringBudgetAmount,A.BudgetAmountUsed,A.RecurringBudgetAmountUsed,A.NonRecurringBudgetAmountUsed,A.BudgetAmountRemaining,A.RecurringBudgetAmountRemaining,A.NonRecurringBudgetAmountRemaining,A.`Status`,A.BudgetStatus FROM `department_budget_summary` A, gla_student_management.campus_master B WHERE A.CampusCode=B.CampusCode AND A.`Status`='Active' AND B.IsActive=1 AND A.`Session`=@Session  AND A.CampusCode=@CampusCode  @ChangeCondition ORDER BY ReferenceNo DESC  LIMIT @LimitItems OFFSET @OffSetItems ;";
+
+        public const string DELETE_DEPARMENT_BUDGETDETAILS = "UPDATE department_budget_details SET `Status`='Deleted',DeletedBy=@DeletedBy,DeletedFrom=@Ip,DeletedOn=NOW() WHERE Id=@Id and Status='Active'\r\n";
+        public const string ISVALIDDEPARMENTFORDELETE = "select * department_budget_details WHERE Id=@Id and ReferenceNo=@refNo and Status='Active'";
     }
 }

@@ -19,5 +19,10 @@ namespace AdvanceAPI.IServices.Budget
         Task<ApiResponse> GetBudgetHeadMapping(BudgetHeadMappingRequest? mappingRequest);
         Task<ApiResponse> AddBudgetHeadMapping(AddBudgetTypeHeadRequest? addRequest, string? employeeId);
         Task<ApiResponse> DeleteBudgetHeadMapping(DeleteBudgetHeadMappingRequest? deleteRequest, string? employeeId);
+        Task<ApiResponse> GetCreateBudgetSummaryDepartments(string? employeeId, string? campusCode);
+        Task<ApiResponse> CreateBudgetSummary(string? employeeId, CreateDepartmentBudgetSummaryV2Request? budgetRequest);
+        Task<ApiResponse> GetBudgetSummary(string? employeeId, GetDepartmentBudgetSummaryV2Request? budgetRequest);
+        Task<ApiResponse> DeleteDepartmentBudgetDetails(string EmpCode, int Id, string REfNo);
+
     }
 }

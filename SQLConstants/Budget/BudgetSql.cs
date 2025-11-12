@@ -36,7 +36,7 @@
         public const string GET_DEPARTMENT_BUDGET_SUMMARY_RESTRICTED = "SELECT A.ReferenceNo,A.`Session`,A.CampusCode,A.Department,A.BudgetName,A.BudgetAmount,A.BudgetStatus,DATE_FORMAT(A.InitiatedOn,'%d.%m.%Y %r')'InitiatedOn'  FROM `department_budget_summary` A, salary_management.departmenthod B  WHERE A.Department=B.Department AND A.`Session`=@Session AND A.CampusCode=@CampusCode   AND A.`Status`!='Deleted' @AdditionalCondition  AND (A.InitiatedBy=@EmployeeId OR (B.EmployeeCode=@EmployeeId AND B.`Status`='Activated')) LIMIT @LimitItems OFFSET @OffSetItems;";
 
         public const string GET_DEPARTMENT_BUDGET_SUMMARY_ALL = "SELECT A.ReferenceNo,A.`Session`,A.CampusCode,A.Department,A.BudgetName,A.BudgetAmount,A.BudgetStatus,DATE_FORMAT(A.InitiatedOn,'%d.%m.%Y %r')'InitiatedOn'  FROM `department_budget_summary` A  WHERE A.`Session`=@Session AND A.CampusCode=@CampusCode  AND A.`Status`!='Deleted' @AdditionalCondition LIMIT @LimitItems OFFSET @OffSetItems ;";
-       
-      
+
+
     }
 }

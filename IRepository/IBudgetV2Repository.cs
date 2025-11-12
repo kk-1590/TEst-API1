@@ -29,5 +29,14 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> CheckBudgetTypeHeadMappingAlreadyExistsByid(string? headMapId);
         Task<DataTable> CheckBudgetTypeHeadMappingUsedOrNOtByid(string? headMapId);
         Task<DataTable> DeleteBudgetTypeHeadMappingAlreadyExists(DeleteBudgetHeadMappingRequest? deleteRequest, string? employeeId);
+        Task<DataTable> CheckAllDepartmentBudgetAllowed(string? employeeCode);
+        Task<DataTable> GetBudgetDepartments(string? employeeCode, string? campusCode, bool allDepartmentsAllowed);
+        Task<DataTable> CheckIsValidDepartmentBudgetDepartment(CreateDepartmentBudgetSummaryV2Request? budgetRequest);
+        Task<DataTable> CheckIsDepartmentBudgetSummaryExists(CreateDepartmentBudgetSummaryV2Request? budgetRequest);
+        Task<DataTable> GetNewDepartmentBudgetSummaryReferenceNo();
+        Task<int> CreateNewBudgetSummary(string? employeeId, string? referenceNo, string? ipAddress, CreateDepartmentBudgetSummaryV2Request? budgetRequest);
+        Task<DataTable> GetDepartmentBudgetSummary(GetDepartmentBudgetSummaryV2Request? budgetRequest, string? employeeId, bool allDepartmentsAllowed);
+        Task<DataTable> ValidDepartmentDetailsForDelete(int id, string RefNo);
+        Task<int> deleteDepartment(string EmpCode, int Id);
     }
 }

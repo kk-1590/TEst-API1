@@ -16,6 +16,7 @@ namespace AdvanceAPI.Controllers
     {
         private readonly ILogger<BudgetV2Controller> _logger;
         private readonly IBudgetV2 _iBudget;
+
         public BudgetV2Controller(ILogger<BudgetV2Controller> logger, IBudgetV2 budget)
         {
             _logger = logger;
@@ -135,7 +136,6 @@ namespace AdvanceAPI.Controllers
             }
         }
 
-
         [HttpDelete]
         [Route("delete-budget-session-amount-summary")]
         public async Task<IActionResult> DeleteBudgetSessionSummaryAmount(DeleteBudgetSessionSummaryAmountRequest? deleteRequest)
@@ -203,7 +203,6 @@ namespace AdvanceAPI.Controllers
             }
         }
 
-
         [HttpGet]
         [Route("get-budget-maad/{Maad}")]
         public async Task<IActionResult> getBudgetMaad(string Maad)
@@ -228,6 +227,7 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
+
         [HttpGet]
         [Route("get-budget-sessions-summary-amount-add")]
         public async Task<IActionResult> GetBudgetSummaryNewSessions()
@@ -245,7 +245,6 @@ namespace AdvanceAPI.Controllers
             }
         }
 
-
         [HttpPut]
         [Route("add-budget-department-details")]
         public async Task<IActionResult> AddBudgetDepartment(AddDepartmentSummaryRequest request)
@@ -262,7 +261,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _iBudget.AddDepartmentDetails(employeeId,request);
+                ApiResponse apiResponse = await _iBudget.AddDepartmentDetails(employeeId, request);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -272,6 +271,7 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
+
         [HttpGet]
         [Route("get-budget-department-details/{RefNo}")]
         public async Task<IActionResult> GetBudgetDepartment(string RefNo)
@@ -288,7 +288,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _iBudget.GetDepartmentBudgetDetails (RefNo);
+                ApiResponse apiResponse = await _iBudget.GetDepartmentBudgetDetails(RefNo);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
@@ -298,8 +298,9 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
+
         [HttpPut]
-        [Route("update-budget-department-details/{RefNo}")]
+        [Route("update-budget-department-details")]
         public async Task<IActionResult> PutBudgetDepartment(AddDepartmentSummaryUpdateRequest request)
         {
             try
@@ -324,7 +325,6 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
-
 
         [HttpPost]
         [Route("get-budget-head-mapping")]
@@ -353,7 +353,6 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
-
 
         [HttpPost]
         [Route("add-budget-head-mapping")]
@@ -389,7 +388,6 @@ namespace AdvanceAPI.Controllers
             }
         }
 
-
         [HttpDelete]
         [Route("delete-budget-head-mapping")]
         public async Task<IActionResult> DeleteBudgetHeadMapping(DeleteBudgetHeadMappingRequest? deleteRequest)
@@ -424,7 +422,112 @@ namespace AdvanceAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("get-budget-create-departments/{campusCode}")]
+        public async Task<IActionResult> GetBudgetDepartments([FromRoute] string? campusCode)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                if (string.IsNullOrEmpty(campusCode))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
 
+                ApiResponse apiResponse = await _iBudget.GetCreateBudgetSummaryDepartments(employeeId, campusCode);
 
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-budget-create-departments");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpPost]
+        [Route("create-department-budget-summary")]
+        public async Task<IActionResult> CreateDepartmentBudgetSummary([FromBody] CreateDepartmentBudgetSummaryV2Request? budgetRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.CreateBudgetSummary(employeeId, budgetRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During create-department-budget-summary");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpPost]
+        [Route("get-department-budget-summary")]
+        public async Task<IActionResult> GetDepartmentBudgetSummary([FromBody] GetDepartmentBudgetSummaryV2Request? budgetRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.GetBudgetSummary(employeeId, budgetRequest);
+
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During get-department-budget-summary");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpDelete]
+        [Route("Delete-budget-department-details/{refNo}/{Id}")]
+        public async Task<IActionResult> DeleteBudgetDepartment(string refNo, int Id)
+        {
+            try
+            {
+                // Task<ApiResponse> DeleteDepartmentBudgetDetails(string EmpCode,int Id)
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse apiResponse = await _iBudget.DeleteDepartmentBudgetDetails(employeeId, Id, refNo);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error During update-budget-department-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
     }
 }

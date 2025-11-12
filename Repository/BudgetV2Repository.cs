@@ -270,19 +270,18 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-
-        public async Task<int> AddMaadInList(string EmpCode,string Maad)
+        public async Task<int> AddMaadInList(string EmpCode, string Maad)
         {
 
             try
             {
-                List<SQLParameters> param= new List<SQLParameters>();
+                List<SQLParameters> param = new List<SQLParameters>();
                 //@Maad,NOW(),@IpAddress,@AddBy
                 param.Add(new SQLParameters("@Maad", Maad));
                 param.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
                 param.Add(new SQLParameters("@AddBy", EmpCode));
-                
-                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.ADD_MAAD_IN_LIST,param,DBConnections.Advance);
+
+                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.ADD_MAAD_IN_LIST, param, DBConnections.Advance);
 
             }
             catch (Exception ex)
@@ -295,19 +294,19 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
+                List<SQLParameters> param = new List<SQLParameters>();
                 // (@ReferenceNo, @BudgetType, @BudgetHead, @BudgetMaad, @BudgetAmount, @AllowOverBudgetApproval, NOW(), @AddedFrom, @AddedBy)
-                param.Add(new SQLParameters("@ReferenceNo",request.ReferenceNo??string.Empty));
-                param.Add(new SQLParameters("@BudgetType", request.BudgetType??string.Empty));
-                param.Add(new SQLParameters("@BudgetHead", request.BudgetHead??string.Empty));
-                param.Add(new SQLParameters("@BudgetMaad", request.BudgetMaad??string.Empty));
-                param.Add(new SQLParameters("@BudgetAmount", request.BudgetAmount.ToString()??string.Empty));
+                param.Add(new SQLParameters("@ReferenceNo", request.ReferenceNo ?? string.Empty));
+                param.Add(new SQLParameters("@BudgetType", request.BudgetType ?? string.Empty));
+                param.Add(new SQLParameters("@BudgetHead", request.BudgetHead ?? string.Empty));
+                param.Add(new SQLParameters("@BudgetMaad", request.BudgetMaad ?? string.Empty));
+                param.Add(new SQLParameters("@BudgetAmount", request.BudgetAmount.ToString() ?? string.Empty));
                 param.Add(new SQLParameters("@AllowOverBudgetApproval", request.AllowOverBudgetApproval));
                 param.Add(new SQLParameters("@AddedFrom", _general.GetIpAddress()));
                 param.Add(new SQLParameters("@AddedBy", EmpCode));
                 return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.ADD_DEPARTMENT_BUDGET_DETAILS, param, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During AddDepartmentList");
                 throw;
@@ -318,10 +317,11 @@ namespace AdvanceAPI.Repository
             try
             {
                 List<SQLParameters> parameters = new List<SQLParameters>();
-                parameters.Add(new SQLParameters("@RefNo",RefNo));
-                return await _dbOperations.SelectAsync(BudgetV2Sql.GET_DEPARMENT_BUDGET_DETAILS,parameters,DBConnections.Advance);
+                parameters.Add(new SQLParameters("@RefNo", RefNo));
+                return await _dbOperations.SelectAsync(BudgetV2Sql.GET_DEPARMENT_BUDGET_DETAILS, parameters, DBConnections.Advance);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 _logger.LogError(ex, "Error During GetDepartmentDetails");
                 throw;
             }
@@ -331,7 +331,7 @@ namespace AdvanceAPI.Repository
             //UPDATE department_budget_details SET BudgetType=@BudgetType,BudgetHead=@BudgetHead,BudgetMaad=@BudgetMaad,BudgetAmount=@BudgetAmount,AllowOverBudgetApproval=@AllowOverBudgetApproval,UpdatedBy=@UpdateBy,UpdatedOn=NOW(),UpdatedFrom=@IP WHERE Id=@Id
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
+                List<SQLParameters> param = new List<SQLParameters>();
                 param.Add(new SQLParameters("@BudgetType", request.BudgetType ?? string.Empty));
                 param.Add(new SQLParameters("@BudgetHead", request.BudgetHead ?? string.Empty));
                 param.Add(new SQLParameters("@BudgetMaad", request.BudgetMaad ?? string.Empty));
@@ -340,10 +340,10 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@IP", _general.GetIpAddress()));
                 param.Add(new SQLParameters("@UpdateBy", EmpCode));
                 param.Add(new SQLParameters("@Id", request.Id));
-                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.UPDATE_DEPARTMENT_BUDGET_DETAILS,param,DBConnections.Advance );
+                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.UPDATE_DEPARTMENT_BUDGET_DETAILS, param, DBConnections.Advance);
 
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During UpdateDepartmentDetails");
                 throw;
@@ -424,7 +424,6 @@ namespace AdvanceAPI.Repository
             }
         }
 
-
         public async Task<DataTable> CheckBudgetTypeHeadMappingAlreadyExistsByid(string? headMapId)
         {
             try
@@ -474,6 +473,188 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During CheckBudgetTypeHeadMappingUsedOrNOtByid");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckAllDepartmentBudgetAllowed(string? employeeCode)
+        {
+            try
+            {
+                List<SQLParameters> sqlParameters = new List<SQLParameters>(1);
+                sqlParameters.Add(new SQLParameters("@EmployeeId", employeeCode ?? string.Empty));
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.CHECK_ALL_DEPARTMENT_BUDGET_ALLOWED, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckAllDepartmentBudgetAllowed");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetBudgetDepartments(string? employeeCode, string? campusCode, bool allDepartmentsAllowed)
+        {
+            try
+            {
+                List<SQLParameters> sqlParameters = new List<SQLParameters>(1);
+                sqlParameters.Add(new SQLParameters("@CampusCode", campusCode ?? string.Empty));
+                if (!allDepartmentsAllowed)
+                {
+                    sqlParameters.Add(new SQLParameters("@EmployeeId", employeeCode ?? string.Empty));
+                }
+
+                return await _dbOperations.SelectAsync(allDepartmentsAllowed ? BudgetV2Sql.GET_ALL_BUGDET_DEPARTMENT : BudgetV2Sql.GET_ALLOWED_BUGDET_DEPARTMENT, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetBudgetDepartments");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckIsDepartmentBudgetSummaryExists(CreateDepartmentBudgetSummaryV2Request? budgetRequest)
+        {
+            try
+            {
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@Session", budgetRequest?.Session ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@CampusCode", budgetRequest?.CampusCode ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@Department", budgetRequest?.Department ?? string.Empty));
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.CHECK_IS_DEPARTMENT_BUDGET_SUMMARY_EXISTS, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckIsDepartmentBudgetSummaryExists");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> CheckIsValidDepartmentBudgetDepartment(CreateDepartmentBudgetSummaryV2Request? budgetRequest)
+        {
+            try
+            {
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@CampusCode", budgetRequest?.CampusCode ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@Department", budgetRequest?.Department ?? string.Empty));
+
+                return await _dbOperations.SelectAsync(BudgetV2Sql.GET_IS_VALID_BUGDET_DEPARTMENT, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckIsValidDepartmentBudgetDepartment");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetNewDepartmentBudgetSummaryReferenceNo()
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(BudgetV2Sql.GET_NEW_DEPARTMENT_BUDGET_SUMMARY_REFERENCE_NO, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetNewDepartmentBudgetSummaryReferenceNo");
+                throw;
+            }
+        }
+        public async Task<int> CreateNewBudgetSummary(string? employeeId, string? referenceNo, string? ipAddress, CreateDepartmentBudgetSummaryV2Request? budgetRequest)
+        {
+            try
+            {
+
+                //@ReferenceNo,@Session,@CampusCode,@Department,@BudgetName,@BudgetAmount,@InitiatedBy,NOW(),@InitiatedFrom
+
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@ReferenceNo", referenceNo ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@Session", budgetRequest?.Session ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@CampusCode", budgetRequest?.CampusCode ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@Department", budgetRequest?.Department ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@BudgetName", budgetRequest?.BudgetName ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@InitiatedBy", employeeId ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@InitiatedFrom", ipAddress ?? string.Empty));
+
+                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.CREATE_NEW_BUDGET_SUMMARY, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CreateNewBudgetSummary");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetDepartmentBudgetSummary(GetDepartmentBudgetSummaryV2Request? budgetRequest, string? employeeId, bool allDepartmentsAllowed)
+        {
+            try
+            {
+                StringBuilder changeCondition = new StringBuilder("");
+                List<SQLParameters> sqlParameters = new List<SQLParameters>();
+                sqlParameters.Add(new SQLParameters("@Session", budgetRequest?.Session ?? string.Empty));
+                sqlParameters.Add(new SQLParameters("@CampusCode", budgetRequest?.CampusCode ?? string.Empty));
+                if (!string.IsNullOrWhiteSpace(budgetRequest?.Department))
+                {
+                    changeCondition.Append(" AND A.Department=@Department ");
+                    sqlParameters.Add(new SQLParameters("@Department", budgetRequest?.Department ?? string.Empty));
+                }
+                if (!string.IsNullOrWhiteSpace(budgetRequest?.ReferenceNo))
+                {
+                    changeCondition.Append(" AND A.ReferenceNo=@ReferenceNo ");
+                    sqlParameters.Add(new SQLParameters("@ReferenceNo", budgetRequest?.ReferenceNo ?? string.Empty));
+                }
+                if (!allDepartmentsAllowed)
+                {
+                    changeCondition.Append(" AND ( A.InitiatedBy=@EmployeeId  OR A.Department IN ((SELECT DISTINCT B.Department FROM salary_management.emp_department A, salary_management.departmenthod B WHERE A.`name`=B.Department AND FIND_IN_SET(@CampusCode,A.CampusCodes) AND B.EmployeeCode=@EmployeeId AND B.`Status` ='Activated')))");
+
+                    sqlParameters.Add(new SQLParameters("@EmployeeId", employeeId ?? string.Empty));
+                }
+
+                sqlParameters.Add(new SQLParameters("@OffSetItems", budgetRequest?.RecordFrom ?? 0));
+                sqlParameters.Add(new SQLParameters("@LimitItems", budgetRequest?.NoOfRecords ?? 0));
+
+                string query = BudgetV2Sql.GET_DEPARTMENT_BUDGET_SUMMARY.Replace("@ChangeCondition", changeCondition.ToString());
+
+                return await _dbOperations.SelectAsync(query, sqlParameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetDepartmentBudgetSummary");
+                throw;
+            }
+        }
+
+
+
+        public async Task<DataTable> ValidDepartmentDetailsForDelete(int id, string RefNo)
+        {
+            List<SQLParameters> parameters = new List<SQLParameters>();
+            try
+            {
+                parameters.Add(new SQLParameters("@Id", id));
+                parameters.Add(new SQLParameters("@refNo", RefNo));
+                return await _dbOperations.SelectAsync(BudgetV2Sql.ISVALIDDEPARMENTFORDELETE, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During ValidDepartmentDetailsForDelete");
+                throw;
+            }
+
+        }
+        public async Task<int> deleteDepartment(string EmpCode, int Id)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@DeletedBy", EmpCode));
+                parameters.Add(new SQLParameters("@Id", Id));
+                parameters.Add(new SQLParameters("@Ip", _general.GetIpAddress()));
+                return await _dbOperations.DeleteInsertUpdateAsync(BudgetV2Sql.DELETE_DEPARMENT_BUDGETDETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During deleteDepartment");
                 throw;
             }
         }

@@ -11,8 +11,8 @@ namespace AdvanceAPI.Services.Budget
     {
 
         private readonly IBudgetRepository _budgetRepository;
-        private readonly IGeneral _general; 
-        public BudgetService(IBudgetRepository budgetRepository,IGeneral general)
+        private readonly IGeneral _general;
+        public BudgetService(IBudgetRepository budgetRepository, IGeneral general)
         {
             _budgetRepository = budgetRepository;
             _general = general;
@@ -20,7 +20,7 @@ namespace AdvanceAPI.Services.Budget
 
         public async Task<ApiResponse> AddItemWithSession(string EmpCode, MapNewMaad mapNewMaad)
         {
-            using (DataTable d = await _budgetRepository.CheckAlreadyAdded(mapNewMaad)) 
+            using (DataTable d = await _budgetRepository.CheckAlreadyAdded(mapNewMaad))
             {
                 if (d.Rows.Count > 0)
                 {
@@ -29,7 +29,7 @@ namespace AdvanceAPI.Services.Budget
                 else
                 {
                     int ins = await _budgetRepository.AddDetails(EmpCode, mapNewMaad);
-                    if (ins > 0) 
+                    if (ins > 0)
                     {
                         return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{mapNewMaad.Maad}` Added Successfully");
                     }
@@ -40,24 +40,24 @@ namespace AdvanceAPI.Services.Budget
                 }
             }
 
-           return new ApiResponse(StatusCodes.Status200OK, null);
+            return new ApiResponse(StatusCodes.Status200OK, null);
         }
         public async Task<ApiResponse> UpdateBudgetMaad(string EmpCode, UpdateMaadBudegtRequest updateMaadBudegtRequest)
         {
             //Task<int> UpdateMaadForBudget(string EmpCode, UpdateMaadBudegtRequest updateMaadBudegtRequest)
-            int ins=await _budgetRepository.UpdateMaadForBudget(EmpCode, updateMaadBudegtRequest);
+            int ins = await _budgetRepository.UpdateMaadForBudget(EmpCode, updateMaadBudegtRequest);
             if (ins > 0)
             {
-                return new ApiResponse(StatusCodes.Status200OK,"Success",$"`{ins}` Record Update Successfully");
+                return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Update Successfully");
             }
             else
             {
                 return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Record Not Update/Invelid Access");
             }
         }
-        public async Task<ApiResponse> GetRecord(int Limit, int Offset,string CampusCode,string Session,int BudgetRequired)
+        public async Task<ApiResponse> GetRecord(int Limit, int Offset, string CampusCode, string Session, int BudgetRequired)
         {
-            using (DataTable dt = await _budgetRepository.GetMaadBudgetDetails(Limit, Offset,CampusCode,Session,BudgetRequired))
+            using (DataTable dt = await _budgetRepository.GetMaadBudgetDetails(Limit, Offset, CampusCode, Session, BudgetRequired))
             {
                 List<MapDetailsResponse> lst = new List<MapDetailsResponse>();
                 foreach (DataRow dr in dt.Rows)
@@ -80,44 +80,44 @@ namespace AdvanceAPI.Services.Budget
         public async Task<ApiResponse> GetMaadBudgetRequired(LimitRequest limitRequest)
         {
             List<string> list = new List<string>();
-            using (DataTable dt = await _budgetRepository.GetRequiredBudget(limitRequest.CampusCode!,limitRequest.Session!))
+            using (DataTable dt = await _budgetRepository.GetRequiredBudget(limitRequest.CampusCode!, limitRequest.Session!))
             {
                 foreach (DataRow dr in dt.Rows)
                 {
                     list.Add(dr[0].ToString() ?? string.Empty);
                 }
-                return new ApiResponse(StatusCodes.Status200OK,"Success",list);
+                return new ApiResponse(StatusCodes.Status200OK, "Success", list);
             }
         }
         public async Task<ApiResponse> GetMaadNonBudgetRequired(LimitRequest limitRequest)
         {
             List<string> list = new List<string>();
-            using (DataTable dt = await _budgetRepository.GetRequiredBudget(limitRequest.CampusCode!,limitRequest.Session!))
+            using (DataTable dt = await _budgetRepository.GetRequiredBudget(limitRequest.CampusCode!, limitRequest.Session!))
             {
                 foreach (DataRow dr in dt.Rows)
                 {
                     list.Add(dr[0].ToString() ?? string.Empty);
                 }
-                return new ApiResponse(StatusCodes.Status200OK,"Success",list);
+                return new ApiResponse(StatusCodes.Status200OK, "Success", list);
             }
         }
         public async Task<ApiResponse> GetAddedMaad(string RefNo)
         {
-            using(DataTable dt=await _budgetRepository.GetMaadAddedDetails(RefNo))
+            using (DataTable dt = await _budgetRepository.GetMaadAddedDetails(RefNo))
             {
-                List< AddedMaadResponse > lst= new List< AddedMaadResponse >();
-                foreach(DataRow dr in dt.Rows)
+                List<AddedMaadResponse> lst = new List<AddedMaadResponse>();
+                foreach (DataRow dr in dt.Rows)
                 {
                     lst.Add(new AddedMaadResponse(dr));
                 }
-                return new ApiResponse(StatusCodes.Status200OK,"Success",lst);
+                return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
             }
         }
         public async Task<ApiResponse> UpdateaadDetails(string EmpCode, UpdateBudgetDetails updateBudgetDetails)
         {
             // Task<int> UpdateBudgetDetails(string EmpCode,UpdateBudgetDetails updateBudgetDetails)
-            int ins=await _budgetRepository.UpdateBudgetDetails(EmpCode,updateBudgetDetails);
-            if(ins>0)
+            int ins = await _budgetRepository.UpdateBudgetDetails(EmpCode, updateBudgetDetails);
+            if (ins > 0)
             {
                 return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Updated Successfully");
             }
@@ -127,10 +127,10 @@ namespace AdvanceAPI.Services.Budget
 
             }
         }
-        public async Task<ApiResponse> DeleteaadDetails( UpdateBudgetDetails updateBudgetDetails)
+        public async Task<ApiResponse> DeleteaadDetails(UpdateBudgetDetails updateBudgetDetails)
         {
-            int ins =await _budgetRepository.DeleteDetails(updateBudgetDetails);
-            if(ins>0)
+            int ins = await _budgetRepository.DeleteDetails(updateBudgetDetails);
+            if (ins > 0)
             {
                 return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Delete Successfully");
             }
@@ -143,27 +143,27 @@ namespace AdvanceAPI.Services.Budget
         public async Task<ApiResponse> CheckAlreadyAddedMaadDetails(List<AddBudgetDetailsRequest> Adddetails)
         {
             //  Task<DataTable> CheckAllreadyAddedDetails(List<AddBudgetDetailsRequest> add)
-           
-            using(DataTable dt=await _budgetRepository.CheckAllreadyAddedDetails(Adddetails))
+
+            using (DataTable dt = await _budgetRepository.CheckAllreadyAddedDetails(Adddetails))
             {
                 string str = string.Empty;
-                if (dt.Rows.Count > 0) 
+                if (dt.Rows.Count > 0)
                 {
-                    foreach (DataRow row in dt.Rows) 
+                    foreach (DataRow row in dt.Rows)
                     {
 
-                        str += row["Maad"].ToString()+" , ";
+                        str += row["Maad"].ToString() + " , ";
                     }
                 }
-                if(str.Length > 0)
+                if (str.Length > 0)
                 {
-                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", str+="\n Maad Already Added");
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", str += "\n Maad Already Added");
                 }
                 else
                 {
                     return new ApiResponse(StatusCodes.Status200OK, "Success", "");
                 }
-                
+
 
             }
         }

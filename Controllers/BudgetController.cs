@@ -16,7 +16,7 @@ namespace AdvanceAPI.Controllers
     {
         private readonly ILogger<BudgetController> _logger;
         private readonly IBudget _Ibudget;
-        public BudgetController(ILogger<BudgetController> logger,IBudget budget) 
+        public BudgetController(ILogger<BudgetController> logger, IBudget budget)
         {
             _logger = logger;
             _Ibudget = budget;
@@ -33,14 +33,14 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _Ibudget.AddItemWithSession(employeeId,mapNewMaad);
+                ApiResponse apiResponse = await _Ibudget.AddItemWithSession(employeeId, mapNewMaad);
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
@@ -59,14 +59,14 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _Ibudget.UpdateBudgetMaad (employeeId,mapNewMaad);
+                ApiResponse apiResponse = await _Ibudget.UpdateBudgetMaad(employeeId, mapNewMaad);
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
@@ -74,7 +74,7 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
-        
+
         [HttpGet]
         [Route("get-budget-maad-details")]
         public async Task<IActionResult> getdetails([FromBody] LimitRequest limitRequest)
@@ -86,14 +86,14 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _Ibudget.GetRecord  (limitRequest.NoOfItems,limitRequest.ItemsFrom,limitRequest.CampusCode,limitRequest.Session,Convert.ToInt32(limitRequest.BudgetRequired));
+                ApiResponse apiResponse = await _Ibudget.GetRecord(limitRequest.NoOfItems, limitRequest.ItemsFrom, limitRequest.CampusCode, limitRequest.Session, Convert.ToInt32(limitRequest.BudgetRequired));
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
@@ -112,14 +112,14 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
                 ApiResponse apiResponse = await _Ibudget.GetMaadBudgetRequired(limitRequest);
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
@@ -138,14 +138,14 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
                 ApiResponse apiResponse = await _Ibudget.GetMaadNonBudgetRequired(limitRequest);
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
@@ -164,14 +164,14 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
                 ApiResponse apiResponse = await _Ibudget.GetAddedMaad(RefNo);
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
@@ -190,14 +190,14 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
-                ApiResponse apiResponse = await _Ibudget.UpdateaadDetails(employeeId,updateBudgetDetails);
+                ApiResponse apiResponse = await _Ibudget.UpdateaadDetails(employeeId, updateBudgetDetails);
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
@@ -216,7 +216,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-              
+
                 if (string.IsNullOrEmpty(employeeId))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
@@ -224,7 +224,7 @@ namespace AdvanceAPI.Controllers
                 //Task<ApiResponse> DeleteaadDetails( UpdateBudgetDetails updateBudgetDetails)
                 ApiResponse apiResponse = await _Ibudget.DeleteaadDetails(updateBudgetDetails);
 
-                return  apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }
             catch (Exception ex)
             {
