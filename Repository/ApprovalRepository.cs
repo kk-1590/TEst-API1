@@ -5,6 +5,8 @@ using AdvanceAPI.ENUMS.DB;
 using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.DB;
+using AdvanceAPI.Services.DB;
+using AdvanceAPI.SQLConstants.Advance;
 using AdvanceAPI.SQLConstants.Approval;
 using System.Data;
 using System.Text;
@@ -490,6 +492,28 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+
+        public async Task<DataTable> CanGenerateAdvance(string Type,string Empcode)
+        {
+            try
+            {
+                string showcond = "";
+                if (Type== "STORE")
+                {
+                    showcond += "  And (IniId = '" + Empcode + "' Or RelativePersonID='" + Empcode + "')";
+                }
+                return await _dbContext.SelectAsync(ApprovalSql.CAN_GENERATE_ADVANCE.Replace("@Condition",showcond),DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "Error during GetMyApprovals.");
+                throw;
+            }
+        }
+
+
+
+
         public async Task<DataTable> GetMyApprovalsCount(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search)
         {
             try
@@ -1304,6 +1328,60 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+        public async Task<DataTable> CanGenerateBill(string Type, string EmpCode, bool IsThousand, string RefNo )
+        {
+            try
+            {
+                string Cond = "";
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpCode", EmpCode));
+                if (Type.ToUpper() == "STORE")
+                {
+                    Cond += " And (IniId = @EmpCode Or RelativePersonID=@EmpCode)";
+                }
+                if (IsThousand)
+                {
+                    Cond += "  And BillRequired='No' And ReferenceBillStatus ='Closed' And BillId is null";
+                }
+                else
+                {
+                    Cond += " And ReferenceBillStatus ='Open'";
+                }
 
+                DataTable LockMenuDetails = await LockMenu(EmpCode);
+                string ids = "";
+                if (RefNo != "")
+                {
+                    ids = ids == "" ? RefNo : (ids + "," + RefNo);
+                }
+                if (ids.Length > 0)
+                {
+                    Cond += " And ReferenceNo in (" + ids + ")";
+                }
+
+                return await _dbContext.SelectAsync(AdvanceSql.GET_DETAILS_FOR_CAN_BILL_UPLOAD.Replace("@Condition", Cond), param, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During CanGenerateBill...", ex);
+                throw;
+            }
+        }
+        public async Task<DataTable> LockMenu(string EmpCode)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@EmpCode", EmpCode));
+                return await _dbContext.SelectAsync(AdvanceSql.GETLOCKMENU, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During LockMenu...", ex);
+                throw;
+            }
+
+        }
     }
 }

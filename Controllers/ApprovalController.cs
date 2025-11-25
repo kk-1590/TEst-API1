@@ -423,6 +423,7 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
+
                 ApiResponse apiResponse = await _approvalService.EditApprovalDetails(referenceNo, details, employee);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
@@ -450,10 +451,10 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(ModelState);
                 }
+                string? AddEmpCode=User.FindFirstValue(ClaimTypes.AuthorizationDecision);
+                string? type = User.FindFirstValue(ClaimTypes.Authentication);
 
-
-
-                ApiResponse apiResponse = await _approvalService.GetPurchaseApproval(employee, "", details);
+                ApiResponse apiResponse = await _approvalService.GetPurchaseApproval(employee, AddEmpCode!, details,type);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
             }

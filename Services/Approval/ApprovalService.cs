@@ -7,6 +7,7 @@ using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Approval;
 using AdvanceAPI.IServices.Inclusive;
 using System.Data;
+using System.Reflection.Emit;
 
 namespace AdvanceAPI.Services.Approval
 {
@@ -295,11 +296,14 @@ namespace AdvanceAPI.Services.Approval
 
             using (DataTable approvalsTable = await _approvalRepository.GetMyApprovals(emploeeId, OnlySelfApprovals, search))
             {
+                DataTable CanGenerateAdvance = await _approvalRepository.CanGenerateAdvance(type!, emploeeId!);
+
                 foreach (DataRow row in approvalsTable.Rows)
                 {
                     MyApprovalReponse approval = new MyApprovalReponse(row);
-
-
+                    
+                    DataTable canUploadbill = await _approvalRepository.CanGenerateBill(type, emploeeId, Convert.ToDouble(approval.TotalAmount) < 1000 ? true : false, approval.ReferenceNo);
+                    approval.CanUploadBill =  canUploadbill.Rows.Count > 0;
                     approval.InitiatedByName = _generalService.ToTitleCase(approval.InitiatedByName ?? string.Empty);
                     approval.App1Name = _generalService.ToTitleCase(approval.App1Name ?? string.Empty);
                     approval.App2Name = _generalService.ToTitleCase(approval.App2Name ?? string.Empty);
@@ -313,7 +317,7 @@ namespace AdvanceAPI.Services.Approval
                     approval.App3Photo = await _inclusiveService.GetEmployeePhotoUrl(approval.App3Id ?? string.Empty);
                     approval.App4Photo = await _inclusiveService.GetEmployeePhotoUrl(approval.App4Id ?? string.Empty);
 
-
+                    approval.CanGenerateAdvance=CanGenerateAdvance.Select("ReferenceNo="+approval.ReferenceNo+"").Length>0;
                     DataTable dtIsComparisonDefined = await _approvalRepository.CheckIsApprovalComparisonDefined(approval.ReferenceNo ?? string.Empty);
 
                     if (dtIsComparisonDefined.Rows.Count > 0 || approval.CanDeleteApproval == true)
@@ -632,7 +636,7 @@ namespace AdvanceAPI.Services.Approval
             }
         }
 
-        public async Task<ApiResponse> GetPurchaseApproval(string EmpCode, string EmpCodeAdd, AprrovalsListRequest details)
+        public async Task<ApiResponse> GetPurchaseApproval(string EmpCode, string EmpCodeAdd, AprrovalsListRequest details,string Type)
         {
             //await _account.GetAdditionalEmployeeCode(loginRequest?.UserId);
             DataTable d = await _accountRepository.GetAdditionalEmployeeCode(EmpCode);
@@ -662,6 +666,10 @@ namespace AdvanceAPI.Services.Approval
                     pd.AuthorityNumber = GetAuthNo(dr, EmpCode, EmpCodeAdd);
                     pd.CanApproval = CanApprove(dr, EmpCode, EmpCodeAdd);
                     pd.CanCancel = CanCancel(dr, EmpCode, EmpCodeAdd);
+                    pd.TotalAmount = dr["TotalAmount"].ToString() ?? string.Empty;
+                    pd.ReferenceNo = dr["ReferenceNo"].ToString() ?? string.Empty;
+                  
+
                     if (_generalService.IsFileExists($"Uploads/Approvals/{dr["ReferenceNo"].ToString()}.xlsx"))
                     {
                         pd.IsExcelFile = true;
@@ -684,7 +692,7 @@ namespace AdvanceAPI.Services.Approval
                     pd.Status = dr["Status"].ToString() ?? string.Empty;
                     pd.BudgetAmount = dr["BudgetAmount"].ToString() ?? string.Empty;
                     pd.prevTaken = dr["PreviousTaken"].ToString() ?? string.Empty;
-                    pd.TotalAmount = dr["TotalAmount"].ToString() ?? string.Empty;
+                   
                     pd.BudgetStatus = dr["BudgetStatus"].ToString() ?? string.Empty;
                     pd.UploadBy = dr["IniName"].ToString() ?? string.Empty;
 
@@ -699,7 +707,7 @@ namespace AdvanceAPI.Services.Approval
                     pd.Maad = dr["Maad"].ToString() ?? string.Empty;
                     pd.LastRecieveOn = dr["LastRecieveOn"].ToString() ?? string.Empty;
 
-                    pd.ReferenceNo = dr["ReferenceNo"].ToString() ?? string.Empty;
+                   
                     pd.PreviousCancelRemark = dr["PreviousCancelRemark"].ToString() ?? string.Empty;
                     pd.CancelledOn = dr["CancelledOn"].ToString() ?? string.Empty;
                     pd.CancelledReason = dr["CancelledReason"].ToString() ?? string.Empty;

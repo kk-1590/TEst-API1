@@ -23,6 +23,8 @@ using AdvanceAPI.Services.Approval;
 using AdvanceAPI.Services.VenderPriceCompServices;
 using AdvanceAPI.IServices.Budget;
 using AdvanceAPI.Services.Budget;
+using AdvanceAPI.IServices.Advance;
+using AdvanceAPI.Services.Advance;
 
 namespace AdvanceAPI
 {
@@ -123,6 +125,7 @@ namespace AdvanceAPI
             services.AddScoped<IVenderPriceCompRepository, VenderPriceCompRepository>();
             services.AddScoped<IBudgetRepository, BudgetRepository>();
             services.AddScoped<IBudgetV2Repository, BudgetV2Repository>();
+            services.AddScoped<IAdvanceRepository, AdvanceRepository>();
 
             //Services Setup
             services.AddScoped<IGeneral, General>();
@@ -133,6 +136,7 @@ namespace AdvanceAPI
             services.AddScoped<IVenderPriceComparisionServices, VenderPriceCompServices>();
             services.AddScoped<IBudget, BudgetService>();
             services.AddScoped<IBudgetV2, BudgetV2Service>();
+            services.AddScoped<IAdvanceService, AdvanceService>();
         }
 
     }

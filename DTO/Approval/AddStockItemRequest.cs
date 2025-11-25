@@ -38,7 +38,7 @@ namespace AdvanceAPI.DTO.Approval
 
         public string? SNo { get;set; }
 
-        [Required]
+       
         public string? Size { get; set; }
         [Required]
         [RegularExpression(@"^\d+\.\d{2}$", ErrorMessage = "The discount must have a maximum of two decimal places.")]

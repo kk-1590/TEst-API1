@@ -66,5 +66,14 @@
 
         public const string DELETE_DEPARMENT_BUDGETDETAILS = "UPDATE department_budget_details SET `Status`='Deleted',DeletedBy=@DeletedBy,DeletedFrom=@Ip,DeletedOn=NOW() WHERE Id=@Id and Status='Active'\r\n";
         public const string ISVALIDDEPARMENTFORDELETE = "select * department_budget_details WHERE Id=@Id and ReferenceNo=@refNo and Status='Active'";
+        public const string IsValidDetails = "select * department_budget_details WHERE  ReferenceNo=@refNo and Status='Active'";
+
+        public const string GET_BUDGETDETAILS = "SELECT BudgetType,BudgetHead,BudgetMaad,BudgetAmount FROM department_budget_details WHERE `Status`='Active' AND ReferenceNo=@ReferenceNo;\r\n";
+
+        public const string UPDATE_BUDGET_SUMMARY = "UPDATE department_budget_summary SET BudgetAmount=@BudgetAmount,RecurringBudgetAmount=@RecurringBudgetAmount,NonRecurringBudgetAmount=@NonRecurringBudgetAmount,BudgetAmountRemaining=@BudgetAmountRemaining,RecurringBudgetAmountRemaining=@RecurringBudgetAmountRemaining,NonRecurringBudgetAmountRemaining=@NonRecurringBudgetAmountRemaining,BudgetStatus='Created' WHERE ReferenceNo=@ReferenceNo AND BudgetStatus='Initiated' AND `Status`='Active'\r\n";
+        public const string UPDATE_BUDGET_DETAILS = "UPDATE department_budget_details SET Status='Lock',LockBy=@EmpCode,LockOn=NOW(),LockFrom=@Ip WHERE  `Status`='Active' AND ReferenceNo=@ReferenceNo";
+
+
+        public const string GETBUDGETHEADFILTER = "SELECT BudgetHead FROM `budget_type_head_mapping` WHERE BudgetType=@Type AND `Status`='Active';";
     }
 }

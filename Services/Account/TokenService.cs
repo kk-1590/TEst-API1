@@ -39,7 +39,8 @@ namespace AdvanceAPI.Services.Account
                 new Claim(ClaimTypes.NameIdentifier, tokenRequest?.EmployeeCode!),
                 new Claim(ClaimTypes.Name, tokenRequest?.Name!),
                 new Claim(ClaimTypes.Role, tokenRequest?.MyRoles!),
-                new Claim(ClaimTypes.Authentication, tokenRequest?.Type!)
+                new Claim(ClaimTypes.Authentication, tokenRequest?.Type!),
+                new Claim(ClaimTypes.AuthorizationDecision, tokenRequest?.AdditionalEmployeeCode!)
             };
 
             var token = new JwtSecurityToken(

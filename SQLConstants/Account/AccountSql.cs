@@ -2,7 +2,7 @@
 {
     public static class AccountSql
     {
-        public const string LOGIN_ACCOUNT_STATUS_CHECK = @"select A.*,B.first_name,deisgnation,B.currentstatus from user_login A, emp_master B  where A.Employee_Code = @Employee_Code And A.Employee_Code=B.employee_code";
+        public const string LOGIN_ACCOUNT_STATUS_CHECK = @"select A.*,B.first_name,deisgnation,B.currentstatus,B.santioneddeptt from user_login A, emp_master B  where A.Employee_Code = @Employee_Code And A.Employee_Code=B.employee_code";
 
         public const string GET_MAIN_PASSWORD = "select * from main";
 

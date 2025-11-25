@@ -205,15 +205,16 @@ namespace AdvanceAPI.Controllers
 
         [HttpGet]
         [Route("get-budget-maad/{Maad}")]
+        [AllowAnonymous]
         public async Task<IActionResult> getBudgetMaad(string Maad)
         {
             try
             {
 
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                //if (!ModelState.IsValid)
+                //{
+                //    return BadRequest(ModelState);
+                //}
 
                 //Task<ApiResponse> GetMaadForfilter(string Maad)
 
@@ -274,20 +275,21 @@ namespace AdvanceAPI.Controllers
 
         [HttpGet]
         [Route("get-budget-department-details/{RefNo}")]
+        //[AllowAnonymous]
         public async Task<IActionResult> GetBudgetDepartment(string RefNo)
         {
             try
             {
 
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(employeeId))
-                {
-                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
-                }
+                //if (!ModelState.IsValid)
+                //{
+                //    return BadRequest(ModelState);
+                //}
+                //string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //if (string.IsNullOrEmpty(employeeId))
+                //{
+                //    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                //}
                 ApiResponse apiResponse = await _iBudget.GetDepartmentBudgetDetails(RefNo);
 
                 return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
@@ -525,9 +527,64 @@ namespace AdvanceAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error During update-budget-department-details");
+                _logger.LogError(ex, $"Error During Delete-budget-department-details");
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
+        [HttpGet]
+        [Route("Lock-budget-department-details/{refNo}")]
+        public async Task<IActionResult> LockBudgetDepartment(string refNo)
+        {
+            try
+            {
+               // Task<ApiResponse> LockDepartmentDetails(string RefNo, string EmpCode)
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.LockDepartmentDetails( refNo,employeeId);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error During Lock-budget-department-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpGet]
+        [Route("get-budget-head/{Type}")]
+        public async Task<IActionResult> getbudgethead(string Type)
+        {
+            try
+            {
+               // Task<ApiResponse> LockDepartmentDetails(string RefNo, string EmpCode)
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse apiResponse = await _iBudget.GetHeadFilter(Type);
+                return apiResponse.Status == StatusCodes.Status200OK ? Ok(apiResponse) : BadRequest(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error During Lock-budget-department-details");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        
+
     }
 }

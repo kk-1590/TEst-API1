@@ -93,6 +93,9 @@ namespace AdvanceAPI.DTO.Approval
         public bool? CanOpenExcel { get; set; } = false;
 
         public bool? CanEditItems { get; set; } = false;
+        public bool? CanUploadBill { get; set; } = false;
+
+        public bool? CanGenerateAdvance { get; set; } = false;
 
         public MyApprovalReponse()
         {

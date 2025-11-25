@@ -28,6 +28,7 @@ namespace AdvanceAPI.IRepository
         Task<int> DeletedDraftedItem(string ItemId);
 
         Task<DataTable> GetMyApprovals(string? emploeeId, bool OnlySelfApprovals, AprrovalsListRequest? search);
+        Task<DataTable> CanGenerateAdvance(string Type, string Empcode);
         Task<DataTable> CheckIsApprovalComparisonDefined(string? referenceNo);
         Task<DataTable> CheckIsApprovalExists(string? referenceNo);
         Task<int> DeleteApproval(string? employeeId, string? referenceNo);
@@ -70,5 +71,7 @@ namespace AdvanceAPI.IRepository
         Task<int> DeleteItemFromApproval(string? employeeId, DeleteApprovalItemRequest? deleteRequest);
         Task<int> AddItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? addRequest, ItemDetails itemDetails);
         Task<int> UpdateItemInCreatedApproval(string? employeeId, AddUpdateItemInApprovalRequest? updateRequest);
+        Task<DataTable> CanGenerateBill(string Type, string EmpCode, bool IsThousand, string RefNo);
+        
     }
 }

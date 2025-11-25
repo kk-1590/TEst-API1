@@ -23,6 +23,7 @@ namespace AdvanceAPI.IServices.Budget
         Task<ApiResponse> CreateBudgetSummary(string? employeeId, CreateDepartmentBudgetSummaryV2Request? budgetRequest);
         Task<ApiResponse> GetBudgetSummary(string? employeeId, GetDepartmentBudgetSummaryV2Request? budgetRequest);
         Task<ApiResponse> DeleteDepartmentBudgetDetails(string EmpCode, int Id, string REfNo);
-
+        Task<ApiResponse> LockDepartmentDetails(string RefNo, string EmpCode);
+        Task<ApiResponse> GetHeadFilter(string Type);
     }
 }

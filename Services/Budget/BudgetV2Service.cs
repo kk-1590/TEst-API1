@@ -189,7 +189,6 @@ namespace AdvanceAPI.Services.Budget
                 if (dt.Rows.Count <= 0)
                     await _budgetRepository.AddMaadInList(EmpCode, request.BudgetMaad ?? string.Empty);
             }
-            //Task<int> AddDepartmentList(string EmpCode, AddDepartmentSummaryRequest request)
             int ins = await _budgetRepository.AddDepartmentList(EmpCode, request);
 
             return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Insert Successfully");
@@ -381,5 +380,52 @@ namespace AdvanceAPI.Services.Budget
             int ins = await _budgetRepository.deleteDepartment(EmpCode, Id);
             return new ApiResponse(StatusCodes.Status200OK, "Success", $"`{ins}` Record Delete Successfully");
         }
+
+        public async Task<ApiResponse> LockDepartmentDetails(string RefNo,string EmpCode)
+        {
+            using(DataTable dt=await _budgetRepository.ValidDetails(RefNo))
+            {
+                if(dt.Rows.Count>0)
+                {
+                    new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
+                }
+            }
+
+            using(DataTable dt=await _budgetRepository.GetDepartMentDetails(RefNo))
+            {
+                int TotalAmount = 0;
+                int TotalRecurringAmount = 0;
+                int TotalNonrecurringAmount = 0;
+                if (dt.Rows.Count>0)
+                {
+                    TotalAmount = dt.AsEnumerable().Sum(x => Convert.ToInt32(x["BudgetAmount"].ToString()));
+                    TotalRecurringAmount = dt.AsEnumerable().Where(x => x["BudgetType"].ToString() == "Recurring").Sum(x => Convert.ToInt32(x["BudgetAmount"].ToString()));
+                    TotalNonrecurringAmount = dt.AsEnumerable().Where(x => x["BudgetType"].ToString() == "Non-Recurring").Sum(x => Convert.ToInt32(x["BudgetAmount"].ToString()));
+                    int UpdateSummary = await _budgetRepository.UpdateBudgetSummary(RefNo,TotalAmount,TotalRecurringAmount,TotalNonrecurringAmount);
+
+                    int UpdateDetails = await _budgetRepository.UpdateDetails(RefNo,EmpCode);
+
+                    if (UpdateDetails > 0) 
+                    {
+                        return new ApiResponse(StatusCodes.Status200OK,"Success","Details Locked Successfully");
+                    }
+                }
+                return  new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
+            }
+        }
+
+        public async Task<ApiResponse> GetHeadFilter(string Type)
+        {
+            using (DataTable dt = await _budgetRepository.GetHeadDetails(Type)) 
+            {
+                List<string> lst = new List<string>();
+                foreach (DataRow item in dt.Rows) 
+                {
+                    lst.Add(item["BudgetHead"].ToString()??string.Empty);
+                }
+                return new ApiResponse(StatusCodes.Status200OK,"Success",lst);
+            }
+        }
+
     }
 }

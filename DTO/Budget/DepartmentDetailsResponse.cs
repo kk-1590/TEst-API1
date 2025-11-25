@@ -10,7 +10,7 @@ namespace AdvanceAPI.DTO.Budget
         public string? BudgetHead { get;set; }
         public string? BudgetMaad { get;set; }
         public string? BudgetAmount { get;set; }
-        public int AllowOverBudget { get;set; }
+        public int AllowOverBudgetApproval { get;set; }
 
         public DepartmentDetailsResponse(DataRow dr)
         {
@@ -20,7 +20,7 @@ namespace AdvanceAPI.DTO.Budget
             BudgetHead = dr["BudgetHead"].ToString() ?? string.Empty;
             BudgetMaad = dr["BudgetMaad"].ToString()?? string.Empty;
             BudgetAmount = dr["BudgetAmount"].ToString()??string.Empty;
-            AllowOverBudget = Convert.ToInt32(dr["AllowOverBudgetApproval"].ToString());
+            AllowOverBudgetApproval = Convert.ToInt32(dr["AllowOverBudgetApproval"].ToString());
         }
     }
 }

@@ -79,9 +79,10 @@ namespace AdvanceAPI.Services.Account
                             createTokenRequest.AgainstRoles = advanceAccess.Rows[0][2]?.ToString();
                             createTokenRequest.Application = advanceAccess.Rows[0]["applicationupload"]?.ToString();
                             createTokenRequest.CampusCode = await GetEmployeeCampusCode(loginRequest?.UserId!);
-
+                            createTokenRequest.Designation = result.Rows[0]["deisgnation"]?.ToString();
                             TokenResponse? tokenResponse = await _token.GenerateJSONWebToken(createTokenRequest);
-
+                            tokenResponse!.Designation = createTokenRequest.Designation;
+                            tokenResponse!.Department = result.Rows[0]["santioneddeptt"]?.ToString();
                             if (tokenResponse == null)
                             {
                                 return new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an issue. Wait for some time to login.....");

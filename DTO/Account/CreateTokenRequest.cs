@@ -12,6 +12,7 @@
         public string? Application { get; set; }
         public string? CampusCode { get; set; }
         public string? RefreshTokenId { get; set; }
+        public string? Designation { get; set; }
 
     }
 }

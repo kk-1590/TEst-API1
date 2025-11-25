@@ -38,5 +38,12 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetDepartmentBudgetSummary(GetDepartmentBudgetSummaryV2Request? budgetRequest, string? employeeId, bool allDepartmentsAllowed);
         Task<DataTable> ValidDepartmentDetailsForDelete(int id, string RefNo);
         Task<int> deleteDepartment(string EmpCode, int Id);
+        Task<DataTable> GetDepartMentDetails(string RefNo);
+        Task<int> UpdateBudgetSummary(string RefNo, int BudgetAmount, int RecurringAmount, int NonRecurringAmount);
+        Task<int> UpdateDetails(string RefNo,string EmpCode);
+        Task<DataTable> ValidDetails(string RefNo);
+        Task<DataTable> GetHeadDetails(string Type);
+
+
     }
 }

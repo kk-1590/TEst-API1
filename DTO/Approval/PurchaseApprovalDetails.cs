@@ -5,6 +5,7 @@ public class PurchaseApprovalDetails
     public bool IsRejectable { get; set; }
     public bool CanApproval { get; set; }
     public bool CanCancel { get; set; }
+    public bool CanUploadBill { get; set; }
     public int AuthorityNumber { get; set; }
     public string VendorName { get; set; }
     public string ExcelFileUrl { get; set; }
