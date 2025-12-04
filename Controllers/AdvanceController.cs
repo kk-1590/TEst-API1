@@ -82,7 +82,8 @@ namespace AdvanceAPI.Controllers
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }
                 //Task<ApiResponse> GenerateAdvance(GenerateAdvancerequest req,string EmpCode,string EmpName,string RefNo)
-                ApiResponse response = await _advanceService.GenerateAdvance(req,employeeId,"EmpName",RefNo);
+                string EmpName= User.FindFirstValue(ClaimTypes.Name);
+                ApiResponse response = await _advanceService.GenerateAdvance(req,employeeId, EmpName, RefNo.Replace("PLC","").Replace("CVV","").Replace("ADM",""));
                 return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
             }
             catch (Exception e)
@@ -294,6 +295,33 @@ namespace AdvanceAPI.Controllers
             }
         }
         [HttpGet]
+        [Route("get-basic-details-for-bill-generate-against-advance/{RefNo}")]
+        
+        public async Task<IActionResult> GetBasicDetailsagainstadvance(string RefNo)
+        {
+            try
+            {
+
+
+                
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                //Task<ApiResponse> GetBasicDetailsForGenerateBill(string RefNo)
+                ApiResponse response = await _advanceService. GetBasicDetailsForGenerateBillAgainstAdvance(RefNo);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"get-basic-details-for-bill-generate/{RefNo}");
+                throw;
+            }
+        }
+        [HttpGet]
         [Route("get-auth/{RefNo}")]
         
         public async Task<IActionResult> getauth(string RefNo)
@@ -428,7 +456,7 @@ namespace AdvanceAPI.Controllers
 
         [HttpGet]
         [Route("load-sub-firm/{vendorId}")]
-        [AllowAnonymous]
+        
         public async Task<IActionResult> LoadSubFirm(int vendorId)
         {
             try
@@ -457,9 +485,9 @@ namespace AdvanceAPI.Controllers
             public string TypeId { get;set; }
         
         }
-        [HttpGet]
+        [HttpPost]
         [Route("load-offices")]
-        [AllowAnonymous]
+        
         public async Task<IActionResult> LoadOffices([FromBody] LoadOfficesCls cls)
         {
             try
@@ -469,11 +497,11 @@ namespace AdvanceAPI.Controllers
                     return BadRequest(ModelState);
                 }
 
-                //string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                //if (string.IsNullOrEmpty(employeeId))
-                //{
-                //    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
-                //}
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
                 //string? EmpName = User.FindFirstValue(ClaimTypes.Name);
                 //string? type = User.FindFirstValue(ClaimTypes.Authentication);
                 //Task<ApiResponse> GetPurchase(string Type,string Empcode)
@@ -487,6 +515,286 @@ namespace AdvanceAPI.Controllers
                 throw;
             }
         }
+        [HttpPost]
+        [Route("get-basic-purchase-details-generate-advance")]
+        public async Task<IActionResult> generateAdvanceBasicDetails([FromBody]TextValues val)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse response = await _advanceService.GetBasicDetailsForGenerateAdvance(val.Value,val.Text);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"get-basic-purchase-details-generate-advance");
+                throw;
+            }
+        }
+
+        //Task<ApiResponse> SaveBill(string EmpCode,string EmpName, AddBillGenerateRequest req)
+        [HttpPost]
+        [Route("UploadBill")]
+        public async Task<IActionResult> SaveBillUpload([FromForm] AddBillGenerateRequest req)
+        {
+            try
+            {
+
+                //if (!ModelState.IsValid)
+                //{
+                //    return BadRequest(ModelState);
+                //}
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse response = await _advanceService.SaveBill(employeeId, EmpName!,req,EmpType!);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"UploadBill");
+                throw;
+            }
+        }
+        [HttpGet]
+        [Route("get-bill-refno/{CanThousand}")]
+        public async Task<IActionResult> advanceREfNo(bool CanThousand)
+        {
+            try
+            {
+
+                //if (!ModelState.IsValid)
+                //{
+                //    return BadRequest(ModelState);
+                //}
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? type = User.FindFirstValue(ClaimTypes.Authentication);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse response = await _advanceService.GeneratereNoForUploadBill(type,employeeId,CanThousand);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"UploadBill");
+                throw;
+            }
+        }
+        [HttpGet]
+        [Route("LoadFirm/{Cond}")]
+        public async Task<IActionResult> advanceREfNo(string Cond)
+        {
+            try
+            {
+
+                //if (!ModelState.IsValid)
+                //{
+                //    return BadRequest(ModelState);
+                //}
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? type = User.FindFirstValue(ClaimTypes.Authentication);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                ApiResponse response = await _advanceService.GetDetails(Cond);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"LoadFirm");
+                throw;
+            }
+        }
+
+
+        [HttpGet]
+        [Route("get-advance-approval-print/{ReferenceNo}")]
+
+        public async Task<IActionResult> GetAdvanceApprovalPrint([FromRoute] string ReferenceNo)
+        {
+            try
+            {
+                string? employeeName = User.FindFirstValue(ClaimTypes.Name);
+                string? employeeType = User.FindFirstValue(ClaimTypes.Authentication);
+
+                if (string.IsNullOrEmpty(employeeName) || string.IsNullOrEmpty(employeeType))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                ApiResponse response = await _advanceService.GetAdvanceApprovalPrint(ReferenceNo, employeeName, employeeType);
+
+                return response.Status == StatusCodes.Status200OK ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"get-advance-approval-print");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpGet]
+        [Route("GetLockDetails/{Type}")]
+        
+        public async Task<IActionResult> GetDateLock([FromRoute] string Type)
+        {
+            try
+            {
+                //string? employeeName = User.FindFirstValue(ClaimTypes.Name);
+                //string? employeeType = User.FindFirstValue(ClaimTypes.Authentication);
+
+                //if (string.IsNullOrEmpty(employeeName) || string.IsNullOrEmpty(employeeType))
+                //{
+                //    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                //}
+
+                ApiResponse response = await _advanceService.GetLockDetails(Type);
+
+                return response.Status == StatusCodes.Status200OK ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"GetLockDetails/{Type}");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpGet]
+        [Route("get-ref-no-for-bill-generate")]
+        
+        public async Task<IActionResult> getrefnoagainstadvance()
+        {
+            try
+            {
+                string? employeeName = User.FindFirstValue(ClaimTypes.Name);
+                string? employeeType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(employeeName) || string.IsNullOrEmpty(employeeType))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                //Task<ApiResponse> GeneratereNoForUploadBillAgainstAdvance(string Type, string EmpCode, string RefNo = "")
+
+                ApiResponse response = await _advanceService.GeneratereNoForUploadBillAgainstAdvance(employeeType,employeeId);
+
+                return response.Status == StatusCodes.Status200OK ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"get-ref-no-for-bill-generate");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpGet]
+        [Route("get-auth-advance-bill/{RefNo}")]
+        
+        public async Task<IActionResult> getrefnoagainstadvance(string RefNo)
+        {
+            try
+            {
+                string? employeeName = User.FindFirstValue(ClaimTypes.Name);
+                string? employeeType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(employeeName) || string.IsNullOrEmpty(employeeType))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                //Task<ApiResponse> GetAdvancebillAuth(string refNo)
+
+                ApiResponse response = await _advanceService.GetAdvancebillAuth(RefNo);
+
+                return response.Status == StatusCodes.Status200OK ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"get-auth-advance-bill/{RefNo}");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpPost]
+        [Route("get-purchase-approval-bill")]
+        
+        public async Task<IActionResult> getPurchaseApprovalBill([FromBody] GetApprovalBillRequest req)
+        {
+            try
+            {
+                string? employeeName = User.FindFirstValue(ClaimTypes.Name);
+                string? employeeType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(employeeName) || string.IsNullOrEmpty(employeeType))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                //Task<ApiResponse> GetPurchaseApprovalBill(string EmpCode, string Type, GetApprovalBillRequest req)
+
+                ApiResponse response = await _advanceService.GetPurchaseApprovalBill(employeeId,employeeType,req);
+
+                return response.Status == StatusCodes.Status200OK ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"get-purchase-approval-bill " + req);
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+        [HttpPut]
+        [Route("update-approval-bill")]
+        
+        public async Task<IActionResult> UpdateBill ([FromBody] UpdatePurchaseBillDateRequest req)
+        {
+            try
+            {
+                string? employeeName = User.FindFirstValue(ClaimTypes.Name);
+                string? employeeType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if(ModelState.IsValid== false)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (string.IsNullOrEmpty(employeeName) || string.IsNullOrEmpty(employeeType))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+                //Task<ApiResponse> GetPurchaseApprovalBill(string EmpCode, string Type, GetApprovalBillRequest req)
+
+                ApiResponse response = await _advanceService.UpdatePurchaseBillDate(employeeId!,req);
+
+                return response.Status == StatusCodes.Status200OK ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"update-approval-bill " + req);
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+       
+
 
 
 

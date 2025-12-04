@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Data;
 
 namespace AdvanceAPI.DTO.Advance
 {
@@ -14,7 +15,9 @@ namespace AdvanceAPI.DTO.Advance
     }
     public class TextValues
     {
+        [Required]
         public string? Value { get; set; }
+        [Required]
         public string? Text { get;set; }
         public string? EmpCode { get;set; }
         public TextValues() { }

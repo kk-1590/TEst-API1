@@ -10,9 +10,12 @@ using Mysqlx.Crud;
 using MySqlX.XDevAPI;
 using NuGet.Protocol.Plugins;
 using Org.BouncyCastle.Ocsp;
+using Org.BouncyCastle.Utilities.Zlib;
 using System.Data;
 using System.Reflection.Emit;
+using System.Reflection.Metadata;
 using System.Security.Cryptography.Xml;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace AdvanceAPI.Repository
 {
@@ -161,11 +164,11 @@ namespace AdvanceAPI.Repository
             }
         }
 
-        public async Task<DataTable> GetBackValue()
+        public async Task<DataTable> GetBackValue(string Type)
         {
             try
             {
-                return await _dbOperations.SelectAsync(AdvanceSql.GET_PURCHASE_APPROVAL_BACK_VALUE, DBConnections.Advance);
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_PURCHASE_APPROVAL_BACK_VALUE.Replace("@Value",Type.Replace("Advance Form","").Trim() +"%"), DBConnections.Advance);
             }
             catch (Exception ex) 
             {
@@ -188,7 +191,7 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-        public async Task<int> SaveAdvance(GenerateAdvancerequest req, string EmpCode, string EmpName, string RefNo,string FirmName,string FirmPerson,string FirmEmail,string FirmPanNo,string FirmAddress,string FirmContactNo,string FirmAlternateContactNo,string BackValue,string PurchaseApprovalDetails)
+        public async Task<int> SaveAdvance(GenerateAdvancerequest req, string EmpCode, string EmpName, string RefNo,string FirmName,string FirmPerson,string FirmEmail,string FirmPanNo,string FirmAddress,string FirmContactNo,string FirmAlternateContactNo,string BackValue,string PurchaseApprovalDetails,string PrevRefNo)
         {
             //            INSERT INTO otherapprovalsummary(
             //  ReferenceNo, Session, MyType, Note, Purpose, BillUptoValue, BillUptoType, IniId, IniName, IniOn, IniFrom, ForDepartment,
@@ -280,6 +283,37 @@ namespace AdvanceAPI.Repository
             try
             {
                 int ins = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.INSERT_ADVANCE_DETAILS, param, DBConnections.Advance);
+
+                if(req.ApprovalType.Contains("Mission Admission"))
+                {
+                    //DataTable dtFlat = new DataTable();
+                    //dtFlat.Columns.AddRange(new DataColumn[6] { new DataColumn("Head"), new DataColumn("Unit"), new DataColumn("Price"), new DataColumn("Amount"), new DataColumn("Month"), new DataColumn("Remark") });
+
+                }
+
+                if(req.ApprovalType.Contains("Corporate Visit"))
+                {
+                    param.Clear();
+                    param.Add(new SQLParameters("@AdvRefNo", RefNo));
+                    param.Add(new SQLParameters("@RefNo", PrevRefNo.Replace("PLC","")));
+                    int inss = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_PLACEMEMT_SUMMARY,param,DBConnections.Advance);
+                }
+                if(req.ApprovalType.Contains("Partner Visit"))
+                {
+                    param.Clear();
+                    param.Add(new SQLParameters("@AdvRefNo", RefNo));
+                    param.Add(new SQLParameters("@RefNo", PrevRefNo.Replace("PLC","")));
+                    int inss = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_VISIT_SUMMARY, param,DBConnections.Advance);
+                }
+                if(req.ApprovalType.Contains("School Visit"))
+                {
+                    param.Clear();
+                    param.Add(new SQLParameters("@AdvRefNo", RefNo));
+                    param.Add(new SQLParameters("@RefNo", PrevRefNo.Replace("PLC","")));
+                    int inss = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_SCHOOL_SUMMARY, param,DBConnections.Advance);
+                }
+
+
                 //GET_UPDATE_ADVANCETOKEN
                 param.Clear();
                 param.Add(new SQLParameters("@EmpCode",EmpCode));
@@ -741,6 +775,39 @@ namespace AdvanceAPI.Repository
             }
         }
 
+        public async Task <DataTable> CanGenerateBillAdvance(string Type,string EmpCode,string RefNo="")
+        {
+            try
+            {
+                string Cond = "";
+                List<SQLParameters> param= new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpCode", EmpCode));
+                if(Type.ToUpper()=="STORE")
+                {
+                    Cond += " And (IniId = @EmpCode Or RelativePersonID=@EmpCode)";
+                }
+                
+
+                DataTable LockMenuDetails = await LockMenu(EmpCode);
+                string ids = "";
+                if(RefNo!="")
+                {
+                    ids= ids == "" ? RefNo : (ids + "," + RefNo);
+                }
+                if (ids.Length > 0)
+                {
+                    Cond += " And ReferenceNo in (" + ids + ")";
+                }
+
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_DETAILS_FOR_CAN_BILL_UPLOAD.Replace("@Condition",Cond), param, DBConnections.Advance);
+
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During CanGenerateBill...", ex);
+                throw;
+            }
+        }
         public async Task <DataTable> CanGenerateBill(string Type,string EmpCode,bool IsThousand,string RefNo="")
         {
             try
@@ -806,9 +873,9 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@EmpCode",EmpCode));
                 if(Type.ToUpper()=="STORE")
                 {
-                    Cond += "  And (IniId = @EmpCode Or RelativePersonID=@EmpCode";
+                    Cond += "  And (IniId = @EmpCode Or RelativePersonID=@EmpCode)";
                 }
-                return await _dbOperations.SelectAsync(AdvanceSql.GET_APPROVAL_REFNO.Replace("@EmpCode",EmpCode),param,DBConnections.Advance);
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_APPROVAL_REFNO.Replace("@Condition",Cond),param,DBConnections.Advance);
             }
             catch (Exception ex)
             {
@@ -983,5 +1050,763 @@ namespace AdvanceAPI.Repository
             }
         }
 
+        public async Task<DataTable> GetBillBaseRefNo()
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_BILL_BASE_REF_NO, DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Error During GetBillBaseRefNo...", ex);
+                throw;
+            }
+        }
+
+        public async Task<DataTable> getPurchaseApprovalDetails(string RefNo)
+        {
+            try
+            {
+                List<SQLParameters > param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", RefNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_PURCHASE_DETAILS, param,DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During getPurchaseApprovalDetails...", ex);
+                throw;
+            }
+        }
+
+        public async Task<int> SaveBillSave(string EmpCode,string EmpName, AddBillGenerateRequest req,string BillBaseREfNo)
+        {
+            // "insert into bill_base (TransactionID,Session,ForType,RelativePersonID,RelativePersonName,RelativeDesignation,RelativeDepartment,FirmName,FirmPerson,FirmEmail,FirmPanNo,FirmAddress,FirmContactNo,\r\nFirmAlternateContactNo,AmountRequired,AmountPaid,AmountRemaining,IssuedBy,IssuedName,IssuedOn,IssuedFrom,LastUpdatedOn,LastUpdatedBy,Remark,GateEntryOn,DepartmentApprovalDate,StoreDate,BillDate,\r\nBillReceivedOnGate,BillNo,Status,VendorID,Col1,Col2,Col3,Col4,Col5,CashDiscount,BillExtra1,BillExtra3,BillExtra4,BillExtra5,CampusCode,CampusName) Values\r\n(@TransactionID,@Session,@ForType,@RelativePersonID,@RelativePersonName,@RelativeDesignation,@RelativeDepartment,@FirmName,@FirmPerson,@FirmEmail,@FirmPanNo,@FirmAddress,@FirmContactNo,\r\n@FirmAlternateContactNo,@AmountRequired,@AmountPaid,@AmountRemaining,@IssuedBy,@IssuedName,NOW(),@Ip,NOW(),@LastUpdatedBy,@Purpose,@GateEntryOn,@DepartmentApprovalDate,@StoreDate,@BillDate,@BillReceivedOnGate,@BillNo,'Waiting For Bills Approval',@VendorID,@Department,@MeInitiate,@SelectedOffice,@Col4,@Col5,\r\n@CashDiscount,@Initiate,@RefNo,@Initiate,@nextbill,@CampusCode,@CampusName);";
+            try
+            {
+
+
+                DataTable Details = new DataTable();
+                if(req.ForTypeOf=="Advance Bill")
+                {
+                    Details = await getAdvanceApprovalDetails(req.RefNo);
+                }
+                else
+                {
+                  Details=  await getPurchaseApprovalDetails(req.RefNo);
+                }
+                    //  DataTable VenderDetails = await GetVendorDetails(Details.Rows[0]["VendorId"].ToString() ?? "");
+
+                    List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransactionID", BillBaseREfNo));
+                param.Add(new SQLParameters("@Session", _general.GetFinancialSession(DateTime.Now)));
+                param.Add(new SQLParameters("@ForType", req.ForTypeOf));
+                param.Add(new SQLParameters("@RelativePersonID", Details.Rows[0]["RelativePersonID"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@RelativePersonName", Details.Rows[0]["RelativePersonName"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@RelativeDesignation", Details.Rows[0]["RelativeDesignation"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@RelativeDepartment", Details.Rows[0]["RelativeDepartment"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@FirmName", Details.Rows[0]["FirmName"].ToString() ?? ""));
+                param.Add(new SQLParameters("@FirmPerson", Details.Rows[0]["FirmPerson"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@FirmEmail", Details.Rows[0]["FirmEmail"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@FirmPanNo", Details.Rows[0]["FirmPanNo"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@FirmAddress", Details.Rows[0]["FirmAddress"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@FirmContactNo", Details.Rows[0]["FirmContactNo"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@FirmAlternateContactNo", Details.Rows[0]["FirmAlternateContactNo"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@AmountRequired", req.Amount ?? string.Empty));
+                param.Add(new SQLParameters("@AmountPaid", 0));
+                param.Add(new SQLParameters("@AmountRemaining", req.Amount ?? string.Empty));
+                param.Add(new SQLParameters("@IssuedBy", EmpCode));
+                param.Add(new SQLParameters("@IssuedName", EmpName));
+                param.Add(new SQLParameters("@Ip", _general.GetIpAddress()));
+                param.Add(new SQLParameters("@LastUpdatedBy", EmpCode));
+                param.Add(new SQLParameters("@Purpose", req.Purpose));
+                param.Add(new SQLParameters("@BillNo", req.BillNo));
+                param.Add(new SQLParameters("@VendorID", Details.Rows[0]["VendorID"].ToString() ?? ""));
+                param.Add(new SQLParameters("@Department", req.Department));
+                param.Add(new SQLParameters("@MeInitiate", req.InitiateOn ?? string.Empty));
+                param.Add(new SQLParameters("@SelectedOffice", req.Office ?? string.Empty));
+                param.Add(new SQLParameters("@Col5", req.AdditionalName ?? string.Empty));
+                param.Add(new SQLParameters("@Col4", "---"));
+                param.Add(new SQLParameters("@CashDiscount", req.Discount!));
+                param.Add(new SQLParameters("@Initiate", req.ExpBillDate!));
+                param.Add(new SQLParameters("@RefNo", req.RefNo!));
+                param.Add(new SQLParameters("@nextbill", req.NextBillTill!));
+                param.Add(new SQLParameters("@CampusCode", req.CampusCode!));
+                param.Add(new SQLParameters("@CampusName", req.CampusName!));
+               
+               
+               
+                param.Add(new SQLParameters("@TestUpto", req.TestingUpto!));
+                if(req.ForTypeOf== "Advance Bill")
+                {
+                    param.Add(new SQLParameters("@BillReceivedOnGate", null));
+                    param.Add(new SQLParameters("@StoreDate", null));
+                    param.Add(new SQLParameters("@BillDate", null));
+                    param.Add(new SQLParameters("@GateEntryOn", null));
+                    param.Add(new SQLParameters("@DepartmentApprovalDate", null));
+                }
+                else
+                {
+                    param.Add(new SQLParameters("@BillReceivedOnGate", req.BillOnGate!));
+                    param.Add(new SQLParameters("@StoreDate", req.StoreDate!));
+                    param.Add(new SQLParameters("@BillDate", req.BillDate!));
+                    param.Add(new SQLParameters("@GateEntryOn", req.GateDate!));
+                    param.Add(new SQLParameters("@DepartmentApprovalDate", req.DepartmentDate!));
+                }
+
+                    int ins = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.INSERRT_INTO_BILL_BASE, param, DBConnections.Advance);
+
+                string newnext = "";
+                if (!string.IsNullOrEmpty(req.NextBillTill))
+                {
+                    newnext = ",ExtendedBillDate='" + req.NextBillTill + "'";
+                }
+                if (req.ForTypeOf == "Advance Bill")
+                {
+                    string UpdateQ = "update otherapprovalsummary set BillId=if(BillId is NULL,'," + BillBaseREfNo + ",',CONCAT(BillId,'" + BillBaseREfNo + ",')),BillVariationRemark='" + req.VariationReason?.Trim().ToUpper() + "',ReferenceBillStatus='" + req.BillStatus + "'" + newnext + " where ReferenceNo='" + req.RefNo + "'";
+
+                    int upDate = await _dbOperations.DeleteInsertUpdateAsync(UpdateQ, new List<SQLParameters>(), DBConnections.Advance);
+
+                    param.Clear();
+                    param.Add(new SQLParameters("@EmpCode", EmpCode));
+                    param.Add(new SQLParameters("@VendorId", Details.Rows[0]["VendorID"].ToString() ?? string.Empty));
+                    param.Add(new SQLParameters("@IniBy", EmpCode ?? string.Empty));
+                    param.Add(new SQLParameters("@VendorIdOffice", Details.Rows[0]["VendorID"].ToString() + "#" + req.Office ?? string.Empty));
+                    int iin = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.GET_UPDATE_ADVANCETOKEN, param, DBConnections.Advance);
+                }
+                else
+                {
+                    string UpdateQ = "update purchaseapprovalsummary set BillId=if(BillId is NULL,'," + BillBaseREfNo + ",',CONCAT(BillId,'" + BillBaseREfNo + ",')),BillVariationRemark='" + req.VariationReason?.Trim().ToUpper() + "',ReferenceBillStatus='" + req.BillStatus + "' " + newnext + " where ReferenceNo=" + req.RefNo + "";
+                    int upDate = await _dbOperations.DeleteInsertUpdateAsync(UpdateQ, new List<SQLParameters>(), DBConnections.Advance);
+                }
+             
+
+                return ins;
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During SaveBillSave...", ex);
+                throw;
+            }
+        }
+
+        public async Task<int> SaveBillAuth(string EmpCode, string EmpName, AddBillGenerateRequest req, string BillBaseREfNo)
+        {
+            List<SQLParameters> param= new List<SQLParameters>();
+            int cnt= 1;
+            if(req.Auth1Id!.Length>0)
+            {
+                param.Clear();
+                param.Add(new SQLParameters("@AuthName",req.Auth1Name??string.Empty));
+                param.Add(new SQLParameters("@AuthId", req.Auth1Id));
+                param.Add(new SQLParameters("@Count", cnt));
+                param.Add(new SQLParameters("@TransId", BillBaseREfNo));
+                cnt++;
+                int ins = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.SaveAuth,param,DBConnections.Advance);
+            }
+            if(req.Auth2Id!.Length>0)
+            {
+                param.Clear();
+                param.Add(new SQLParameters("@AuthName",req.Auth2Name ?? string.Empty));
+                param.Add(new SQLParameters("@AuthId", req.Auth2Id));
+                param.Add(new SQLParameters("@Count", cnt));
+                param.Add(new SQLParameters("@TransId", BillBaseREfNo));
+                cnt++;
+                int ins = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.SaveAuth, param, DBConnections.Advance);
+            }
+            if(req.Auth3Id!=null && req.Auth3Id!.Length>0)
+            {
+                param.Clear();
+                param.Add(new SQLParameters("@AuthName",req.Auth3Name ?? string.Empty));
+                param.Add(new SQLParameters("@AuthId", req.Auth3Id));
+                param.Add(new SQLParameters("@Count", cnt));
+                param.Add(new SQLParameters("@TransId", BillBaseREfNo));
+                cnt++;
+                int ins = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.SaveAuth, param, DBConnections.Advance);
+            }
+            if(req.Auth4Id!=null && req.Auth4Id!.Length>0)
+            {
+                param.Clear();
+                param.Add(new SQLParameters("@AuthName",req.Auth4Name ?? string.Empty));
+                param.Add(new SQLParameters("@AuthId", req.Auth4Id));
+                param.Add(new SQLParameters("@Count", cnt));
+                param.Add(new SQLParameters("@TransId", BillBaseREfNo));
+                cnt++;
+                int ins = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.SaveAuth, param, DBConnections.Advance);
+            }
+            return cnt;
+        }
+        public async Task<int> UpdatePdf(string RefNo)
+        {
+            try
+            {
+                List<SQLParameters> param= new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", RefNo));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_PDF_UPLOAD,param,DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During UpdatePdf...", ex);
+                throw;
+            }
+        }
+        public async Task<int> UpdateExcel(string RefNo)
+        {
+            try
+            {
+                List<SQLParameters> param= new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", RefNo));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_EXCEL_UPLOAD,param,DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During UpdatePdf...", ex);
+                throw;
+            }
+        }
+        public async Task<DataTable> GetFirm(string cond)
+        {
+            try
+            {
+                List<SQLParameters> param= new List<SQLParameters>();
+                
+                return await _dbOperations.SelectAsync(AdvanceSql.GETFIRMDETAILS.Replace("@VendorId",cond), param,DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetFirm...", ex);
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetDateLock(string Type)
+        {
+            try
+            {
+                List<SQLParameters> param= new List<SQLParameters>();
+                param.Add(new SQLParameters("@Type",Type));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_DATE_ADVANCE_LOCK, param, DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Error During GetDateLock...", ex);
+                throw;
+            }
+        }
+
+        public async Task<DataTable> getAdvanceApprovalDetails(string RefNo)
+        {
+            try
+            {
+                List<SQLParameters> param=new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", RefNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_DETAILS, param, DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Error During getAdvanceApprovalDetails...", ex);
+                throw;
+            }
+        }
+
+
+        public async Task<DataTable> GetMissionAdmissionReturnTypes()
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_MISSION_ADMISSION_RETURN_TYPES, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetMissionAdmissionReturnTypes...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvancePrintApprovalDetails(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_APPROVAL_PRINT_DETAILS, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvancePrintApprovalDetails...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvanceOfficeMappingEmployeeCodes(string OfficeName, string Session)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@OfficeName", OfficeName));
+                parameters.Add(new SQLParameters("@Session", Session));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_OFFICE_MAPPING_EMPLOYEE_DETAILS, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceOfficeMappingEmployeeCodes...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvanceEmployeeLeaveDetails(string EmployeeIds, string AdvanceFrom, string AdvanceTo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ForCodes", EmployeeIds));
+                parameters.Add(new SQLParameters("@AdvanceFrom", AdvanceFrom));
+                parameters.Add(new SQLParameters("@AdvanceTo", AdvanceTo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_EEMPLOYEE_LEAVE_DETAILS, parameters, DBConnections.Salary);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceEmployeeLeaveDetails...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvanceBillSummaryDetails(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_BILL_SUMMARY, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceBillSummaryDetails...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvancePaymentDetailsByPaymentGroupId(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_PAYMENT_DETAILS_WITH_PAYMENT_GROUP_REFERENCE_NO, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvancePaymentDetailsByPaymentGroupId...");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetAdvancePaymentDetailsByReferenceNo(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_PAYMENT_DETAILS_WITH_REFERENCE_NO, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvancePaymentDetailsByReferenceNo...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvancePaymentTransactionIdsByReferenceNo(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_PAYMENT_TRANSACTION_IDS, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvancePaymentTransactionIdsByReferenceNo...");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetAdvanceBillDetailsByTransactionIds(string TransactionIds)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@TransactionIds", TransactionIds));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_PAYMENT_TRANSACTION_IDS_BILL_DETAILS, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceBillDetailsByTransactionIds...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvanceBillBillDistributionDetailsById(string BillId)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@BillId", BillId));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_PAYMENT_BILL_DISTRIBUTION_DETAILS, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceBillBillDistributionDetailsById...");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetAdvanceBillAgainstBaseDistributionDetailsByTransactionIds(string TransactionIds)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@TransactionIds", TransactionIds));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_PAYMENT_BILL_AGINST_BASE_DISTRIBUTION_DETAILS, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceBillAgainstBaseDistributionDetailsByTransactionIds...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvanceOtherSummaryDistributionDetailsByReferenceNo(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_OTHER_SUMMARY_DISTRIBUTION_DETAILS, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceOtherSummaryDistributionDetailsByReferenceNo...");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetAdvanceAmountIssuedAgainstBudgetByReferenceNo(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_AMOUNT_ISSUED_AGINST_BUDGET, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceAmountIssuedAgainstBudgetByReferenceNo...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvanceBudgetUsageSessionWiseByReferenceNo(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_BUDGET_SESSION_WISE_USAGE, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceBudgetUsageSessionWiseByReferenceNo...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAdvanceBudgetUsageMonthWiseByReferenceNo(string ReferenceNo)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@ReferenceNo", ReferenceNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_BUDGET_MONTH_WISE_USAGE, parameters, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAdvanceBudgetUsageMonthWiseByReferenceNo...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetPurchaseBasicForBillAgainstAdvance(string RefNo)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", RefNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_PURCHASE_DETAILS_FOR_GENERATE_BILL_AGAINST_ADVANCE, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During GetPurchaseBasicForBillAgainstAdvance...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetrefnoForGenerateBillAdvance(string Type,string EmpCode,string RefNo="")
+        {
+            try
+            {
+                string Cond = "";
+                List<SQLParameters> param= new List<SQLParameters>();
+                if(Type.ToUpper()== "STORE")
+                {
+                    Cond += "  And (IniId = @EmpCode Or RelativePersonID=@EmpCode)";
+                    param.Add(new SQLParameters("@EmpCode",EmpCode));
+                }
+                if (!string.IsNullOrEmpty(RefNo))
+                { 
+                    Cond += " And ReferenceNo=" + RefNo + "";
+                }
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_REF_NO_FOR_UPLOAD_BILL_IN_ADVANCE.Replace("@Condition",Cond),param,DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetrefnoForGenerateBillAdvance...");
+                throw;
+            }
+        }
+        public async Task<DataTable> Auth1AdvanceBill(string refNo)
+        {
+            try
+            {
+                List<SQLParameters> param=new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", refNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GETADVANCEBILLAUTH1,param,DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During Auth1AdvanceBill...");
+                throw;
+            }
+        }
+        public async Task<DataTable> Auth2AdvanceBill(string refNo)
+        {
+            try
+            {
+                List<SQLParameters> param=new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", refNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GETADVANCEBILLAUTH2,param,DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During Auth2AdvanceBill...");
+                throw;
+            }
+        }
+        public async Task<DataTable> Auth3AdvanceBill(string refNo)
+        {
+            try
+            {
+                List<SQLParameters> param=new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", refNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GETADVANCEBILLAUTH3,param,DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During Auth3AdvanceBill...");
+                throw;
+            }
+        }
+        public async Task<DataTable> Auth4AdvanceBill(string refNo)
+        {
+            try
+            {
+                List<SQLParameters> param=new List<SQLParameters>();
+                param.Add(new SQLParameters("@RefNo", refNo));
+                return await _dbOperations.SelectAsync(AdvanceSql.GETADVANCEBILLAUTH4,param,DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During Auth4AdvanceBill...");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetAuthAdvanceBillAuth2(string Campus)
+        {
+            try
+            {
+               
+                {
+                    string query = AdvanceSql.gtAuth + "  AND employee_code=(SELECT `Value` FROM advances.`othervalues` WHERE Type='Online And Noida Campus Member 4 Authority') GROUP BY Employee_Code";
+                    return await _dbOperations.SelectAsync(query,DBConnections.Advance);
+                }
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetAuthAdvanceBill...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAuthAdvanceBillAuth1(string Campus)
+        {
+            try
+            {
+               
+                {
+                    string query = AdvanceSql.GetAuthForOutMathura ;
+                    return await _dbOperations.SelectAsync(query,DBConnections.Advance);
+                }
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetAuthAdvanceBill...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAuthAdvanceBillAuth4(string Campus)
+        {
+            try
+            {
+                
+                
+                    return await _dbOperations.SelectAsync(AdvanceSql.gtAuth + "  and FIND_IN_SET('" + Campus + "',B.CampusCodes)  ORDER BY MyOrder", DBConnections.Advance);
+
+
+
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetAuthAdvanceBill...");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> GetApprovalBill(string EmpCode,string Type, GetApprovalBillRequest req)
+        {
+            try
+            {
+                string Cond = "";
+                List<SQLParameters> Parameters = new List<SQLParameters>();
+
+                Cond += "  And (BillExtra3 is not NULL and BillExtra3 not like '%-%' and BillExtra3 not like '' and BillExtra3 not like 'S%' and BillExtra3 not like 'WRK%' and  BillExtra3 not like 'P%')  And Status=@Status";
+                Parameters.Add(new SQLParameters("@Status", req.Category??""));
+                if (Type=="STORE")
+                {
+                    Cond += "  And IssuedBy = @EmpCode ";
+                    Parameters.Add(new SQLParameters("@EmpCode", EmpCode));
+                }
+                if (!string.IsNullOrEmpty(req.ReferenceNo))
+                {
+                    Cond += " And M.TransactionID=@TransId";
+                    Parameters.Add(new SQLParameters("@TransId", req.ReferenceNo));
+                }
+                else
+                {
+                    if(req.Category== "Ready To Issue Amount")
+                    {
+                        Cond += "  And M.AmountRemaining>0";
+                    }
+                    if(!string.IsNullOrEmpty(req.VendorId))
+                    {
+                        Cond += "  And M.VendorID=@VendorId";
+                        Parameters.Add(new SQLParameters("@VendorId", req.VendorId));
+                    }
+                    if(!string.IsNullOrEmpty(req.Campus))
+                    {
+                        Cond += "  AND M.CampusCode=@CampusCode";
+                        Parameters.Add(new SQLParameters("CampusCode", req.Campus));
+                    }
+                }
+                Parameters.Add(new SQLParameters("@Session", req.Session??string.Empty));
+                Parameters.Add(new SQLParameters("@Limit", req.NoOfItems));
+                Parameters.Add(new SQLParameters("@OffSet", req.ItemsFrom));
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_APPROVAL_BILL.Replace("@Condition",Cond).Replace("@ForType",req.Type),Parameters,DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetApprovalBill...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetIssuedAmount(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> Parameters = new List<SQLParameters>();
+                Parameters.Add(new SQLParameters("@TransactionId", TransId));
+
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ISSUED_AMOUNT, Parameters,DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetIssuedAmount...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetIssuedAmounREadyApproval(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> Parameters = new List<SQLParameters>();
+                Parameters.Add(new SQLParameters("@TransId", TransId));
+
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_APPROVAL_AUTHORITY_READY_TO_ISSUE, Parameters,DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("Error During GetIssuedAmounREadyApproval...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetApprovalAuthority(string Tid)
+        {
+            try
+            {
+                List<SQLParameters> Parameters = new List<SQLParameters>();
+                Parameters.Add(new SQLParameters("@TransId", Tid));
+
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_AUTHORITY, Parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During GetIssuedAmount...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateBillBase(string Cond, string TransId, string WarId, List<SQLParameters> lst)
+        {
+            try
+            {
+                lst.Add(new SQLParameters("@NewWarId", WarId));
+                string Query = AdvanceSql.Update_BillBase.Replace("@Cond", Cond).Replace("@TransId", TransId);
+                return await _dbOperations.DeleteInsertUpdateAsync(Query, lst, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During UpdateBillBase...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateRemark(string Remark, string TransId)
+        {
+            try
+            {
+                List<SQLParameters> lst=new List<SQLParameters>();
+                lst.Add(new SQLParameters("@Purpose",Remark));
+                lst.Add(new SQLParameters("@TransId",TransId));
+
+
+                string Query = AdvanceSql.UPDATE_REMARK;
+                return await _dbOperations.DeleteInsertUpdateAsync(Query, lst, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During UpdateBillBase...");
+                throw;
+            }
+        }
     }
 }

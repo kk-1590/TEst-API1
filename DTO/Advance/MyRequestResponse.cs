@@ -3,6 +3,7 @@
     public class MyRequestResponse
     {
         public string? Status { get;set; }
+        public bool CanUploadBill { get;set; }
         public string? App1Status { get;set; }
         public string? App2Status { get;set; }
         public string? App3Status { get;set; }

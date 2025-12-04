@@ -24,5 +24,15 @@ namespace AdvanceAPI.IServices.Advance
         Task<ApiResponse> GetSchoolVisit(string AppType, string Type, string EmpCode);
         Task<ApiResponse> GetSubfirm(int VendorId);
         Task<ApiResponse> LoadOffices(string TypeId, string VendorId);
+        Task<ApiResponse> GetBasicDetailsForGenerateAdvance(string Values, string Type);
+        Task<ApiResponse> SaveBill(string EmpCode, string EmpName, AddBillGenerateRequest req,string Type);
+        Task<ApiResponse> GetDetails(string Cond);
+        Task<ApiResponse> GetAdvanceApprovalPrint(string ReferenceNo, string EmployeeId, string EmployeeType);
+        Task<ApiResponse> GetLockDetails(string Type);
+        Task<ApiResponse> GetBasicDetailsForGenerateBillAgainstAdvance(string RefNo);
+        Task<ApiResponse> GeneratereNoForUploadBillAgainstAdvance(string Type, string EmpCode, string RefNo = "");
+        Task<ApiResponse> GetAdvancebillAuth(string refNo);
+        Task<ApiResponse> GetPurchaseApprovalBill(string EmpCode, string Type, GetApprovalBillRequest req);
+        Task<ApiResponse> UpdatePurchaseBillDate(string empCode, UpdatePurchaseBillDateRequest req);
     }
 }

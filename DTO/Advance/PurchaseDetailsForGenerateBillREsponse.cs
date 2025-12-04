@@ -22,6 +22,7 @@
         public string? AmountSantioned { get;set; } 
         public string? ApprovalStatus { get;set; }
         public List<TextValues>? Offices { get;set; }
-        public string BillExtendDate { get; internal set; }
+        public string BillExtendDate { get;  set; }
+        public string ExtraValues { get;  set; }
     }
 }

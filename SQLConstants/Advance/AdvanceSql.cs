@@ -1,4 +1,6 @@
-﻿namespace AdvanceAPI.SQLConstants.Advance
+﻿using Humanizer;
+
+namespace AdvanceAPI.SQLConstants.Advance
 {
     public class AdvanceSql
     {
@@ -16,7 +18,7 @@
         public const string GET_DEPARTMENT_HOD = "SELECT CONCAT(B.first_name,' - ',B.deisgnation,' [',A.Department,']') 'Text',CONCAT(A.EmployeeCode,'#',first_name,'#',deisgnation,'#',A.Department) 'Value' from salary_management.departmenthod A,salary_management.emp_master B WHERE A.EmployeeCode=B.employee_code AND A.`Status`='Activated' AND A.Department=@Dept";
         public const string GET_ADVANCE_APPROVAL_REFNO= "Select IFNULL(CAST(MAX(ReferenceNo)+1 as CHAR),CONCAT(CAST(DATE_FORMAT(now(),'%y%m%d') as CHAR),'0001')) 'ReferenceNo' from (Select ReferenceNo from purchaseapprovalsummary UNION Select ReferenceNo from otherapprovalsummary) A  where ReferenceNo like CONCAT(CAST(DATE_FORMAT(now(),'%y%m%d') as CHAR),'%')";
 
-        public const string GET_PURCHASE_APPROVAL_BACK_VALUE = "Select ForType  from othervalues where Type='Advance Approval' AND `Value`='Against Purchase Approval' ORDER BY Id\r\n";
+        public const string GET_PURCHASE_APPROVAL_BACK_VALUE = "Select ForType  from othervalues where Type='Advance Approval' AND `Value` Like '@Value' ORDER BY Id\r\n";
 
         public const string GET_PURCHASE_APPROVAL_DETAILS_PREVIOUS_VALUE = "Select CAST(CONCAT('App. No. - ',CAST(ReferenceNo as CHAR),' [ ',FirmName,' : ',TotalAmount,' ]',if(Billid is not null ,CONCAT(' Prev Bill Id - ',BillId),'')) as CHAR) 'Text',CAST(CONCAT(CAST(ReferenceNo as CHAR),'#',CAST(VendorID as CHAR),'#',CAST(TotalAmount as CHAR),'#',CAST(DATE_FORMAT(AppDate,'%d %b, %Y') as CHAR)) as CHAR)  as 'Value' from purchaseapprovalsummary where `Status`='Approved' And ReferenceBillStatus ='Open' And BillId is null AND ReferenceNo=@RefNo  ORDER BY IniOn\r\n";
 
@@ -62,12 +64,18 @@
         public const string CHECK_WAR_IN_QUERY = "Select * from purchaseapprovaldetail where ReferenceNo=@RefNo And WarIn>0 ";
         public const string CHECK_WAR_STATUS = "Select WarStatus from purchaseapprovalsummary where ReferenceNo=@RefNo";
 
+        public const string CHECK_WAR_IN_QUERY_Advance = "Select * from otherapprovalsummary where ReferenceNo=@RefNo And WarIn>0 ";
+        public const string CHECK_WAR_STATUS_Advance = "Select WarStatus from otherapprovalsummary where ReferenceNo=@RefNo";
+        public const string GET_ADVANCE_DETAILS = "Select * from otherapprovalsummary where ReferenceNo=@RefNo";
+
         public const string GET_FINANCE_AUTHORITY = "select CONCAT(first_name,' - ',deisgnation,' [',santioneddeptt,']') 'Text',CONCAT(employee_code,'#',first_name,'#',deisgnation,'#',santioneddeptt) 'Value2',employee_code 'Value' from salary_management.emp_master A, advances.billauthorities B where A.employee_code=B.EmployeeID And `status`!='INACTIVE'  ORDER BY first_name";
 
         public const string GET_THIRD_AUTH = "select CONCAT(first_name,' - ',deisgnation,' [',santioneddeptt,']') 'Text',CONCAT(employee_code,'#',first_name,'#',deisgnation,'#',santioneddeptt) 'Value2',employee_code 'Value' from emp_master A where `status`!='INACTIVE' AND FIND_IN_SET(employee_code,(SELECT `Value` FROM advances.`othervalues` WHERE Type='Online And Noida Campus Member 3 Authority')) ";
 
         public const string GETLOCKMENU = "Select GROUP_CONCAT(REPLACE(details,' ','')) 'Details' from useraccountlockother where DATE(unlockedon)=DATE(now()) And  employee_code=@EmpCode And category in ('Bill Not Uploaded Yet - No Gate Entry','Bill Not Uploaded Yet - Gate Entry') And automaticmode is NULL GROUP BY employee_code ";
         public const string GET_DETAILS_FOR_CAN_BILL_UPLOAD = "Select CAST(CONCAT('App. No. - ',CAST(ReferenceNo as CHAR),' [ ',FirmName,' : ',TotalAmount,' ]',if(Billid is not null ,CONCAT(' Prev Bill Id - ',BillId),'')) as CHAR) 'Text',CAST(ReferenceNo as CHAR)  as 'Value' from purchaseapprovalsummary where `Status`='Approved' @Condition And ReferenceNo not in (SELECT SUBSTRING_INDEX(PExtra4,'#',1) from otherapprovalsummary where `Status`='Approved' And PExtra4!='No Purchase Approval') ORDER BY IniOn";
+
+        public const string GET_REF_NO_FOR_UPLOAD_BILL_IN_ADVANCE = "Select CAST(CONCAT('App. No. - ',CAST(ReferenceNo as CHAR),' [ ',FirmName,' : ',TotalAmount,' ]',if(Billid is not null ,CONCAT(' Prev Bill Id - ',BillId),'')) as CHAR) 'Text',CAST(ReferenceNo as CHAR)  as 'Value' from otherapprovalsummary where `Status`='Approved' And ReferenceBillStatus ='Open' @Condition ORDER BY IniOn";
 
         public const string GET_APPROVAL_REFNO = "Select CAST(CONCAT('App. No. - ',CAST(ReferenceNo as CHAR),' [ ',FirmName,' : ',TotalAmount,' ]',if(Billid is not null ,CONCAT(' Prev Bill Id - ',BillId),'')) as CHAR) 'Text',CAST(CONCAT(CAST(ReferenceNo as CHAR),'#',CAST(VendorID as CHAR),'#',CAST(TotalAmount as CHAR),'#',CAST(DATE_FORMAT(AppDate,'%d %b, %Y') as CHAR)) as CHAR)  as 'Value' from purchaseapprovalsummary where `Status`='Approved' And ReferenceBillStatus ='Open' And BillId is null @Condition ORDER BY IniOn";
 
@@ -87,5 +95,79 @@
         public const string AGAINST_PURCHASE_APPROVAL = "Select Note,Purpose,ForDepartment from purchaseapprovalsummary where ReferenceNo= @RefNo";
         public const string CORPORATE_VISIT = "SELECT A.Purpose,B.santioneddeptt 'ForDepartment','' as Note FROM salary_management.emp_master B,(Select Purpose,IniId from placement_management.visit_approval_summary where ReferenceNo= @RefNo) A WHERE A.IniId=B.employee_code;";
         public const string SCHOOL_VISIT = "SELECT A.Purpose,B.santioneddeptt 'ForDepartment','' as Note FROM salary_management.emp_master B,(Select Purpose,IniId from school_management.visit_approval_summary where ReferenceNo= @RefNo) A WHERE A.IniId=B.employee_code";
+        public const string INSERRT_INTO_BILL_BASE = "insert into bill_base (TransactionID,Session,ForType,RelativePersonID,RelativePersonName,RelativeDesignation,RelativeDepartment,FirmName,FirmPerson,FirmEmail,FirmPanNo,FirmAddress,FirmContactNo,\r\nFirmAlternateContactNo,AmountRequired,AmountPaid,AmountRemaining,IssuedBy,IssuedName,IssuedOn,IssuedFrom,LastUpdatedOn,LastUpdatedBy,Remark,GateEntryOn,DepartmentApprovalDate,StoreDate,BillDate,\r\nBillReceivedOnGate,BillNo,Status,VendorID,Col1,Col2,Col3,Col4,Col5,CashDiscount,BillExtra1,BillExtra3,BillExtra4,BillExtra5,CampusCode,CampusName) Values\r\n(@TransactionID,@Session,@ForType,@RelativePersonID,@RelativePersonName,@RelativeDesignation,@RelativeDepartment,@FirmName,@FirmPerson,@FirmEmail,@FirmPanNo,@FirmAddress,@FirmContactNo,\r\n@FirmAlternateContactNo,@AmountRequired,@AmountPaid,@AmountRemaining,@IssuedBy,@IssuedName,NOW(),@Ip,NOW(),@LastUpdatedBy,@Purpose,@GateEntryOn,@DepartmentApprovalDate,@StoreDate,@BillDate,@BillReceivedOnGate,@BillNo,'Waiting For Bills Approval',@VendorID,@Department,@MeInitiate,@SelectedOffice,@Col4,@Col5,\r\n@CashDiscount,@Initiate,@RefNo,@TestUpto,@nextbill,@CampusCode,@CampusName);";
+        public const string GET_BILL_BASE_REF_NO = "select if(MAX(TransactionID) is NULL,1,MAX(TransactionID)+1) from bill_base";
+        public const string GET_PURCHASE_DETAILS = "Select * from purchaseapprovalsummary where ReferenceNo=@RefNo";
+
+        public const string SaveAuth = "insert into approvals_authority (Type,TransactionID,SequenceNo,ApprovalNo,EmployeeID,EmployeeDetails,AssignedOn,`Limit`,`Status`) Values ('Bills Approval',@TransId,-1,@Count,@AuthId,@AuthName,now(),(Select `Limit` from mylimits where LimitFor='Bills Approval' And StepNo=1),'Pending')";
+        public const string UPDATE_PDF_UPLOAD = "update bill_base set PdfUploaded=1 where TransactionID=@RefNo";
+        public const string UPDATE_EXCEL_UPLOAD = "update bill_base set ExcelUploaded=1 where TransactionID=@RefNo";
+
+        public const string GETFIRMDETAILS = "select CONCAT(VendorName,' [ ',DepartmentName,' ]') 'Text',VendorID 'Value' from vendorregister A, departmentregister B where A.DepartmentCode=B.DepartmentCode And A.VendorID @VendorId ORDER BY VendorName,DepartmentName";
+
+        public const string GET_DATE_ADVANCE_LOCK = "select Type,MyLimit from barriers where ForType=@Type order By Type";
+
+
+        public const string GET_MISSION_ADMISSION_RETURN_TYPES = "SELECT DISTINCT `Value` FROM `othervalues` where Type='Mission Admission Return' ORDER BY `Value`";
+
+        public const string GET_ADVANCE_APPROVAL_PRINT_DETAILS = "Select ReferenceNo,`Session`,DATE_FORMAT(AdvFrom,'%Y-%m-%d') as 'AdvFrom',DATE_FORMAT(AdvTo,'%Y-%m-%d') as 'AdvTo',DATE_FORMAT(AdvFrom,'%d.%m.%Y') as 'AdvFromShow',DATE_FORMAT(AdvTo,'%d.%m.%Y') as 'AdvToShow',`Status`,RelativePersonID,RelativePersonName,RelativeDepartment,RelativeDesignation,ForDepartment,FirmAddress,DATE_FORMAT(now(),'%d.%m.%Y') as 'MyOrderDate',MyType,Note,Purpose,CampusName, DATE_FORMAT(if(BillUptoType='Day',ADDDATE(AppDate,INTERVAL BillUptoValue Day),if(BillUptoType='Month',ADDDATE(AppDate,INTERVAL BillUptoValue MONTH),if(BillUptoType='Year',ADDDATE(AppDate,INTERVAL BillUptoValue Year),NULL))),'%d %M, %Y') 'ExpDate',TotalAmount,Amount,CashPer,Other,FirmName,FirmContactNo,IniName,IniId,DATE_FORMAT(AppDate,'%d.%m.%Y %h:%i %p') 'OrderDate',DATE_FORMAT(IniOn,'%d.%m.%Y  %h:%i %p') 'CreateDate',IF(BillTill!=ExtendedBillDate,DATE_FORMAT(ExtendedBillDate,'%d %M, %Y'),NULL) 'NewExpDate',App1Name,App2Name,App3Name,App4Designation,App3Designation,App2Designation,App1Designation,App1Status,App2Status,App3Status,App4Status,DATE_FORMAT(App1DoneOn,'%d %b, %Y %h:%i %p') 'App1On',DATE_FORMAT(App2DoneOn,'%d %b, %Y %h:%i %p') 'App2On',DATE_FORMAT(App3DoneOn,'%d %b, %Y %h:%i %p') 'App3On',DATE_FORMAT(App4DoneOn,'%d %b, %Y %h:%i %p') 'App4On',ByPass,if(`Status`='Cancelled',if(CancelledBy=App1Name,'1',if(CancelledBy=App2Name,'2',if(CancelledBy=App3Name,'3',if(CancelledBy=App4Name,'4','NA')))),'') 'CancelBy',DATE_FORMAT(CancelledOn,'%d %b, %Y %h:%i %p') 'CancelOn',PExtra3,IF(PExtra4 like 'No %','',PExtra4) 'PDetails',BudgetRequired,BudgetAmount,PreviousTaken,CurStatus,BudgetStatus,BudgetReferenceNo from otherapprovalsummary where ReferenceNo=@ReferenceNo";
+
+        public const string GET_ADVANCE_OFFICE_MAPPING_EMPLOYEE_DETAILS = "SELECT GROUP_CONCAT(EmpCode) as 'EmpCode' from advances.office_mapping where OfficeName=@OfficeName And `Session`=@Session And `Status`='Active'";
+
+        public const string GET_ADVANCE_EEMPLOYEE_LEAVE_DETAILS = "SELECT first_name AS 'Name',A.LeaveType,DATE_FORMAT(LeaveFrom,'%d.%m.%Y') as 'LeaveFrom',DATE_FORMAT(LeaveTo,'%d.%m.%Y') as 'LeaveTo' from (SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries_approval where FIND_IN_SET(`Employee_Code`,@ForCodes) And @AdvanceFrom<=LeaveFrom And LeaveTo<=@AdvanceTo And `Status` in ('Approved','Pending') UNION SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries_approval where FIND_IN_SET(`Employee_Code`,@ForCodes) And LeaveFrom<=@AdvanceFrom And @AdvanceTo<=LeaveTo And `Status` in ('Approved','Pending') UNION SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries_approval where FIND_IN_SET(`Employee_Code`,@ForCodes) And LeaveFrom<=@AdvanceFrom And @AdvanceFrom<=LeaveTo And `Status` in ('Approved','Pending') UNION SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries_approval where FIND_IN_SET(`Employee_Code`,@ForCodes) And LeaveFrom<=@AdvanceTo And @AdvanceTo<=LeaveTo And `Status` in ('Approved','Pending') UNION SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries where FIND_IN_SET(`Employee_Code`,@ForCodes) And @AdvanceFrom<=LeaveFrom And LeaveTo<=@AdvanceTo And (EntryBy REGEXP '^[0-9]+$')=FALSE UNION SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries where FIND_IN_SET(`Employee_Code`,@ForCodes) And LeaveFrom<=@AdvanceFrom And @AdvanceTo<=LeaveTo And (EntryBy REGEXP '^[0-9]+$')=FALSE UNION SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries where FIND_IN_SET(`Employee_Code`,@ForCodes) And LeaveFrom<=@AdvanceFrom And @AdvanceFrom<=LeaveTo And (EntryBy REGEXP '^[0-9]+$')=FALSE UNION SELECT `Employee_Code`,LeaveType,LeaveFrom,LeaveTo from salary_management.leaveentries where FIND_IN_SET(`Employee_Code`,@ForCodes) And LeaveFrom<=@AdvanceTo And @AdvanceTo<=LeaveTo And (EntryBy REGEXP '^[0-9]+$')=FALSE ) A, emp_master B where A.Employee_Code=B.employee_code ORDER BY A.LeaveFrom;";
+
+        public const string GET_ADVANCE_BILL_SUMMARY = "Select ReferenceNo,Head,Unit,Price,Amount,MonthName,Remark,PrevAmount,AnyDiscount,DiscountRemark from advances.otherapprovalsummary_distribution where ReferenceNo=@ReferenceNo ORDER BY Head;";
+
+        public const string GET_ADVANCE_PAYMENT_DETAILS_WITH_PAYMENT_GROUP_REFERENCE_NO = "Select PaidAmount,TaxAmount,IssuedAmount,TRIM(REPLACE(TransactionNo,',',', ')) 'TranactionOn',DATE_FORMAT(IssuedOn,'%d.%m.%y') 'IssuedOn',SUBSTRING_INDEX(IssuedByName,' ',1) 'IssuedBy',IFNULL(DATE_FORMAT(SignedOn,'%d.%m.%y'),'---') 'SignedOn',IFNULL(DATE_FORMAT(ReceivedOn,'%d.%m.%y'),'---') 'RecievedOn',IFNULL(DATE_FORMAT(Col4,'%d.%m.%y'),'---') 'Bank',IF(Col4 is not null,'Clr.',IF(ReceivedOn is not null,'Rcv.',IF(SignedOn is not null,'Sgn.','Prp.'))) 'Status' from bill_transaction_issue where (TransactionID in (Select TransactionID from bill_base where BillExtra3=@ReferenceNo And `Status`!='Bill Rejected' And ForType!='Advance Bill') or TransactionID in (Select DISTINCT TransactionID from otherapprovalsummary A, bill_base B where SUBSTRING_INDEX(PExtra4,'#',1)=@ReferenceNo  And A.ReferenceNo=B.BillExtra3 And B.ForType='Advance Bill')) And Col3 is NULL ORDER BY IssuedOn,SequenceID;";
+
+        public const string GET_ADVANCE_PAYMENT_DETAILS_WITH_REFERENCE_NO = "Select PaidAmount,TaxAmount,IssuedAmount,TRIM(REPLACE(TransactionNo,',',', ')) 'TranactionOn',DATE_FORMAT(IssuedOn,'%d.%m.%y') 'IssuedOn',SUBSTRING_INDEX(IssuedByName,' ',1) 'IssuedBy',IFNULL(DATE_FORMAT(SignedOn,'%d.%m.%y'),'---') 'SignedOn',IFNULL(DATE_FORMAT(ReceivedOn,'%d.%m.%y'),'---') 'RecievedOn',IFNULL(DATE_FORMAT(Col4,'%d.%m.%y'),'---') 'Bank',IF(Col4 is not null,'Clr.',IF(ReceivedOn is not null,'Rcv.',IF(SignedOn is not null,'Sgn.','Prp.'))) 'Status' from bill_transaction_issue where TransactionID in (Select TransactionID from bill_base where BillExtra3=@ReferenceNo And `Status`!='Bill Rejected' And ForType='Advance Bill') And Col3 is NULL ORDER BY IssuedOn,SequenceID;";
+
+        public const string GET_ADVANCE_PAYMENT_TRANSACTION_IDS = "Select CAST(GROUP_CONCAT(TransactionID) as CHAR) from bill_base where BillExtra3=@ReferenceNo And `Status`!='Bill Rejected' And ForType='Advance Bill';";
+
+        public const string GET_ADVANCE_PAYMENT_TRANSACTION_IDS_BILL_DETAILS = "Select SequenceID,AmountRequired,DATE_FORMAT(LastUpdatedOn,'%d %b, %Y') 'LastUpdatedOn',LastUpdatedBy,`Status` from bill_against_base where ReferenceTransactionID in (@TransactionIds) And `Status`!='Bill Rejected' ORDER BY LastUpdatedOn;";
+
+        public const string GET_ADVANCE_PAYMENT_BILL_DISTRIBUTION_DETAILS = "Select Title,Qty,Price,Amount from billdistribution_advance where AdvanceSeqId=@BillId ORDER BY MyID;";
+
+        public const string GET_ADVANCE_PAYMENT_BILL_AGINST_BASE_DISTRIBUTION_DETAILS = "Select Title as 'Head',CAST(SUM(Amount) as SIGNED) 'Amount' from advances.bill_against_base A, advances.billdistribution_advance B where ReferenceTransactionID in (@TransactionIds) And A.`Status`!='Bill Rejected' And A.ReferenceTransactionID=B.Id And A.SequenceID=B.AdvanceSeqId GROUP BY Title ORDER BY Title;";
+
+        public const string GET_ADVANCE_OTHER_SUMMARY_DISTRIBUTION_DETAILS = "SELECT Head,CAST(SUM(Amount) as SIGNED) 'Amount' from advances.otherapprovalsummary_distribution where ReferenceNo=@ReferenceNo GROUP BY Head ORDER BY Head;";
+        public const string GET_ADVANCE_AMOUNT_ISSUED_AGINST_BUDGET = "Select A.ReferenceNo,A.RelativePersonName,DATE_FORMAT(A.AppDate,'%d %b, %Y') as 'AppDate',BudgetAmount,PreviousTaken,A.Amount,CurStatus as 'Balance',A.`Status`,A.ExcessUsed from otherapprovalsummary A, budgetapprovalsummary B where A.BudgetReferenceNo=B.ReferenceNo And A.VendorID=B.VendorID And B.ReferenceNo=@ReferenceNo And A.`Status` in ('Pending','Approved') ORDER BY A.AppDate";
+
+        public const string GET_ADVANCE_BUDGET_SESSION_WISE_USAGE = "SELECT A.Session,ReferenceNo,DATE_FORMAT(BudFrom,'%d.%m.%Y') 'FromDate',DATE_FORMAT(BudTill,'%d.%m.%Y') 'ToDate',TotalAmount,(UsedAmount+ExcessUsed) 'Used' from budgetapprovalsummary A,  (Select `Session`,PExtra3 from budgetapprovalsummary where ReferenceNo=@ReferenceNo) B where A.PExtra3=B.PExtra3 And A.`Status` in ('Pending','Approved') And A.`Session`<=B.`Session` ORDER BY A.`Session`  DESC LIMIT 3";
+
+        public const string GET_ADVANCE_BUDGET_MONTH_WISE_USAGE = "SELECT LEFT(MonthName,3) as 'Mon',Head,SUM(B.Amount) 'Amount',CAST(GROUP_CONCAT(CAST(A.ReferenceNo as CHAR),' / ',A.RelativePersonName,' (App. On : ',DATE_FORMAT(AppDate,'%d.%m.%Y'),')',' / ',B.Head,' / ',B.Unit,' * ',B.Price,' = ',B.Amount,' (Unit * Amount = Total)' SEPARATOR '$') as CHAR) 'Remark' from otherapprovalsummary A, otherapprovalsummary_distribution B where A.ReferenceNo=B.ReferenceNo And A.BudgetReferenceNo= @ReferenceNo And A.`Status` in ('Pending','Approved') GROUP BY Head,MonthName;";
+
+
+        public const string UPDATE_PLACEMEMT_SUMMARY = "update placement_management.visit_approval_summary set AdvRefNo=@AdvRefNo where ReferenceNo=@RefNo";
+        public const string UPDATE_VISIT_SUMMARY = "update visit_manager.visit_approval_summary set AdvRefNo=@AdvRefNo where ReferenceNo=@RefNo";
+        public const string UPDATE_SCHOOL_SUMMARY = "update visit_approval_summary set AdvRefNo=@AdvRefNo where ReferenceNo=@RefNo";
+
+
+        public const string GET_PURCHASE_DETAILS_FOR_GENERATE_BILL_AGAINST_ADVANCE = "select *,ROUND(Amount*CashPer/100,0) 'Dis',DATE_FORMAT(AppDate,'%m/%d/%Y') 'AppDateDisp',DATE_FORMAT(ExtendedBillDate,'%m/%d/%Y') 'ExpDate' from otherapprovalsummary where ReferenceNo=@RefNo";
+
+
+        public const string GETADVANCEBILLAUTH1 = "select EmployeeID,EmployeeDetails,Col2 from approvals_authority where ApprovalNo=1 And TransactionID=@RefNo And Type='Bills Approval'";
+        public const string GETADVANCEBILLAUTH2 = "select EmployeeID,EmployeeDetails,Col2 from approvals_authority where ApprovalNo=2 And TransactionID=@RefNo And Type='Bills Approval'";
+        public const string GETADVANCEBILLAUTH3= "select EmployeeID,EmployeeDetails,Col2 from approvals_authority where ApprovalNo=3 And TransactionID=@RefNo And Type='Bills Approval'";
+        public const string GETADVANCEBILLAUTH4 = "select EmployeeID,EmployeeDetails,Col2 from approvals_authority where ApprovalNo=4 And TransactionID=@RefNo And Type='Bills Approval'";
+
+        public const string GetAuthForOutMathura = "select CONCAT(first_name,' - ',deisgnation,' [',santioneddeptt,']') 'Text',CONCAT(employee_code,'#',first_name,'#',deisgnation,'#',santioneddeptt) 'Value2',employee_code 'Value' from salary_management.emp_master A where `status`!='INACTIVE' AND FIND_IN_SET(employee_code,(SELECT `Value` FROM advances.`othervalues` WHERE Type='Online And Noida Campus Member 3 Authority')) ";
+        public const string gtAuth = "select CONCAT(first_name,' - ',deisgnation,' [',santioneddeptt,']') 'Text',CONCAT(employee_code,'#',first_name,'#',deisgnation,'#',santioneddeptt) 'Value2',employee_code 'Value' from salary_management.emp_master A, advances.billauthorities B where A.employee_code=B.EmployeeID And `status`!='INACTIVE'  ";
+
+
+        #region Bill Througn Approval
+        public const string GET_APPROVAL_BILL = "select IssuedBy,DATE_FORMAT(IssuedOn,'%d %b, %y') 'IssuedOn',TransactionID,DATE_FORMAT(Col2,'%d %b, %y') 'INI',TransactionID 'Trans. ID',RelativePersonName 'Initiated By',if(Col3 is NULL or Col3='----',FirmName,CONCAT(FirmName,'( ',Col3,' )')) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',Status,AmountRemaining,IssuedName,IFNULL(DATE_FORMAT(BillExtra4,'%m/%d/%Y'),'') 'MyINICheck',(Select DISTINCT IsSpecial from specialvendors A where A.VendorID=M.VendorID) 'IsSpecial',CashDiscount,BillExtra3,BillExtra6,CAST(DATE_FORMAT(Col2,'%m/%d/%Y') as CHAR) as 'NewIni',CAST(DATE_FORMAT(BillDate,'%m/%d/%Y') as CHAR) as 'NewBill',CAST(DATE_FORMAT(GateEntryOn,'%m/%d/%Y') as CHAR) as 'NewGate',CAST(DATE_FORMAT(BillExtra4,'%m/%d/%Y') as CHAR) as 'NewTest',CAST(DATE_FORMAT(BillExtra1,'%m/%d/%Y') as CHAR) as 'NewExp',BillExtra3 as 'NewAppId',REPLACE(BillExtra2,'$','\n') 'ShowMeNow',M.Col5,M.CampusName  from bill_base M where `Session`=@Session And ForType in ('@ForType') And Status!='Bill Rejected' @Condition order by BillExtra4,TransactionID LIMIT @Limit OFFSET @OffSet";
+
+        public const string GET_ISSUED_AMOUNT = "select Sum(IssuedAmount) from bill_transaction_issue where TransactionID=@TransactionId And SignedOn is not NULL GROUP BY TransactionID";
+
+        public const string GET_APPROVAL_AUTHORITY_READY_TO_ISSUE = "select distinct EmployeeDetails,Status,CAST(DATE_FORMAT(DoneOn,'%d %b, %y') AS CHAR) 'DB',EmployeeID from approvals_authority where Type='Bills Approval -> Cheque Approval' And TransactionID=@TransId And SequenceNo = (select max(SequenceID) from bill_transaction_issue where TransactionID=@TransId) order by ApprovalNo";
+
+        public const string GET_AUTHORITY = "select distinct EmployeeDetails,Status,CAST(DATE_FORMAT(DoneOn,'%d %b, %y') AS CHAR) 'DB',EmployeeID from approvals_authority where Type='Bills Approval' And TransactionID=@TransId order by ApprovalNo ";
+        public const string Update_BillBase="update bill_base set @Cond BillExtra6=@NewWarId where TransactionID=@TransId";
+        public const string UPDATE_REMARK = "update bill_transaction_issue set Remark=@Purpose where Col3 is NULL And SignedOn is NULL And TransactionID=@TransId";
+        #endregion
+
+
+
     }
 }
