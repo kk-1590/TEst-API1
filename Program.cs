@@ -1,7 +1,9 @@
 using AdvanceAPI;
 using AdvanceAPI.Middlewares;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.DotNet.Scaffolding.Shared;
+using Microsoft.Extensions.FileProviders;
 using Serilog;
 using Serilog.Context;
 
@@ -35,6 +37,22 @@ app.UseCors(builder =>
     builder.AllowAnyOrigin()
            .AllowAnyMethod()
            .AllowAnyHeader();
+});
+var providerfile = new FileExtensionContentTypeProvider();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills")),
+    RequestPath = "/Upload_Bills",
+    ServeUnknownFileTypes = true,
+    ContentTypeProvider = providerfile
+});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills")),
+    RequestPath = "/Upload_Bills/Approved",
+    ServeUnknownFileTypes = true,
+    ContentTypeProvider = providerfile
 });
 
 // Configure the HTTP request pipeline.

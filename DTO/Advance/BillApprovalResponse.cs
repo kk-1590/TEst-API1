@@ -32,6 +32,9 @@
         public string IssImg { get; internal set; }
         public string? IssuedOn { get; internal set; }
         public string? IssuedBy { get; internal set; }
+        public string? BackColor { get; set; }
+        public bool CanEdit { get; set; }
+        public bool CanDelete { get; set; }
     }
     public class Authorities
     {

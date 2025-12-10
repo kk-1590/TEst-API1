@@ -1,5 +1,6 @@
 ﻿using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Advance;
+using AdvanceAPI.DTO.Advance.Bill;
 
 namespace AdvanceAPI.IServices.Advance
 {
@@ -34,5 +35,19 @@ namespace AdvanceAPI.IServices.Advance
         Task<ApiResponse> GetAdvancebillAuth(string refNo);
         Task<ApiResponse> GetPurchaseApprovalBill(string EmpCode, string Type, GetApprovalBillRequest req);
         Task<ApiResponse> UpdatePurchaseBillDate(string empCode, UpdatePurchaseBillDateRequest req);
+        Task<ApiResponse> UpdateBillDetails(string RefNo);
+        Task<ApiResponse> DeleteBill(string EmpCode, string TransId,int Opr=0);
+        Task<ApiResponse> UpdateBill(string EmpCode, string EmpName, AddBillGenerateRequest req, string Type);
+        Task<ApiResponse> GetBillDetails(string TransId, string EmpName);
+        Task<ApiResponse> GetVendorDetails(string VendorId);
+        Task<ApiResponse> LoadTransactionDetails(string TransId);
+        Task<ApiResponse> getAuthForDirectBill(string CampusCode);
+        Task<ApiResponse> GetBillApprovalFilterSessions();
+        Task<ApiResponse> GetBillApprovalFilterInitiatedBy();
+        Task<ApiResponse> GetBillApprovalFilterChequeBy();
+        Task<ApiResponse> GetBillApprovalDetails(GetBillApprovalRequest? getBillApprovalRequest, string employeeId, string role, string name);
+        Task<ApiResponse> GetChequeAuthority();
+        Task<ApiResponse> GetPayentDetails();
+        Task<ApiResponse> SaveChequeDetails(string EmpCode, string Type, string EmpName, SaveCheDetailsRequest req);
     }
 }

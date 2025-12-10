@@ -1,18 +1,23 @@
 ﻿using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Advance;
+using AdvanceAPI.DTO.Advance.Bill;
 using AdvanceAPI.DTO.DB;
 using AdvanceAPI.DTO.Inclusive;
 using AdvanceAPI.IRepository;
 using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Advance;
 using AdvanceAPI.IServices.Inclusive;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using MySql.Data.MySqlClient;
 using MySqlX.XDevAPI;
 using Org.BouncyCastle.Ocsp;
+using Org.BouncyCastle.Pqc.Crypto.Lms;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.Threading;
 using System.Web;
 
 namespace AdvanceAPI.Services.Advance
@@ -22,7 +27,8 @@ namespace AdvanceAPI.Services.Advance
         private IAdvanceRepository _advanceRepository;
         private IGeneral _general;
         private readonly IInclusiveService _inclusiveService;
-        public AdvanceService(IAdvanceRepository advanceRepository, IGeneral general, IInclusiveService inclusiveService) {
+        public AdvanceService(IAdvanceRepository advanceRepository, IGeneral general, IInclusiveService inclusiveService)
+        {
             _advanceRepository = advanceRepository;
             _general = general;
             _inclusiveService = inclusiveService;
@@ -66,7 +72,7 @@ namespace AdvanceAPI.Services.Advance
                 DataTable BalanceDetails = await _advanceRepository.GetBalanceDetails(RefNo);
                 DataTable PreviousDetails = await _advanceRepository.GetVendorDetails(RefNo);
                 if (BalanceDetails.Rows.Count > 0)
-                {    
+                {
                     if (BalanceDetails.Rows[0][0].ToString()!.Length > 0)
                     {
 
@@ -109,7 +115,7 @@ namespace AdvanceAPI.Services.Advance
 
         public async Task<ApiResponse> GenerateAdvance(GenerateAdvancerequest req, string EmpCode, string EmpName, string RefNo)
         {
-            
+
             using (DataTable dt = await _advanceRepository.CheckPreviousPendingBill(RefNo))
             {
                 if (dt.Rows.Count > 0)
@@ -120,7 +126,7 @@ namespace AdvanceAPI.Services.Advance
 
 
 
-            req.ApprovalType = req.ApprovalType+" Advance Form";
+            req.ApprovalType = req.ApprovalType + " Advance Form";
             if (Convert.ToDateTime(req.AppDate) > Convert.ToDateTime(req.BillTill))
             {
                 req.ApprovalType = "Post Facto - " + req.ApprovalType;
@@ -196,7 +202,7 @@ namespace AdvanceAPI.Services.Advance
             }
 
             //Task<int> SaveAdvance(GenerateAdvancerequest req, string EmpCode, string EmpName, string RefNo,string FirmName,string FirmPerson,string FirmEmail,string FirmPanNo,string FirmAddress,string FirmContactNo,string FirmAlternateContactNo,string BackValue,string PurchaseApprovalDetails)
-            int ins = await _advanceRepository.SaveAdvance(req, EmpCode, EmpName, RefrenceNo, fname, fcontcatname, femail, "", fadd, fcno, falter, PurChaseBackValue, PurchaseApprovalDetails,RefNo);
+            int ins = await _advanceRepository.SaveAdvance(req, EmpCode, EmpName, RefrenceNo, fname, fcontcatname, femail, "", fadd, fcno, falter, PurChaseBackValue, PurchaseApprovalDetails, RefNo);
 
             return new ApiResponse(StatusCodes.Status200OK, "Success", "Record Insert Successfully");
 
@@ -236,9 +242,9 @@ namespace AdvanceAPI.Services.Advance
                         MyReq.CanDelete = true;
                     }
                     MyReq.CanUploadBill = false;
-                    using (DataTable ds= await _advanceRepository.GetrefnoForGenerateBillAdvance(Type, EmpCode, dr["ReferenceNo"].ToString()))
+                    using (DataTable ds = await _advanceRepository.GetrefnoForGenerateBillAdvance(Type, EmpCode, dr["ReferenceNo"].ToString()))
                     {
-                        MyReq.CanUploadBill=ds.Rows.Count > 0;
+                        MyReq.CanUploadBill = ds.Rows.Count > 0;
                     }
                     MyReq.Status = dr["Status"].ToString();
                     MyReq.CampusName = dr["CampusName"].ToString();
@@ -847,7 +853,7 @@ namespace AdvanceAPI.Services.Advance
                     return new ApiResponse(StatusCodes.Status200OK, "Warning", "Sorry! Previous Advance Approval Is Still Pending To Approve For Same Purchase Approval Initiated By " + dt.Rows[0]["IniName"].ToString() + " on " + dt.Rows[0]["AppDate"].ToString() + " of Amount : " + dt.Rows[0]["Amount"].ToString() + " Rs/-");
                 }
                 DataTable dtt = await _advanceRepository.GetVendorTextValue(splt[1]);
-               
+
                 foreach (DataRow row in dtt.Rows)
                 {
                     VendorDetails.Add(new TextValues(row));
@@ -879,51 +885,53 @@ namespace AdvanceAPI.Services.Advance
                 }
                 details.Vendorlst = VendorDetails;
             }
-           
-          
-            return new ApiResponse(StatusCodes.Status200OK,"Success",details);
+
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", details);
         }
 
-        public async Task<ApiResponse> SaveBill(string EmpCode,string EmpName, AddBillGenerateRequest req,string Type)
+        public async Task<ApiResponse> SaveBill(string EmpCode, string EmpName, AddBillGenerateRequest req, string Type)
         {
-            if(req.ForTypeOf=="Advance Bill")
+            if (!string.IsNullOrEmpty(req.RefNo))
             {
-                DataTable cann = await _advanceRepository.GetrefnoForGenerateBillAdvance(Type,EmpCode,req.RefNo!);
-                if(cann.Rows.Count<=0)
+                if (req.ForTypeOf == "Advance Bill")
                 {
-                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
-                }
-                using (DataTable dt = await _advanceRepository.CheckPreviousPendingBill(req.RefNo!))
-                {
-                    if (dt.Rows.Count > 0)
+                    DataTable cann = await _advanceRepository.GetrefnoForGenerateBillAdvance(Type, EmpCode, req.RefNo!);
+                    if (cann.Rows.Count <= 0)
                     {
-                        return new ApiResponse(StatusCodes.Status200OK, "Warning", "Sorry! Previous Advance Approval Is Still Pending To Approve For Same Purchase Approval Initiated By " + dt.Rows[0]["IniName"].ToString() + " on " + dt.Rows[0]["AppDate"].ToString() + " of Amount : " + dt.Rows[0]["Amount"].ToString() + " Rs/-");
+                        return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
+                    }
+                    using (DataTable dt = await _advanceRepository.CheckPreviousPendingBill(req.RefNo!))
+                    {
+                        if (dt.Rows.Count > 0)
+                        {
+                            return new ApiResponse(StatusCodes.Status200OK, "Warning", "Sorry! Previous Advance Approval Is Still Pending To Approve For Same Purchase Approval Initiated By " + dt.Rows[0]["IniName"].ToString() + " on " + dt.Rows[0]["AppDate"].ToString() + " of Amount : " + dt.Rows[0]["Amount"].ToString() + " Rs/-");
+                        }
+                    }
+                }
+                else
+                {
+                    DataTable dt = await _advanceRepository.CanGenerateBill(Type, EmpCode, Convert.ToInt32(req.Amount) > 1000 ? false : true, req.RefNo!);
+                    if (dt.Rows.Count <= 0)
+                    {
+                        return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
                     }
                 }
             }
-            else
-            {
-                DataTable dt = await _advanceRepository.CanGenerateBill(Type, EmpCode, Convert.ToInt32(req.Amount) > 1000 ? true : false, req.RefNo!);
-                if (dt.Rows.Count <= 0)
-                {
-                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
-                }
-            }
 
-
-                string BillRefNo = "";
-            using (DataTable GetBillBaseRefNo = await _advanceRepository.GetBillBaseRefNo()) 
+            string BillRefNo = "";
+            using (DataTable GetBillBaseRefNo = await _advanceRepository.GetBillBaseRefNo())
             {
-                if(GetBillBaseRefNo.Rows.Count>0)
+                if (GetBillBaseRefNo.Rows.Count > 0)
                 {
-                    string myid = GetBillBaseRefNo.Rows[0][0].ToString()??string.Empty;
-                    string NewId = GetBillBaseRefNo.Rows[0][0].ToString()??string.Empty;
-                     BillRefNo = GetBillBaseRefNo.Rows[0][0].ToString()??string.Empty;
+                    string myid = GetBillBaseRefNo.Rows[0][0].ToString() ?? string.Empty;
+                    string NewId = GetBillBaseRefNo.Rows[0][0].ToString() ?? string.Empty;
+                    BillRefNo = GetBillBaseRefNo.Rows[0][0].ToString() ?? string.Empty;
                 }
                 //Task<int> SaveBillAuth(string EmpCode, string EmpName, AddBillGenerateRequest req, string BillBaseREfNo)
                 //Task<int> SaveBillSave(string EmpCode,string EmpName, AddBillGenerateRequest req,string BillBaseREfNo)
-                int saverecord = await _advanceRepository.SaveBillSave(EmpCode,EmpName,req,BillRefNo);
-                int SaveAuth = await _advanceRepository.SaveBillAuth(EmpCode,EmpName,req,BillRefNo);
+                int saverecord = await _advanceRepository.SaveBillSave(EmpCode, EmpName, req, BillRefNo);
+                int SaveAuth = await _advanceRepository.SaveBillAuth(EmpCode, EmpName, req, BillRefNo);
 
 
 
@@ -933,12 +941,12 @@ namespace AdvanceAPI.Services.Advance
                 string FilePath = Directory.GetCurrentDirectory();
                 FilePath = Path.Combine(FilePath, "Upload_Bills");
                 string FileName = BillRefNo + ".pdf";
-                
-                if(!Directory.Exists(FilePath))
+
+                if (!Directory.Exists(FilePath))
                 {
                     Directory.CreateDirectory(FilePath);
                 }
-                if (req.pdf!=null && req.pdf.Length > 0)
+                if (req.pdf != null && req.pdf.Length > 0)
                 {
                     //delete file
                     if (File.Exists(Path.Combine(FilePath, FileName)))
@@ -979,10 +987,10 @@ namespace AdvanceAPI.Services.Advance
         }
         public async Task<ApiResponse> GetLockDetails(string Type)
         {
-            DateLockResponse lst=new DateLockResponse();
+            DateLockResponse lst = new DateLockResponse();
             using (DataTable dt = await _advanceRepository.GetDateLock(Type))
             {
-                
+
                 foreach (DataRow dr in dt.Rows)
                 {
                     if (dr["Type"].ToString() == "Initiation")
@@ -1602,7 +1610,7 @@ namespace AdvanceAPI.Services.Advance
 
 
             PurchaseDetailsForGenerateBillREsponse lst = new PurchaseDetailsForGenerateBillREsponse();
-            using (DataTable dt = await _advanceRepository. GetPurchaseBasicForBillAgainstAdvance(RefNo))
+            using (DataTable dt = await _advanceRepository.GetPurchaseBasicForBillAgainstAdvance(RefNo))
             {
                 lst.FirmName = dt.Rows[0]["FirmName"].ToString() ?? string.Empty;
                 lst.Department = dt.Rows[0]["ForDepartment"].ToString() ?? string.Empty;
@@ -1622,7 +1630,7 @@ namespace AdvanceAPI.Services.Advance
                 lst.Actualmount = dt.Rows[0]["TotalAmount"].ToString();
                 lst.AmountSantioned = dt.Rows[0]["TotalAmount"].ToString() ?? string.Empty;
                 lst.AmountDiscount = dt.Rows[0]["Dis"].ToString() ?? string.Empty;
-                lst.ExtraValues= dt.Rows[0]["PExtra3"].ToString() ?? ""; ;
+                lst.ExtraValues = dt.Rows[0]["PExtra3"].ToString() ?? ""; ;
 
                 //Load Vendor
 
@@ -1649,7 +1657,7 @@ namespace AdvanceAPI.Services.Advance
                     }
                     lst.Offices = VendorOffice;
 
-                    
+
                 }
                 return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
             }
@@ -1662,7 +1670,7 @@ namespace AdvanceAPI.Services.Advance
             List<TextValues> lst3 = new List<TextValues>();
             List<TextValues> lst4 = new List<TextValues>();
 
-            if(CampusCode!="101")
+            if (CampusCode != "101")
             {
                 using (DataTable dtAuuth1 = await _advanceRepository.GetAuthAdvanceBillAuth1(CampusCode))
                 {
@@ -1725,23 +1733,23 @@ namespace AdvanceAPI.Services.Advance
                 }
             }
 
-                return new ApiResponse(StatusCodes.Status200OK, "Success", new {app3List= lst1, app4List= lst2, app1List= lst3, app2List= lst4 });
+            return new ApiResponse(StatusCodes.Status200OK, "Success", new { app3List = lst1, app4List = lst2, app1List = lst3, app2List = lst4 });
         }
         public async Task<ApiResponse> GetPurchaseApprovalBill(string EmpCode, string Type, GetApprovalBillRequest req)
         {
             //Task<DataTable> GetApprovalBill(string EmpCode,string Type, GetApprovalBillRequest req)
-            List< BillApprovalResponse > lst=new List<BillApprovalResponse> ();
-            using (DataTable dt = await _advanceRepository.GetApprovalBill(EmpCode,Type,req))
+            List<BillApprovalResponse> lst = new List<BillApprovalResponse>();
+            using (DataTable dt = await _advanceRepository.GetApprovalBill(EmpCode, Type, req))
             {
                 DataTable mytab = new DataTable();
-                mytab=dt.Clone();
+                mytab = dt.Clone();
                 mytab.Rows.Clear();
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
-                    BillApprovalResponse ls=new BillApprovalResponse();
+                    BillApprovalResponse ls = new BillApprovalResponse();
                     if (Convert.ToInt32(dt.Rows[i]["AmountRemaining"].ToString()) <= 0)
                     {
-                        DataTable dts = await _advanceRepository.GetIssuedAmount(dt.Rows[i]["TransactionID"].ToString()??"");
+                        DataTable dts = await _advanceRepository.GetIssuedAmount(dt.Rows[i]["TransactionID"].ToString() ?? "");
 
                         if (dts.Rows.Count > 0)
                         {
@@ -1774,7 +1782,7 @@ namespace AdvanceAPI.Services.Advance
                         //dtn.Tables[0].Rows[i][5] = dtn.Tables[0].Rows[i]["AmountRemaining"].ToString();
                         mytab.ImportRow(dt.Rows[i]);
                     }
-                    
+
                     ls.CampusName = mytab.Rows[i]["CampusName"].ToString();
                     ls.TransactionId = mytab.Rows[i]["TransactionID"].ToString();
                     ls.SenAmount = mytab.Rows[i]["Santioned"].ToString();
@@ -1800,7 +1808,7 @@ namespace AdvanceAPI.Services.Advance
                     ls.Col5 = mytab.Rows[i]["col5"].ToString();
                     ls.NewIni = mytab.Rows[i]["NewIni"].ToString();
                     ls.AmountRemaining = mytab.Rows[i]["AmountRemaining"].ToString();
-                    if (mytab.Rows[i]["BillExtra6"].ToString()!.Length>0)
+                    if (mytab.Rows[i]["BillExtra6"].ToString()!.Length > 0)
                     {
                         ls.PurposeLink = "http://hostel.glauniversity.in:84/warrenty.aspx?approvalid=" + mytab.Rows[i]["BillExtra6"].ToString();
                     }
@@ -1826,11 +1834,11 @@ namespace AdvanceAPI.Services.Advance
 
                         if ((Type != "STORE" && Type != "GUEST" && mytab.Rows[i]["NewBill"].ToString().Length > 0) || (apporrej <= 0 && mytab.Rows[i]["Status"].ToString() == "Waiting For Bills Approval" && mytab.Rows[i]["NewBill"].ToString().Length > 0))
                         {
-                            ls.CanEditDate=true;
+                            ls.CanEditDate = true;
                         }
                         DataTable AuthDetails = await _advanceRepository.GetApprovalAuthority(mytab.Rows[i]["Trans. ID"].ToString());
                         List<Authorities> authorities = new List<Authorities>();
-                        foreach(DataRow dr in AuthDetails.Rows)
+                        foreach (DataRow dr in AuthDetails.Rows)
                         {
                             authorities
                                 .Add(new Authorities
@@ -1839,7 +1847,7 @@ namespace AdvanceAPI.Services.Advance
                                     On = dr["DB"].ToString(),
                                     Status = dr["Status"].ToString(),
                                     EmployeeId = dr["EmployeeID"].ToString(),
-                                    Img =await _inclusiveService.GetEmployeePhotoUrl(dr["EmployeeID"].ToString()??"")
+                                    Img = await _inclusiveService.GetEmployeePhotoUrl(dr["EmployeeID"].ToString() ?? "")
                                 });
                         }
                         ls.AuthList = authorities;
@@ -1856,7 +1864,7 @@ namespace AdvanceAPI.Services.Advance
                     {
                         if (mytab.Rows[i]["AmountRemaining"].ToString() == "0")
                             ls.Status = "Bill Fully Paid";
-                        using (DataTable auth=await _advanceRepository.GetIssuedAmounREadyApproval(dt.Rows[i]["TransactionID"].ToString() ?? ""))
+                        using (DataTable auth = await _advanceRepository.GetIssuedAmounREadyApproval(dt.Rows[i]["TransactionID"].ToString() ?? ""))
                         {
                             List<Authorities> authorities = new List<Authorities>();
                             foreach (DataRow dr in auth.Rows)
@@ -1895,14 +1903,95 @@ namespace AdvanceAPI.Services.Advance
                             }
                             ls.AuthList = authorities;
                         }
-                       
 
+
+                    }
+                    //color
+                    if (mytab.Rows[i]["Status"].ToString() != "Bill Rejected")
+                    {
+                        using (DataTable colordt = await _advanceRepository.RowColor(mytab.Rows[i]["Trans. ID"].ToString()))
+                        {
+                            if (colordt.Rows.Count > 0)
+                            {
+                                if (mytab.Rows[i]["MyINICheck"].ToString().Length <= 0)
+                                {
+                                    ls.BackColor = "#FF5555";
+                                }
+                                else
+                                {
+                                    var iniRaw = mytab.Rows[i]["MyINICheck"]?.ToString();
+                                    var limit = Convert.ToInt32(colordt.Rows[0]["Limit"]);
+
+                                    var ini = DateTime.ParseExact(
+                                        iniRaw,
+                                        "MM/dd/yyyy",                    // ya "dd/MM/yyyy" jo actual ho
+                                        CultureInfo.InvariantCulture);
+
+                                    if (ini.AddDays(limit).Date == DateTime.Now.Date)
+                                    {
+                                        ls.BackColor = "#FFFFCC";
+                                    }
+                                    if (ini.AddDays(limit) < DateTime.Now.Date)
+                                    {
+                                        ls.BackColor = "#FF5555";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (mytab.Rows[i]["Status"].ToString() == "Ready To Issue Amount" || mytab.Rows[i]["Status"].ToString() == "Waiting For Cheque Approval")
+                    {
+                        using (DataTable rowcolo = await _advanceRepository.RowColorReadyAmount(mytab.Rows[i]["Trans. ID"].ToString()))
+                        {
+                            if (Convert.ToDateTime(mytab.Rows[i]["MyINICheck"].ToString()).AddDays(Convert.ToInt32(rowcolo.Rows[0]["Limit"].ToString())) == DateTime.Now.Date)
+                            {
+                                ls.BackColor = "#FFFFCC";
+                            }
+                            if (Convert.ToDateTime(mytab.Rows[i]["MyINICheck"].ToString()).AddDays(Convert.ToInt32(rowcolo.Rows[0]["Limit"].ToString())) < DateTime.Now.Date)
+                            {
+                                ls.BackColor = "#FF5555";
+                            }
+                        }
+                    }
+                    if (mytab.Rows[i]["IsSpecial"].ToString() == "True")
+                    {
+                        ls.BackColor = "#8CDAFF";
+                    }
+
+                    if (mytab.Rows[i]["Status"].ToString() == "Waiting For Bills Approval" || mytab.Rows[i]["Status"].ToString() == "Bill Rejected" || mytab.Rows[i]["Status"].ToString() == "Bill Cancelled")
+                    {
+                        if (mytab.Rows[0]["Status"].ToString() == "Waiting For Bills Approval" && EmpCode == mytab.Rows[0]["IssuedBy"].ToString())
+                        {
+                            using (DataTable stst = await _advanceRepository.GetAuthStatusBill(ls.TransactionId))
+                            {
+                                if (stst.Rows.Count <= 0)
+                                {
+                                    ls.CanEdit = true;
+                                    ls.CanDelete = true;
+                                }
+                                else
+                                {
+                                    ls.CanEdit = false;
+                                    ls.CanDelete = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ls.CanEdit = false;
+                            ls.CanDelete = false;
+                        }
+                    }
+                    else
+                    {
+                        ls.CanEdit = false;
+                        ls.CanDelete = false;
                     }
 
                     lst.Add(ls);
                 }
 
-                
+
 
 
 
@@ -1910,19 +1999,23 @@ namespace AdvanceAPI.Services.Advance
             return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
         }
 
+
+
+
+
         public async Task<ApiResponse> UpdatePurchaseBillDate(string empCode, UpdatePurchaseBillDateRequest req)
         {
 
             string store = "";
             string Update = "";
             List<SQLParameters> param = new List<SQLParameters>();
-            if(Convert.ToDateTime(req.NewAppDate)!=Convert.ToDateTime(req.OldAppDate))
+            if (Convert.ToDateTime(req.NewAppDate) != Convert.ToDateTime(req.OldAppDate))
             {
-               store+= "Ini. Dt. : " + req.OldAppDate.Replace("-",".") + "->" + req.NewAppDate.Replace("-",".") + ", ";
-               Update += " Col2=@NewAppDate,";
+                store += "Ini. Dt. : " + req.OldAppDate.Replace("-", ".") + "->" + req.NewAppDate.Replace("-", ".") + ", ";
+                Update += " Col2=@NewAppDate,";
                 param.Add(new SQLParameters("@NewAppDate", req.NewAppDate));
             }
-            if(Convert.ToDateTime(req.NewBillDate)!= Convert.ToDateTime(req.OldBillDate))
+            if (Convert.ToDateTime(req.NewBillDate) != Convert.ToDateTime(req.OldBillDate))
             {
                 store += " Bill Dt. : " + req.OldBillDate.Replace("-", ".") + "->" + req.NewBillDate.Replace("-", ".") + ", ";
                 Update += " BillDate=@NewBillDate,";
@@ -1946,7 +2039,7 @@ namespace AdvanceAPI.Services.Advance
                 Update += " BillExtra4=@NewTestDate,";
                 param.Add(new SQLParameters("@NewTestDate", req.NewTestDate));
             }
-            if(store.Length>0)
+            if (store.Length > 0)
             {
                 store = "  Done By : " + empCode + " On " + DateTime.Now.ToLongDateString() + "$";
                 Update += " LastUpdatedOn=now(),LastUpdatedBy='" + empCode + "',BillExtra2=CONCAT(IFNULL(BillExtra2,''),'" + store + "'),";
@@ -1955,17 +2048,1517 @@ namespace AdvanceAPI.Services.Advance
             {
                 int ins = await _advanceRepository.UpdateBillBase(Update, req.TransId, req.NewWarrentyID, param);
             }
-            
+
             //update Purpose
             if (req.NewPurpose != req.OldPurpose)
             {
-               int ins=await _advanceRepository.UpdateRemark(req.NewPurpose ?? "", req.TransId ?? "");
+                int ins = await _advanceRepository.UpdateRemark(req.NewPurpose ?? "", req.TransId ?? "");
             }
             return new ApiResponse(StatusCodes.Status200OK, "Success", "Record Update Successfully");
 
         }
 
-    }
 
-    
+        public async Task<ApiResponse> UpdateBillDetails(string RefNo)
+        {
+            using (DataTable dt = await _advanceRepository.GetEditBillDetails(RefNo))
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    BillDetailsForEditResponse res = new BillDetailsForEditResponse();
+                    res.AdditionalName = dt.Rows[0]["Col5"].ToString() ?? "";
+                    res.ForOffice = dt.Rows[0]["Col3"].ToString() ?? "";
+                    res.RefNo = dt.Rows[0]["BillExtra3"].ToString() ?? "";
+                    res.Department = dt.Rows[0]["Col1"].ToString() ?? "";
+                    res.FirmName = dt.Rows[0]["FirmName"].ToString() ?? "";
+                    res.FirmContactName = dt.Rows[0]["FirmPerson"].ToString() ?? "";
+                    res.FirmEmail = dt.Rows[0]["FirmEmail"].ToString() ?? "";
+                    res.FirmContactNo = dt.Rows[0]["FirmContactNo"].ToString() ?? "";
+                    res.FirmAlternate = dt.Rows[0]["FirmAlternateContactNo"].ToString() ?? "";
+                    res.FirmAddress = dt.Rows[0]["FirmAddress"].ToString() ?? "";
+                    res.FirmPANNo = dt.Rows[0]["FirmPanNo"].ToString() ?? "";
+                    res.Purpose = dt.Rows[0]["Remark"].ToString() ?? "";
+                    res.ForEmployee = dt.Rows[0]["RelativePersonName"].ToString() + " - " + dt.Rows[0]["RelativeDesignation"].ToString() + " [" + dt.Rows[0]["RelativeDepartment"].ToString() + "]";
+                    res.Reamining = dt.Rows[0]["AmountRemaining"].ToString() ?? "";
+                    res.Actualmount = dt.Rows[0]["AmountRequired"].ToString() ?? "";
+                    res.AlreadyIssued = dt.Rows[0]["AmountPaid"].ToString() ?? "";
+                    res.BillNo = dt.Rows[0]["BillNo"].ToString() ?? "";
+                    res.GateDate = dt.Rows[0]["G"].ToString() ?? "";
+                    res.StoreDate = dt.Rows[0]["S"].ToString() ?? "";
+                    res.InitiateOn = dt.Rows[0]["Ini"].ToString() ?? "";
+                    res.DepartmentDate = dt.Rows[0]["D"].ToString() ?? "";
+                    res.CampusCode = dt.Rows[0]["CampusCode"].ToString() ?? "";
+                    res.CampusName = dt.Rows[0]["CampusName"].ToString() ?? "";
+                    if (dt.Rows[0]["ExpDt"].ToString() == "---")
+                    {
+                        res.ExpBillDate = "";
+                    }
+                    else
+                    {
+                        res.ExpBillDate = dt.Rows[0]["ExpDt"].ToString();
+                    }
+                    res.TestingUpto = dt.Rows[0]["TestDt"].ToString() ?? "";
+                    res.BillOnGate = dt.Rows[0]["GT"].ToString() ?? "";
+                    res.BillDate = dt.Rows[0]["BL"].ToString() ?? "";
+                    res.AmountDiscount = dt.Rows[0]["CashDiscount"].ToString() ?? "";
+                    res.Status = dt.Rows[0]["Status"].ToString() ?? "";
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["ExtendedBillDate"].ToString()) && dt.Rows[0]["ExtendedBillDate"].ToString().Length > 0)
+                    {
+                        res.NextBillTill = dt.Rows[0]["ExtendedBillDate"].ToString();
+                    }
+
+                    TextValues auth = new TextValues();
+                    using (DataTable Authlst = await _advanceRepository.GetRefAuth(RefNo))
+                    {
+                        DataRow[] dr = Authlst.Select("ApprovalNo = 1");
+                        if (dr.Length > 0)
+                        {
+                            auth = new TextValues
+                            {
+                                Text = dr[0]["EmployeeDetails"].ToString(),
+                                Value = dr[0]["EmployeeID"].ToString() + "#" + dr[0]["EmployeeDetails"].ToString(),
+
+                            };
+                            res.App1Auth = auth;
+                        }
+                        dr = Authlst.Select("ApprovalNo = 2");
+                        auth = new TextValues();
+                        if (dr.Length > 0)
+                        {
+                            auth = new TextValues
+                            {
+                                Text = dr[0]["EmployeeDetails"].ToString(),
+                                Value = dr[0]["EmployeeID"].ToString() + "#" + dr[0]["EmployeeDetails"].ToString(),
+
+                            };
+                            res.App2Auth = auth;
+                        }
+                        dr = Authlst.Select("ApprovalNo = 3");
+                        auth = new TextValues();
+                        if (dr.Length > 0)
+                        {
+                            auth = new TextValues
+                            {
+                                Text = dr[0]["EmployeeDetails"].ToString(),
+                                Value = dr[0]["EmployeeID"].ToString() + "#" + dr[0]["EmployeeDetails"].ToString(),
+
+                            };
+                            res.App3Auth = auth;
+                        }
+                        dr = Authlst.Select("ApprovalNo = 4");
+                        auth = new TextValues();
+                        if (dr.Length > 0)
+                        {
+                            auth = new TextValues
+                            {
+                                Text = dr[0]["EmployeeDetails"].ToString(),
+                                Value = dr[0]["EmployeeID"].ToString() + "#" + dr[0]["EmployeeDetails"].ToString(),
+
+                            };
+                            res.App4Auth = auth;
+                        }
+                    }
+                    List<TextValues> Offices = new List<TextValues>();
+                    using (DataTable loadOffice = await _advanceRepository.GetOffices(dt.Rows[0]["VendorID"].ToString()))
+                    {
+                        foreach (DataRow dr in loadOffice.Rows)
+                        {
+                            Offices.Add(new TextValues
+                            {
+                                Text = dr["Text"].ToString(),
+                                Value = dr["Value"].ToString(),
+                            });
+                        }
+                        if (Offices.Count == 0)
+                        {
+                            DataRow DR = loadOffice.NewRow();
+                            DR[0] = "";
+                            loadOffice.Rows.Add(DR);
+                            DR = loadOffice.NewRow();
+                            DR[0] = "----";
+                            loadOffice.Rows.Add(DR);
+                        }
+                    }
+                    res.Offices = Offices;
+
+
+                    res.BillTransId = RefNo;
+                    string parentPath = Directory.GetCurrentDirectory();
+
+
+                    if (File.Exists(Path.Combine(parentPath, "Upload_Bills", "Approved", res.BillTransId + ".pdf")))
+                    {
+                        res.PdfFile = Path.Combine("Upload_Bills", "Approved", res.BillTransId + ".pdf");
+
+                    }
+                    else
+                    {
+
+                        if (File.Exists(Path.Combine(parentPath, "Upload_Bills", res.BillTransId + ".pdf")))
+                        {
+                            res.PdfFile = Path.Combine("Upload_Bills", res.BillTransId + ".pdf");
+                        }
+                    }
+
+
+                    if (File.Exists(Path.Combine(parentPath, "Upload_Bills", "Approved", res.BillTransId + ".xlsx")))
+                    {
+                        res.ExceFile = Path.Combine("Upload_Bills", "Approved", res.BillTransId + ".xlsx");
+                    }
+                    else
+                    {
+                        if (File.Exists(Path.Combine(parentPath, "Upload_Bills", res.BillTransId + ".xlsx")))
+                        {
+                            res.ExceFile = Path.Combine("Upload_Bills", res.BillTransId + ".xlsx");
+                        }
+                    }
+                    return new ApiResponse(StatusCodes.Status200OK, "Success", res);
+                }
+                else
+                {
+                    return new ApiResponse(StatusCodes.Status200OK, "Success", "No Record Found");
+                }
+            }
+
+
+
+        }
+        public async Task<ApiResponse> DeleteBill(string EmpCode, string TransId, int Opr = 0)
+        {
+
+            //Update PurchaseBillSummary
+            if (Opr == 0)
+            {
+                int del = await _advanceRepository.UpdateDeleteStatus(TransId);
+            }
+            //insert backup
+            int ins = await _advanceRepository.InsertDeleteLog(TransId, EmpCode);
+
+            //deletebill base
+            if (ins == 0)
+            {
+                int BillBase = await _advanceRepository.DeleteBillBase(TransId);
+            }
+            //deletebill Authority
+            int BillAuth = await _advanceRepository.DeleteBillAuth(TransId);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Bill Delete Successfully");
+        }
+
+        public async Task<ApiResponse> UpdateBill(string EmpCode, string EmpName, AddBillGenerateRequest req, string Type)
+        {
+
+
+
+            if (req.ForTypeOf == "Advance Bill")
+            {
+                DataTable cann = await _advanceRepository.GetrefnoForGenerateBillAdvance(Type, EmpCode, req.RefNo!);
+                if (cann.Rows.Count <= 0)
+                {
+                    return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
+                }
+                using (DataTable dt = await _advanceRepository.CheckPreviousPendingBill(req.RefNo!))
+                {
+                    //if (dt.Rows.Count > 0)
+                    //{
+                    //    return new ApiResponse(StatusCodes.Status200OK, "Warning", "Sorry! Previous Advance Approval Is Still Pending To Approve For Same Purchase Approval Initiated By " + dt.Rows[0]["IniName"].ToString() + " on " + dt.Rows[0]["AppDate"].ToString() + " of Amount : " + dt.Rows[0]["Amount"].ToString() + " Rs/-");
+                    //}
+                }
+            }
+            else
+            {
+                DataTable dt = await _advanceRepository.CanGenerateBill(Type, EmpCode, Convert.ToInt32(req.Amount) > 1000 ? false : true, req.RefNo!);
+                if (dt.Rows.Count <= 0)
+                {
+                    //return new ApiResponse(StatusCodes.Status422UnprocessableEntity, "Error", "Invalid Access");
+                }
+            }
+
+
+            string BillRefNo = req.BillId;
+            //using (DataTable GetBillBaseRefNo = await _advanceRepository.GetBillBaseRefNo())
+            {
+                //if (GetBillBaseRefNo.Rows.Count > 0)
+                //{
+                //    string myid = GetBillBaseRefNo.Rows[0][0].ToString() ?? string.Empty;
+                //    string NewId = GetBillBaseRefNo.Rows[0][0].ToString() ?? string.Empty;
+                //    BillRefNo = GetBillBaseRefNo.Rows[0][0].ToString() ?? string.Empty;
+                //}
+                //Task<int> SaveBillAuth(string EmpCode, string EmpName, AddBillGenerateRequest req, string BillBaseREfNo)
+                //Task<int> SaveBillSave(string EmpCode,string EmpName, AddBillGenerateRequest req,string BillBaseREfNo)
+                int saverecord = await _advanceRepository.UpdateBill(EmpCode, EmpName, req, BillRefNo);
+                int SaveAuth = await _advanceRepository.SaveBillAuth(EmpCode, EmpName, req, BillRefNo);
+
+
+
+                //FileName = _general.EncryptWithKey(FileName, await _inclusiveService.GetEnCryptedKey());
+                //string str = await _inclusiveService.SaveFile(FileName, FilePath, file, ".pdf");
+                //check pdf file and delete
+                string FilePath = Directory.GetCurrentDirectory();
+                FilePath = Path.Combine(FilePath, "Upload_Bills");
+                string FileName = BillRefNo + ".pdf";
+
+                if (!Directory.Exists(FilePath))
+                {
+                    Directory.CreateDirectory(FilePath);
+                }
+                if (req.pdf != null && req.pdf.Length > 0)
+                {
+                    //delete file
+                    if (File.Exists(Path.Combine(FilePath, FileName)))
+                    {
+                        File.Delete(Path.Combine(FilePath, FileName));
+                    }
+                    //save file
+                    string str = await _inclusiveService.SaveFile(BillRefNo, FilePath, req.pdf, ".pdf");
+                    int updatepdf = await _advanceRepository.UpdatePdf(BillRefNo);
+                }
+                //check Excel file and delete and save
+                if (req.ExcelFile != null && req.ExcelFile!.Length > 0)
+                {
+                    FileName = BillRefNo + ".xlsx";
+                    if (File.Exists(Path.Combine(FilePath, FileName)))
+                    {
+                        File.Delete(Path.Combine(FilePath, FileName));
+                    }
+                    //save file
+                    string str = await _inclusiveService.SaveFile(BillRefNo, FilePath, req.ExcelFile!, ".xlsx");
+                    int updateExcel = await _advanceRepository.UpdateExcel(BillRefNo);
+                }
+
+                return new ApiResponse(StatusCodes.Status200OK, "Success", "Bill Update Successfully");
+            }
+        }
+        public async Task<ApiResponse> GetBillDetails(string TransId, string EmpName)
+        {
+            using (DataTable dt = await _advanceRepository.GetBillDetails(TransId))
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    var row = dt.Rows[0];
+                    var culture = CultureInfo.CurrentCulture;
+                    var textInfo = culture.TextInfo;
+
+                    // ---------- basic DTO fill ----------
+                    var dto = new BillDetailsResponse
+                    {
+                        TransactionId = row["TransactionID"]?.ToString(),
+                        Session = row["Session"]?.ToString(),
+                        CampusName = row["CampusName"]?.ToString(),
+                        ForType = row["ForType"]?.ToString(),
+                        RelativePersonId = row["RelativePersonID"]?.ToString(),
+                        VendorId = row["VendorID"]?.ToString(),
+                        Department = textInfo.ToTitleCase(row["Col1"]?.ToString()?.ToLower() ?? string.Empty),
+                        Purpose = textInfo.ToTitleCase(row["Remark"]?.ToString()?.ToLower() ?? string.Empty),
+                        FirmName = textInfo.ToTitleCase(row["MyFirmName"]?.ToString()?.ToLower() ?? string.Empty),
+                        FirmAddress = textInfo.ToTitleCase(row["FirmAddress"]?.ToString()?.ToLower() ?? string.Empty),
+                        FirmContactNo = row["FirmContactNo"]?.ToString(),
+                        BillNo = row["BillNo"]?.ToString(),
+                        BillStatus = row["MyStatus"]?.ToString(),
+                        Discount = row["CashDiscount"]?.ToString(),
+                        UploadOn = row["IO"]?.ToString(),
+                        UploadBy = textInfo.ToTitleCase(row["IssuedName"]?.ToString()?.ToLower() ?? string.Empty),
+                        RelativePersonName = textInfo.ToTitleCase(row["RelativePersonName"]?.ToString()?.ToLower() ?? string.Empty),
+                        RelativeDesignation = textInfo.ToTitleCase(row["RelativeDesignation"]?.ToString()?.ToLower() ?? string.Empty),
+                        ReportBy = textInfo.ToTitleCase((EmpName ?? "Guest User").ToLower()),
+                        ReportDate = $"{DateTime.Now:dd.MM.yyyy}"
+                    };
+
+                    dto.AmountRequired = row["AmountRequired"] == DBNull.Value ? 0 : Convert.ToDecimal(row["AmountRequired"]);
+                    dto.AmountPaid = row["AmountPaid"] == DBNull.Value ? 0 : Convert.ToDecimal(row["AmountPaid"]);
+                    dto.AmountRemaining = row["AmountRemaining"] == DBNull.Value ? 0 : Convert.ToDecimal(row["AmountRemaining"]);
+
+                    // Extra name (Col5)
+                    var col5 = row["Col5"]?.ToString()?.Trim();
+                    dto.AdditionalName = string.IsNullOrEmpty(col5) || col5 == "---"
+                        ? "---"
+                        : textInfo.ToTitleCase(col5.ToLower());
+
+                    // ---------- date display logic ----------
+                    dto.ExpBillDate = string.IsNullOrEmpty(row["Exp"]?.ToString()) ? "----" : row["Exp"].ToString();
+                    dto.GateDate = string.IsNullOrEmpty(row["G"]?.ToString()) ? "" : row["G"].ToString();
+                    dto.IniDate = string.IsNullOrEmpty(row["INI"]?.ToString()) ? "----" : row["INI"].ToString();
+                    dto.DeptDate = string.IsNullOrEmpty(row["D"]?.ToString()) ? "----" : row["D"].ToString();
+                    dto.BillDate = string.IsNullOrEmpty(row["BL"]?.ToString()) ? "----" : row["BL"].ToString();
+                    dto.TestBillDate = row["Tst"]?.ToString() == row["BL"]?.ToString()
+                                        ? "----"
+                                        : row["Tst"]?.ToString();
+
+                    // ---------- scan copy (pdf / xlsx) ----------
+                    var tid = dto.TransactionId;
+                    var root = Directory.GetCurrentDirectory();
+                    var pdfApp = Path.Combine(root, "Upload_Bills", "Approved", $"{tid}.pdf");
+                    var pdfNorm = Path.Combine(root, "Upload_Bills", $"{tid}.pdf");
+                    var xlsx = Path.Combine(root, "Upload_Bills", $"{tid}.xlsx");
+
+                    if (System.IO.File.Exists(pdfApp))
+                        dto.ScanCopyLinkHtml = $"{pdfApp}";
+                    else if (System.IO.File.Exists(pdfNorm))
+                        dto.ScanCopyLinkHtml = $"{pdfNorm}";
+                    else if (System.IO.File.Exists(xlsx))
+                        dto.ScanCopyLinkHtml = $"{xlsx}";
+
+                    // ---------- Vendor 827 (Imprest) ----------
+                    if (dto.VendorId == "827")
+                    {
+                        using DataTable imp = await _advanceRepository.GetImprestByBillTransactionId(tid);
+                        if (imp.Rows.Count > 0)
+                        {
+                            dto.ApprovalLinkHtml =
+                                $"ImprestSummary.aspx?Id={_general.Encrypt($"{tid}#No")}";
+                            dto.PageName = "Imprest Summary";
+                        }
+                    }
+
+                    // ---------- BillExtra3 / Col4 based approval links ----------
+                    var billExtra3 = row["BillExtra3"]?.ToString() ?? string.Empty;
+                    var col4Ref = row["Col4"]?.ToString() ?? string.Empty;
+
+                    if (!string.IsNullOrWhiteSpace(billExtra3))
+                    {
+                        if (billExtra3.Contains("SEC"))
+                        {
+                            dto.ApprovalLinkHtml =
+                                $"http://glauniversity.in/RefundPrint.aspx?Id={_general.Encrypt(tid)}";
+                            dto.PageName = "Security Refund";
+                        }
+                        else if (billExtra3.Contains("REF"))
+                        {
+                            dto.ApprovalLinkHtml =
+                                $"http://glauniversity.in/studentinformationfee.aspx?Stu_ID={row["Col4"]}&User={_general.Encrypt("Security")}";
+                            dto.PageName = "Sstudentinformationfee";
+                        }
+                        else if (dto.ForType == "Advance Bill")
+                        {
+                            dto.ApprovalLinkHtml =
+                                $"POAdvance.aspx?Id={billExtra3}";
+                            dto.PageName = "Advance Application";
+                        }
+                        else if (billExtra3.Contains("WRK"))
+                        {
+                            dto.ApprovalLinkHtml =
+                                $"<a href='../WorkShop/WorkShopApprovalPrint.aspx?Id={_general.Encrypt(billExtra3.Replace("WRK", ""))}'>Click Here To Workshop/Conference Approval Details</a>";
+                            dto.PageName = "Workshop/Conference Approval";
+                            // workshopapproval_bill_details grid
+                            using DataTable wrk = await _advanceRepository.GetWorkshopBillDetails(tid);
+                            //dto.Issues.AddRange(BuildIssuesFromWorkshopTable(wrk));  // helper, optional
+                        }
+                        else if (billExtra3.Contains("PLC"))
+                        {
+                            dto.ApprovalLinkHtml =
+                                $"https://glauniversity.in:8105/main/reports/VO.aspx?RefNo={_general.Encrypt(billExtra3.Replace("PLC", ""))}";
+                            dto.PageName = "Visit Approval";
+                        }
+                        else if (billExtra3.Contains("MED"))
+                        {
+                            dto.ApprovalLinkHtml =
+                                $"<a href='ReleaseOrder.aspx?Type=Old&Id={billExtra3.Replace("MED", "")}'>Click Here To View Release Order</a>";
+                            dto.PageName = "Release Order";
+                        }
+                        else if (billExtra3.Contains("ADM"))
+                        {
+                            dto.ApprovalLinkHtml = $"http://glauniversity.in:8109/main/reports/VO.aspx?RefNo={_general.Encrypt(billExtra3.Replace("ADM", ""))}";
+                            dto.PageName = "Visit Approval";
+                            //$"<a href='http://glauniversity.in:8109/main/reports/VO.aspx?RefNo={_general.Encrypt(billExtra3.Replace("ADM", ""))}'>Click Here To View Visit Approval</a>";
+                        }
+                        else if (billExtra3.Contains("SAL"))
+                        {
+                            var tt = billExtra3.Replace("SAL", "");
+                            dto.ApprovalLinkHtml = $"http://glauniversity.in:8088/PrintForms/Res_Feedback.aspx?RefNo={_general.Encrypt(tt)}";
+                            dto.PageName = "Resignation Application";
+                            //$"<a href='http://glauniversity.in:8088/PrintForms/Res_Feedback.aspx?RefNo={_general.Encrypt(tt)}'>Click Here To View Resignation Application</a>";
+                        }
+                        else if (billExtra3.Contains("RSC"))
+                        {
+                            var tt = billExtra3.Replace("RSC", "");
+                            dto.ApprovalLinkHtml = $"https://glauniversity.in:8085/ASP/PhdScholarPrint.aspx?ReqData={_general.EncryptWithoutHour(tt)}";
+                            dto.PageName = "Progress Application";
+                            //$"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8085/ASP/PhdScholarPrint.aspx?ReqData={_general.EncryptWithoutHour(tt)}',0,0); return false;\"><u>Click Here To View Progress Application</u></a>";
+                        }
+                        else
+                        {
+                            dto.ApprovalLinkHtml = billExtra3;
+                            dto.PageName = "Purchase Approval";
+                            //$"<a href='PO.aspx?Id={billExtra3}&Switch=Y'>Click Here To View Purchase Approval</a>";
+                        }
+                    }
+                    else
+                    {
+                        if (col4Ref.Contains("-ADV"))
+                        {
+                            var tt = col4Ref.Replace("-ADV", "");
+                            dto.ApprovalLinkHtml =
+                                $"<a href='POAdvance.aspx?Id={tt}&Switch=Y'>Click Here To View Advance Application</a>";
+                            dto.PageName = "Advance Application";
+                        }
+                        if (col4Ref.Contains("-MOB"))
+                        {
+                            var tt = col4Ref.Replace("-MOB", "");
+                            dto.ApprovalLinkHtml =
+                                $"http://glauniversity.in:8088/ExtraPages/MobileShowBillDetails.aspx?approvedid={_general.Encrypt($"{tid}#{tt}")}";
+                            dto.PageName = "Mobile Bill Details";
+                        }
+                        if (col4Ref.Contains("-SAL"))
+                        {
+                            var tt = col4Ref.Replace("-SAL", "");
+                            dto.ApprovalLinkHtml =
+                                $"http://glauniversity.in:8088/PrintForms/Res_Feedback.aspx?RefNo={_general.Encrypt(tt)}";
+                            dto.PageName = "Resignation Application";
+                        }
+                    }
+
+                    // ---------- relative contact no ----------
+                    using DataTable relDt = await _advanceRepository.GetRelativeContactNo(dto.RelativePersonId);
+                    dto.RelativeContactNo = relDt.Rows.Count > 0
+                        ? relDt.Rows[0]["contactno"].ToString()
+                        : "N/A";
+
+                    // ---------- approvals_authority summary ----------
+                    using DataTable apprDt = await _advanceRepository.GetApprovalsAuthSummary(tid);
+                    dto.ApprovedBySummary = apprDt.Rows.Count > 0
+                        ? textInfo.ToTitleCase(apprDt.Rows[0][0]?.ToString()?.ToLower() ?? string.Empty)
+                        : "N/A";
+
+                    // ---------- bill_transaction_issue grid -> Issues ----------
+                    using DataTable issueDt = await _advanceRepository.GetBillIssues(tid);
+                    var rowNo = 1;
+                    foreach (DataRow r in issueDt.Rows)
+                    {
+                        var issue = new BillIssueRowDto
+                        {
+                            RowNo = rowNo++,
+                            CvName = r["CVName"]?.ToString(),
+                            PaidAmount = r["PaidAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(r["PaidAmount"]),
+                            TaxAmount = r["TaxAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(r["TaxAmount"]),
+                            IssuedAmount = r["IssuedAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(r["IssuedAmount"]),
+                            Tran = r["Tran"]?.ToString(),
+                            IssuedOn = r["On"]?.ToString(),
+                            By = r["By"]?.ToString(),
+                            SignedOn = r["Sign"]?.ToString(),
+                            ReceivedOn = r["Rcv"]?.ToString(),
+                            BankOn = r["Bank"]?.ToString(),
+                            Status = r["Status"]?.ToString()
+                        };
+
+                        var t = r["TransactionID"]?.ToString();
+                        var s = r["SequenceID"]?.ToString();
+                        issue.PdfUrl = $"/Upload_Bills/{t}_{s}.pdf";
+                        issue.ExcelUrl = $"/Upload_Bills/{t}_{s}.xlsx";
+
+                        dto.Issues.Add(issue);
+                    }
+                    return new ApiResponse(StatusCodes.Status200OK, "Success", dto);
+                }
+                else
+                {
+                    return new ApiResponse(StatusCodes.Status200OK, "Success", "No Record Found");
+                }
+            }
+        }
+
+        public async Task<ApiResponse> GetVendorDetails(string VendorId)
+        {
+            DataTable VenderDetails =
+                await _advanceRepository.GetVendorDetails(VendorId);
+            FirmDetailsResponse res = new FirmDetailsResponse();
+
+            if (VenderDetails != null && VenderDetails.Rows.Count > 0)
+            {
+                res.FirmName = VenderDetails.Rows[0]["VendorName"].ToString() ?? string.Empty;
+                res.FirmContactName = VenderDetails.Rows[0]["ContactPersons"].ToString() ?? string.Empty;
+                res.FirmContactNo = VenderDetails.Rows[0]["ContactNo"].ToString() ?? string.Empty;
+                res.FirmEmail = VenderDetails.Rows[0]["EmailID"].ToString() ?? string.Empty;
+                res.FirmAlternateContactNo = VenderDetails.Rows[0]["AlternateContactNo"].ToString() ?? string.Empty;
+                res.FirmAddress = VenderDetails.Rows[0]["Address"].ToString().ToUpper().Replace("<BR/>", " ") ?? string.Empty;
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "Success", res);
+        }
+
+        public async Task<ApiResponse> LoadTransactionDetails(string TransId)
+        {
+            ApiResponseLoadTransactionDetails ls=new ApiResponseLoadTransactionDetails();
+            List<LoadTransactionDetailsRespomse> lst=new List<LoadTransactionDetailsRespomse>();
+            using (DataTable dt = await _advanceRepository.GetTransDetails(TransId))
+            {
+               DataTable billBase=await _advanceRepository.BillBaseDetails(TransId);
+               
+                string FolderPath = Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills");
+                foreach (DataRow dr in dt.Rows) 
+                {
+                    DataTable Auth = await _advanceRepository.CheucqAuth(TransId, dr["SequenceID"].ToString());
+                    lst.Add(new LoadTransactionDetailsRespomse
+                    {
+                        //Remaining = dr["AmountRemaining"].ToString(),
+                        //AlreadyIssued = dr["AmountPaid"].ToString(),
+                        IssuedOn = dr["On"].ToString(),
+                        Firm = dr["CVName"].ToString(),
+                        Sub_Firm = dr["CVSubFirm"].ToString(),
+                        Type = dr["IssuedType"].ToString(),
+                        Issued = dr["IssuedAmount"].ToString(),
+                        Tax = dr["TaxAmount"].ToString(),
+                        Other = dr["OtherCut"].ToString(),
+                        Paid = dr["PaidAmount"].ToString(),
+                        Mode = dr["Mode"].ToString(),
+                        TransNo = dr["TransactionNo"].ToString(),
+                        Date = dr["On"].ToString(),
+                        By = dr["IssuedByName"].ToString(),
+                        SeqNo = dr["SequenceID"].ToString(),
+                        FileUrl = File.Exists(Path.Combine(FolderPath, TransId + "_" + dr["SequenceID"].ToString() + ".pdf")) ? $"Upload_Bills/{TransId}_{dr["SequenceID"].ToString()}.pdf" : "",
+                        CheckIssuedOn = dr["IssuedOn"].ToString(),
+                        SignedOn = dr["SignedOn"].ToString(),
+                        ReceivedOn = dr["ReceivedOn"].ToString(),
+                        ClearOn = dr["ClearOn"].ToString(),
+                        Status = Auth.Rows.Count > 0 ? Auth.Rows[0]["Status"].ToString() : "",
+                        EmpDetails = Auth.Rows.Count > 0 ? Auth.Rows[0]["EmployeeDetails"].ToString() : "" ,
+
+                    });
+                }
+                ls.LoadTransactionDetailsRespomses = lst;
+                ls.CanMessageSend = false;
+                ls.EnableBillUpto = false;
+                if (billBase.Rows.Count > 0)
+                {
+                    ls.Remaining = billBase.Rows[0]["AmountRemaining"].ToString();
+                    ls.AlreadyIssued = billBase.Rows[0]["AmountPaid"].ToString();
+                    ls.AdditionalName= billBase.Rows[0]["Col5"].ToString();
+                    ls.Purpose= billBase.Rows[0]["Remark"].ToString();
+                    ls.FirmName= billBase.Rows[0]["FirmName"].ToString();
+                    ls.Sub_Firm= billBase.Rows[0]["col3"].ToString();
+                    if (billBase.Rows[0]["ForType"].ToString()== "Advance Bill")
+                    {
+                        ls.EnableBillUpto = true;
+                        DataTable IsSpecial = await _advanceRepository.GEtSpecialVendor(billBase.Rows[0]["VendorID"].ToString());
+                        if(IsSpecial.Rows.Count>0)
+                        {
+                            ls.CanMessageSend = true;
+                        }
+                    }
+                }
+
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "Success", ls);
+        }
+
+        public async Task<ApiResponse> getAuthForDirectBill(string CampusCode)
+        {
+            List<TextValues> PersonLst = new List<TextValues>();
+            using(DataTable dt=await _advanceRepository.GetPerson(CampusCode))
+            {
+                foreach(DataRow dr in dt.Rows)
+                {
+                    PersonLst.Add(new TextValues
+                    {
+                        Text = dr["Text"].ToString(),
+                        Value = dr["Value"].ToString(),
+                        EmpCode = dr["employee_code"].ToString()
+                    });
+                }
+            }
+            List<TextValues> App3lst = new List<TextValues>();
+            List<TextValues> App4lst = new List<TextValues>();
+            List<TextValues> App1lst = new List<TextValues>();
+            List<TextValues> App2lst = new List<TextValues>();
+            if(CampusCode!="101")
+            {
+                using(DataTable dt=await _advanceRepository.GetThirdAuth())
+                {
+                    foreach(DataRow dr in dt.Rows)
+                    App3lst.Add(new TextValues
+                    {
+                        Text = dr["Text"].ToString(),
+                        Value = dr["Value2"].ToString(),
+                        EmpCode = dr["Value"].ToString()
+                    });
+                }
+                using(DataTable dt=await _advanceRepository.Get4Auth())
+                {
+                    foreach (DataRow dr in dt.Rows)
+                        App4lst.Add(new TextValues
+                        {
+                            Text = dr["Text"].ToString(),
+                            Value = dr["Value2"].ToString(),
+                            EmpCode = dr["Value"].ToString()
+                        });
+                }
+
+            }
+            else
+            {
+                using(DataTable dt=await _advanceRepository.GetBillauth(CampusCode))
+                {
+                    foreach(DataRow dr in dt.Rows)
+                    {
+                        App4lst.Add(new TextValues
+                        {
+                            Text = dr["Text"].ToString(),
+                            Value = dr["Value2"].ToString(),
+                            EmpCode = dr["Value"].ToString()
+                        });
+                        App3lst.Add(new TextValues
+                        {
+                            Text = dr["Text"].ToString(),
+                            Value = dr["Value2"].ToString(),
+                            EmpCode = dr["Value"].ToString()
+                        });
+                    }
+                }
+            }
+            using(DataTable dt=await _advanceRepository.GetFirstSecond(CampusCode))
+            {
+                foreach(DataRow dr in dt.Rows)
+                {
+                    App1lst.Add(new TextValues
+                    {
+                        Text = dr["Text"].ToString(),
+                        Value = dr["Value2"].ToString(),
+                        EmpCode = dr["Value"].ToString()
+                    });
+                }
+                App2lst = App1lst;
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "Success", new { PersonLst,App1List= App1lst,App2List= App2lst,App3List= App3lst,App4List= App4lst });
+        }
+
+
+
+        //public async Task<ApiResponse> SaveCheckDetails(string EmpCode,string EmpType)
+        //{
+
+        //}
+
+
+        public async Task<ApiResponse> GetBillApprovalFilterSessions()
+        {
+            using DataTable dtSessions = await _advanceRepository.GetBillApprovalFilterSessions();
+            List<string> Sessions = new List<string>();
+            foreach (DataRow dr in dtSessions.Rows)
+            {
+                Sessions.Add(dr["Session"].ToString() ?? string.Empty);
+            }
+            string currentSession = _general.GetFinancialSession(DateTime.Now);
+
+            if (!Sessions.Contains(currentSession))
+            {
+                Sessions.Insert(0, currentSession);
+            }
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", Sessions);
+        }
+        public async Task<ApiResponse> GetBillApprovalFilterInitiatedBy()
+        {
+            using DataTable dtInitiatedBy = await _advanceRepository.GetBillApprovalFilterInitiatedBy();
+
+            List<TextValues> InitiatedBy = new List<TextValues>();
+
+            foreach (DataRow dr in dtInitiatedBy.Rows)
+            {
+                InitiatedBy.Add(new TextValues
+                {
+                    Text = dr["Text"].ToString(),
+                    Value = dr["Value"].ToString(),
+                    EmpCode = dr["Value"].ToString()
+                });
+            }
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", InitiatedBy);
+        }
+        public async Task<ApiResponse> GetBillApprovalFilterChequeBy()
+        {
+            using DataTable dtChequeBy = await _advanceRepository.GetBillApprovalFilterChequeBy();
+
+            List<TextValues> ChequeBy = new List<TextValues>();
+
+            foreach (DataRow dr in dtChequeBy.Rows)
+            {
+                ChequeBy.Add(new TextValues
+                {
+                    Text = dr["Text"].ToString(),
+                    Value = dr["Value"].ToString(),
+                    EmpCode = dr["Value"].ToString()
+                });
+            }
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", ChequeBy);
+        }
+
+        public async Task<ApiResponse> GetBillApprovalDetails(GetBillApprovalRequest? getBillApprovalRequest, string employeeId, string role, string name)
+        {
+            using DataTable dtAgencyWork = await _advanceRepository.GetBillApprovalAgencyBillIds();
+
+            bool AllowBillReject = await _inclusiveService.IsUserAllowed(employeeId, ENUMS.Inclusive.UserRolePermission.AllowBillReject);
+
+            using DataTable dtBillApprovals = await _advanceRepository.GetBillApprovalDetails(getBillApprovalRequest, employeeId, role);
+
+            List<BillChequeApprovalResponse> billApprovalResponses = new List<BillChequeApprovalResponse>();
+
+            foreach (DataRow dr in dtBillApprovals.Rows)
+            {
+                BillChequeApprovalResponse billChequeApprovalResponse = new BillChequeApprovalResponse(dr);
+
+                if (_general.IsFileExists($"Upload_Bills/Approved/{billChequeApprovalResponse?.TransID}.pdf"))
+                {
+                    billChequeApprovalResponse!.BillApprovedPdfExists = true;
+                }
+                else if (_general.IsFileExists($"Upload_Bills/{billChequeApprovalResponse?.TransID}.pdf"))
+                {
+                    billChequeApprovalResponse!.BillPdfExists = true;
+                }
+                if (_general.IsFileExists($"Upload_Bills/{billChequeApprovalResponse?.TransID}.xlsx"))
+                {
+                    billChequeApprovalResponse!.BillExcelExists = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(billChequeApprovalResponse?.SequenceID))
+                {
+                    if (_general.IsFileExists($"Upload_Bills/{billChequeApprovalResponse?.TransID}_{billChequeApprovalResponse?.SequenceID}.pdf"))
+                    {
+                        billChequeApprovalResponse!.SequenceBillPdfExists = true;
+                    }
+                    if (_general.IsFileExists($"Upload_Bills/{billChequeApprovalResponse?.TransID}_{billChequeApprovalResponse?.SequenceID}.xlsx"))
+                    {
+                        billChequeApprovalResponse!.SequenceBillExcelExists = true;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(billChequeApprovalResponse?.BillExtra3) && billChequeApprovalResponse?.BillExtra3.Contains("SEC") == false && billChequeApprovalResponse?.BillExtra3.Contains("REF") == false && billChequeApprovalResponse?.BillExtra3.Contains("SAL") == false)
+                {
+                    if (billChequeApprovalResponse?.ForType == "Advance Bill")
+                    {
+                        billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/POAdvance.aspx?Id={billChequeApprovalResponse?.BillExtra3}&Switch=Y',0,0); return false;\"><u>" + HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType) + "</u></a>";
+
+                        DataTable dtAdvanceBudgetSummary = await _advanceRepository.GetBillApprovalAdvanceBudgetSummary(billChequeApprovalResponse?.BillExtra3 ?? string.Empty);
+
+                        if (dtAdvanceBudgetSummary.Rows.Count > 0)
+                        {
+                            billChequeApprovalResponse!.BudgetString = (!string.IsNullOrWhiteSpace(dtAdvanceBudgetSummary.Rows[0]["BudgetCommentExtra"]?.ToString()) ? dtAdvanceBudgetSummary.Rows[0]["BudgetCommentExtra"].ToString() + "<br/><br/>" : "") + "Budget : " + dtAdvanceBudgetSummary.Rows[0]["BudgetAmount"].ToString() + " Rs./-<br/>Prev. : " + dtAdvanceBudgetSummary.Rows[0]["PreviousTaken"].ToString() + " Rs./-<br/>Cur. : " + dtAdvanceBudgetSummary.Rows[0]["Amount"].ToString() + " Rs./-<br/>Status : " + dtAdvanceBudgetSummary.Rows[0]["BudgetStatus"].ToString() + "<br/>";
+                        }
+                        else
+                        {
+                            dtAdvanceBudgetSummary = await _advanceRepository.GetBillApprovalAdvanceExcludeMedBudgetSummary(billChequeApprovalResponse?.BillExtra3?.Replace("MED", "") ?? string.Empty);
+
+                            if (dtAdvanceBudgetSummary.Rows[0]["MyType"].ToString() == "Against Purchase Approval Advance Form" && dtAdvanceBudgetSummary.Rows[0]["PExtra4"].ToString() != "No Purchase Approval" && dtAdvanceBudgetSummary.Rows[0]["PExtra4"]?.ToString()?.Split('#')[0].Length >= 9)
+                            {
+                                dtAdvanceBudgetSummary = await _advanceRepository.GetBillApprovalAdvanceBudgetSummaryApprovalDetails(dtAdvanceBudgetSummary.Rows[0]["PExtra4"]?.ToString()?.Split('#')[0]!);
+                            }
+
+                            billChequeApprovalResponse!.BudgetString = "Total Amount : " + dtAdvanceBudgetSummary.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtAdvanceBudgetSummary.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtAdvanceBudgetSummary.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtAdvanceBudgetSummary.Rows[0]["Status"].ToString() + "<br/><br/>";
+
+                            billChequeApprovalResponse!.BudgetStringToolTip = dtAdvanceBudgetSummary.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
+
+                        }
+                    }
+                    else
+                    {
+
+                        if (billChequeApprovalResponse!.BillExtra3.Contains("MED"))
+                        {
+                            billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/ReleaseOrder.aspx?Type=Old&Id={(billChequeApprovalResponse!.BillExtra3!.ToString().Replace("MED", ""))}',0,0); return false;\"><u>" + HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType) + "</u></a>";
+
+                            DataTable dtReleaseOrder = await _advanceRepository.GetBillApprovalAdvanceMedReleaseOrder(billChequeApprovalResponse!.BillExtra3?.Replace("MED", "")!);
+                            if (dtReleaseOrder.Rows.Count > 0)
+                            {
+                                if (dtReleaseOrder.Rows[0]["BudgetStatus"].ToString() == "Y")
+                                    billChequeApprovalResponse!.BudgetString = (!string.IsNullOrWhiteSpace(dtReleaseOrder.Rows[0]["BudgetCommentExtra"]?.ToString()) ? dtReleaseOrder.Rows[0]["BudgetCommentExtra"].ToString() + "<br/><br/>" : "") + "Budget : " + dtReleaseOrder.Rows[0]["BudgetAmount"].ToString() + " Rs./-<br/>Prev. : " + dtReleaseOrder.Rows[0]["PreviousTaken"].ToString() + " Rs./-<br/>Cur. : " + dtReleaseOrder.Rows[0]["Amount"].ToString() + " Rs./-<br/>Status : " + dtReleaseOrder.Rows[0]["CurStatus"].ToString() + "<br/><br/>";
+
+                                billChequeApprovalResponse!.BudgetString += "Total Amount : " + dtReleaseOrder.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtReleaseOrder.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtReleaseOrder.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtReleaseOrder.Rows[0]["Status"].ToString() + "<br/><br/>";
+
+                                billChequeApprovalResponse!.BudgetStringToolTip = dtReleaseOrder.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
+                            }
+                        }
+                        else if (!billChequeApprovalResponse!.BillExtra3.Contains("PLC") && !billChequeApprovalResponse!.BillExtra3.Contains("WRK") && !billChequeApprovalResponse!.BillExtra3.Contains("ADM") && !billChequeApprovalResponse!.BillExtra3.Contains("RSC"))
+                        {
+                            if (Int64.TryParse(billChequeApprovalResponse!.BillExtra3?.ToString()?.Replace("MED", ""), out _))
+                            {
+                                using DataTable dtApprovalSummary = await _advanceRepository.GetBillApprovalAdvanceBudgetSummaryApprovalDetails(billChequeApprovalResponse!.BillExtra3?.ToString()?.Replace("MED", "")!);
+                                if (dtApprovalSummary.Rows.Count > 0)
+                                {
+                                    billChequeApprovalResponse!.BudgetString = "Total Amount : " + dtApprovalSummary.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtApprovalSummary.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtApprovalSummary.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtApprovalSummary.Rows[0]["Status"].ToString() + "<br/><br/>";
+
+                                    billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/NewItemReturnnonconsumableprintforbill.aspx?approvalid={billChequeApprovalResponse!.BillExtra3!.ToString()}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.SequenceID)}</u></a>";
+
+                                    billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/PO.aspx?Id={billChequeApprovalResponse!.BillExtra3!.ToString()}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+
+                                    billChequeApprovalResponse!.MainGateRecievingLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/MainGateMaterialReceivingdetail.aspx?referenceno={billChequeApprovalResponse!.BillExtra3}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.INI)}</u></a>";
+
+                                    billChequeApprovalResponse!.BudgetStringToolTip = dtApprovalSummary.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
+                                }
+                            }
+                        }
+
+                        if (billChequeApprovalResponse!.BillExtra3!.Contains("PLC"))
+                        {
+                            billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8105/main/reports/VO.aspx?RefNo={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("PLC", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+                        }
+                        if (billChequeApprovalResponse!.BillExtra3!.Contains("WRK"))
+                        {
+                            billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Workshop/WorkShopApprovalPrint.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("WRK", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+                        }
+                        if (billChequeApprovalResponse!.BillExtra3!.Contains("ADM"))
+                        {
+                            billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8109/main/reports/VO.aspx?RefNo={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("ADM", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+                        }
+                        if (billChequeApprovalResponse!.BillExtra3!.Contains("RSC"))
+                        {
+                            billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8085/ASP/PhdScholarPrint.aspx?ReqData={_general.EncryptWithoutHour(billChequeApprovalResponse!.BillExtra3!.ToString().Replace("RSC", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+                        }
+
+                    }
+                }
+                else
+                {
+                    if (billChequeApprovalResponse?.BillExtra3?.Contains("SEC") == true || billChequeApprovalResponse?.BillExtra3?.Contains("REF") == true)
+                    {
+                        using DataTable dtUserIdentity = await _advanceRepository.GetBillApprovalAdvanceUserIdentity(billChequeApprovalResponse!.TransID!);
+                        long student_id = 0;
+                        if (dtUserIdentity.Rows.Count > 0 && Int64.TryParse(dtUserIdentity.Rows[0][0]?.ToString()!, out student_id))
+                        {
+                            billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in/studentinformationfee.aspx?Stu_ID={student_id}&User={_general.Encrypt("Security")}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.SequenceID)}</u></a>";
+
+                            billChequeApprovalResponse!.StudentId = student_id.ToString();
+
+                            if (billChequeApprovalResponse!.BillExtra3!.Contains("SEC"))
+                            {
+                                billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in/RefundPrint.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.TransID!.ToString())}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        using DataTable dtUserIdentity = await _advanceRepository.GetBillApprovalAdvanceUserIdentity(billChequeApprovalResponse!.TransID!);
+                        if (dtUserIdentity.Rows.Count > 0)
+                        {
+                            if (dtUserIdentity.Rows[0][0]?.ToString()?.Contains("-ADV") == true)
+                            {
+                                int referenceNo = 0;
+                                if (int.TryParse(dtUserIdentity.Rows[0][0]?.ToString()?.Replace("-ADV", ""), out referenceNo))
+                                {
+                                    billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/POAdvance.aspx?Id={referenceNo}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
+
+
+                                    DataTable dtOtherApprovalSummary = await _advanceRepository.GetBillApprovalAdvanceExcludeMedBudgetSummary(referenceNo.ToString());
+                                    if (dtOtherApprovalSummary.Rows.Count > 0)
+                                    {
+                                        if (dtOtherApprovalSummary.Rows[0]["MyType"].ToString() == "Against Purchase Approval Advance Form" && dtOtherApprovalSummary.Rows[0]["PExtra4"].ToString() != "No Purchase Approval" && dtOtherApprovalSummary.Rows[0]["PExtra4"]?.ToString()?.Split('#')[0].Length >= 9)
+                                        {
+                                            dtOtherApprovalSummary = await _advanceRepository.GetBillApprovalAdvanceBudgetSummaryApprovalDetails(dtOtherApprovalSummary.Rows[0]["PExtra4"]?.ToString()?.Split('#')[0]!);
+                                        }
+
+                                        billChequeApprovalResponse!.BudgetString = "Total Amount : " + dtOtherApprovalSummary.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtOtherApprovalSummary.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtOtherApprovalSummary.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtOtherApprovalSummary.Rows[0]["Status"].ToString() + "<br/><br/>";
+
+                                        billChequeApprovalResponse!.BudgetStringToolTip = dtOtherApprovalSummary.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
+                                    }
+                                }
+                            }
+                            if (dtUserIdentity.Rows[0][0]?.ToString()?.Contains("-MOB") == true)
+                            {
+                                string referenceNo = dtUserIdentity?.Rows[0][0]?.ToString()?.Replace("-MOB", "") ?? string.Empty;
+                                billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8088/ExtraPages/MobileShowBillDetails.aspx?approvedid={_general.Encrypt(billChequeApprovalResponse!.TransID + "#" + referenceNo)}',0,0); return false;\"><u>" + HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType) + "</u></a>";
+                            }
+                            if (dtUserIdentity?.Rows[0][0]?.ToString()?.Contains("-SAL") == true)
+                            {
+                                string referenceNo = dtUserIdentity?.Rows[0][0]?.ToString()?.Replace("-SAL", "") ?? string.Empty;
+                                billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8088/PrintForms/Res_Feedback.aspx?RefNo={_general.Encrypt(referenceNo)}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
+                            }
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(billChequeApprovalResponse?.BillExtra6))
+                {
+                    billChequeApprovalResponse.WarrentySwitchAllowed = true;
+                    if (role == "MANAGEMENT")
+                    {
+                        billChequeApprovalResponse!.PurposeLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/warrenty.aspx?approvalid={billChequeApprovalResponse!.BillExtra6}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.Purpose!)}</u></a>";
+                    }
+                    else
+                    {
+                        billChequeApprovalResponse!.PurposeLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/warrenty.aspx?approvalid={billChequeApprovalResponse!.BillExtra6}&Switch=N',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.Purpose!)}</u></a>";
+                    }
+                }
+
+
+                string[] splt = billChequeApprovalResponse?.FirmName?.Split('#')!;
+
+                billChequeApprovalResponse!.DepartmentVendorPaidString = $"<b>Department : <a href='#' style='color:black;' onclick=\"openPopUpEnc('Reports/FirmPaidReport.aspx?VId=$$$&SubId=D','{billChequeApprovalResponse.Col1}'); return false;\"><u>{billChequeApprovalResponse.Col1}</u></a></b><br/><a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?Id={billChequeApprovalResponse.TransID}`,0,0); return false;'><u>{splt[0]}</u></a><br/><span style='color:blue;'><a href='#' style='font-weight:bold;color:blue;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?VId={billChequeApprovalResponse.BVId}&SubId=&CallBy={_general.Encrypt(billChequeApprovalResponse.BRPID!)}`,0,0); return false;'><u>{splt[1]}</u></a></span>";
+
+                if (billChequeApprovalResponse!.BVId == "827")
+                {
+                    using DataTable dtImprest = await _advanceRepository.GetBillApprovalAdvanceImprestDetails(billChequeApprovalResponse!.TransID!);
+                    if (dtImprest.Rows.Count > 0)
+                    {
+                        billChequeApprovalResponse!.IsImprestSummary = true;
+
+                        billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/ImprestSummary.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.TransID + "#Yes")}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
+                    }
+                }
+
+                if (billChequeApprovalResponse!.ForType == "Advance Bill")
+                {
+                    billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?IsAdvance=Y&CallBy={_general.Encrypt(billChequeApprovalResponse!.BRPID!)}`,0,0); return false;'><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.SequenceID)}</u></a>";
+                }
+
+
+                if (dtAgencyWork.Rows.Count > 0 && dtAgencyWork.Select("BillMappedID=" + billChequeApprovalResponse!.TransID).Length > 0)
+                {
+                    billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick='openPopUp(`OtherReports/AbsolutePrint.aspx?TransactionID={_general.Encrypt(billChequeApprovalResponse!.TransID!)}&UName={_general.Encrypt(name)}`,0,0); return false;'><u>{billChequeApprovalResponse!.SequenceID}</u></a>";
+                }
+
+                if (billChequeApprovalResponse!.MyType == "Bills Approval")
+                {
+                    billChequeApprovalResponse!.ExtraTypeString = billChequeApprovalResponse!.Status;
+
+                    bool mypend = false;
+
+                    if (Array.IndexOf(new string[] { "Waiting For Bills Approval", "Bill Rejected" }, billChequeApprovalResponse!.Status) != -1)
+                    {
+
+                        if (billChequeApprovalResponse!.Purpose!.Contains("Exceeded Bill Generated Against"))
+                        {
+                            billChequeApprovalResponse!.Col5ForeColor = System.Drawing.Color.White;
+                            billChequeApprovalResponse!.Col5BackColor = System.Drawing.Color.Green;
+                        }
+
+
+                        using DataTable dtApprovalAuthorities = await _advanceRepository.GetBillApprovalAdvanceBillApprovalAuthorities(billChequeApprovalResponse!.TransID!);
+                        if (dtApprovalAuthorities.Rows.Count > 0)
+                        {
+
+                            billChequeApprovalResponse!.ApprovalAuthsString = dtApprovalAuthorities.Rows[0][1]?.ToString() ?? string.Empty;
+                            if (billChequeApprovalResponse!.ApprovalAuthsString.Contains(employeeId) || (getBillApprovalRequest!.AdditionalEmployeeCode != "" && billChequeApprovalResponse!.ApprovalAuthsString.Contains(getBillApprovalRequest!.AdditionalEmployeeCode!)))
+                            {
+                                mypend = true;
+                            }
+                        }
+                        billChequeApprovalResponse!.ApprovalAuthsString += $"<span style='color:blue;'>{billChequeApprovalResponse!.BillNameBy}</span><br/>";
+                    }
+
+                    if (Array.IndexOf(new string[] { "Bill Rejected" }, billChequeApprovalResponse!.Status) == -1)
+                    {
+                        using DataTable dtRejections = await _advanceRepository.GetBillApprovalAdvancePreviousRejections(billChequeApprovalResponse!.ForType!, billChequeApprovalResponse!.BillExtra3!);
+
+                        if (dtRejections.Rows.Count > 0 && !string.IsNullOrWhiteSpace(dtRejections.Rows[0][0]?.ToString()))
+                        {
+                            billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Previous Bill Rejected</u></b></font><br/>{dtRejections.Rows[0][0]?.ToString()!.Replace("$", "<br/>")}</font>";
+                            billChequeApprovalResponse!.GotRejectedPreviously = true;
+                        }
+
+                        using DataTable dtExtra7 = await _advanceRepository.GetBillApprovalAdvanceBillBaseExtra7Details(billChequeApprovalResponse!.TransID!);
+
+                        if (dtExtra7.Rows.Count > 0 && !string.IsNullOrWhiteSpace(dtExtra7.Rows[0][0]?.ToString()))
+                        {
+                            if (billChequeApprovalResponse!.Status == "Waiting For Bills Approval")
+                            {
+                                billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='blue'><font color='blue'><b><u>For Bill Approval</u></b></font><br/>{dtExtra7.Rows[0][0]?.ToString()!.Replace("$", "<br/>").Replace("@", "<br/>")}</font>";
+                            }
+                            else
+                            {
+                                billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='green'><font color='blue'><b><u>For Bill Approved</u></b></font><br/>{dtExtra7.Rows[0][0]?.ToString()!.Replace("$", "<br/>").Replace("@", "<br/>")}</font>";
+                            }
+                        }
+
+
+                        using DataTable dtApprovalAuthTimeLimit = await _advanceRepository.GetBillApprovalAdvanceBillApprovalAuthoritiesTimeLimit(billChequeApprovalResponse!.TransID!);
+                        if (dtApprovalAuthTimeLimit.Rows.Count > 0)
+                        {
+                            if (string.IsNullOrWhiteSpace(billChequeApprovalResponse!.MyINICheck))
+                            {
+                                billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                billChequeApprovalResponse!.Col9ForeColor = System.Drawing.Color.White;
+
+                                billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                billChequeApprovalResponse!.Col6ForeColor = System.Drawing.Color.White;
+                            }
+                            else
+                            {
+                                if (billChequeApprovalResponse!.Cond45 != "R")
+                                {
+
+                                    if ((Convert.ToDateTime(billChequeApprovalResponse!.Cond45) == DateTime.Now.Date))
+                                    {
+                                        billChequeApprovalResponse!.DiscountForeColor = System.Drawing.Color.Yellow;
+                                    }
+                                    else
+                                    {
+                                        if ((Convert.ToDateTime(billChequeApprovalResponse!.Cond45) < DateTime.Now.Date))
+                                        {
+                                            billChequeApprovalResponse!.DiscountForeColor = System.Drawing.Color.Red;
+                                        }
+                                        else
+                                        {
+                                            billChequeApprovalResponse!.DiscountForeColor = System.Drawing.ColorTranslator.FromHtml("#FF00FF");
+                                        }
+                                    }
+                                }
+                                if (Convert.ToDateTime(billChequeApprovalResponse!.MyINICheck).AddDays(Convert.ToInt32(dtApprovalAuthTimeLimit.Rows[0]["Limit"].ToString())) == DateTime.Now.Date)
+                                {
+
+                                    billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFCC");
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFCC");
+                                }
+
+                                if (Convert.ToDateTime(billChequeApprovalResponse!.MyINICheck).AddDays(Convert.ToInt32(dtApprovalAuthTimeLimit.Rows[0]["Limit"].ToString())) < DateTime.Now.Date)
+                                {
+
+                                    billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                    billChequeApprovalResponse!.Col9ForeColor = System.Drawing.Color.White;
+
+
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                    billChequeApprovalResponse!.Col6ForeColor = System.Drawing.Color.White;
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            billChequeApprovalResponse!.CanApprove = false;
+                            billChequeApprovalResponse!.CanReject = false;
+                        }
+
+                        if (billChequeApprovalResponse!.Status == "Ready To Issue Amount")
+                        {
+                            using DataTable dtBillAuthorities = await _advanceRepository.GetBillApprovalAdvanceBillApprovalAuthorities(billChequeApprovalResponse!.TransID!);
+
+                            if (dtBillAuthorities.Rows.Count > 0)
+                            {
+                                billChequeApprovalResponse!.ReadyToIssueAmountAuthsString += "<br/>" + dtBillAuthorities.Rows[0][1]?.ToString() ?? string.Empty;
+                            }
+                            billChequeApprovalResponse!.ReadyToIssueAmountAuthsString += $"<br/><span style='color:blue;'>{billChequeApprovalResponse!.BillNameBy}</span><br/>";
+
+
+                            using DataTable dtAuthoritiesLimit = await _advanceRepository.GetBillApprovalAdvanceApprovalAuthoritiesLimit(billChequeApprovalResponse!.TransID!);
+
+                            if (billChequeApprovalResponse!.Cond45 != "R")
+                            {
+                                if ((Convert.ToDateTime(billChequeApprovalResponse!.Cond45) == DateTime.Now.Date))
+                                {
+                                    billChequeApprovalResponse!.DiscountForeColor = System.Drawing.Color.Yellow;
+                                }
+                                else
+                                {
+                                    if ((Convert.ToDateTime(billChequeApprovalResponse!.Cond45) < DateTime.Now.Date))
+                                    {
+                                        billChequeApprovalResponse!.DiscountForeColor = System.Drawing.Color.Red;
+                                    }
+                                    else
+                                    {
+                                        billChequeApprovalResponse!.DiscountForeColor = System.Drawing.ColorTranslator.FromHtml("#FF00FF");
+                                    }
+                                }
+                            }
+                            if (Convert.ToDateTime(billChequeApprovalResponse!.MyINICheck).AddDays(Convert.ToInt32(dtAuthoritiesLimit.Rows[0]["Limit"].ToString())) == DateTime.Now.Date)
+                            {
+                                if (Convert.ToInt32(billChequeApprovalResponse!.Paid) != 0 && Convert.ToInt32(billChequeApprovalResponse!.Santioned) > Convert.ToInt32(billChequeApprovalResponse!.Paid))
+                                {
+                                    billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FF8C00");
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FF8C00");
+                                }
+                                else
+                                {
+                                    billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFCC");
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFCC");
+                                }
+                            }
+                            if (Convert.ToDateTime(billChequeApprovalResponse!.MyINICheck).AddDays(Convert.ToInt32(dtAuthoritiesLimit.Rows[0]["Limit"].ToString())) < DateTime.Now.Date)
+                            {
+                                if (Convert.ToInt32(billChequeApprovalResponse!.Paid) != 0 && Convert.ToInt32(billChequeApprovalResponse!.Santioned) > Convert.ToInt32(billChequeApprovalResponse!.Paid))
+                                {
+                                    billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FF8C00");
+                                    billChequeApprovalResponse!.Col9ForeColor = System.Drawing.Color.White;
+
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FF8C00");
+                                    billChequeApprovalResponse!.Col6ForeColor = System.Drawing.Color.White;
+                                }
+                                else
+                                {
+                                    billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                    billChequeApprovalResponse!.Col9ForeColor = System.Drawing.Color.White;
+
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                    billChequeApprovalResponse!.Col6ForeColor = System.Drawing.Color.White;
+                                }
+                            }
+
+                        }
+
+                        if (AllowBillReject && (billChequeApprovalResponse!.Status == "Waiting For Bills Approval" || billChequeApprovalResponse!.Status == "Ready To Issue Amount") && Convert.ToInt32(billChequeApprovalResponse!.Paid) <= 0)
+                        {
+                            billChequeApprovalResponse!.AllowReject = true;
+                        }
+                    }
+                    else
+                    {
+                        billChequeApprovalResponse!.CanApprove = false;
+                        billChequeApprovalResponse!.CanReject = false;
+                    }
+
+                    if (!mypend)
+                    {
+                        billChequeApprovalResponse!.CanApprove = false;
+                        billChequeApprovalResponse!.CanReject = false;
+                    }
+
+                    using DataTable dtBillTransactionIssueCol6 = await _advanceRepository.GetBillApprovalAdvanceBillTransactionIssueECol6(billChequeApprovalResponse!.TransID!);
+                    if (dtBillTransactionIssueCol6.Rows.Count > 0 && !string.IsNullOrWhiteSpace(dtBillTransactionIssueCol6.Rows[0][0]?.ToString()))
+                    {
+                        billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Cheque Rejected</u></b></font><br/>{dtBillTransactionIssueCol6.Rows[0][0]?.ToString()!.Replace("$", "<br/>")}</font>";
+                        billChequeApprovalResponse!.GotRejectedPreviously = true;
+                    }
+                }
+                else
+                {
+                    using DataTable dtRejections = await _advanceRepository.GetBillApprovalAdvancePreviousRejections(billChequeApprovalResponse!.ForType!, billChequeApprovalResponse!.BillExtra3!);
+
+                    if (dtRejections.Rows.Count > 0)
+                    {
+
+                        billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Previous Bill Rejected</u></b></font><br/>{dtRejections.Rows[0][0]?.ToString()?.Replace("$", "<br/>")}</font>";
+
+                        billChequeApprovalResponse!.GotRejectedPreviously = true;
+                    }
+
+                    bool mypend = false;
+                    using DataTable dtBillTransactionIssueECol6 = await _advanceRepository.GetBillApprovalAdvanceBillTransactionIssueECol6(billChequeApprovalResponse!.TransID!);
+                    if (dtBillTransactionIssueECol6.Rows.Count > 0 && !string.IsNullOrWhiteSpace(dtBillTransactionIssueECol6.Rows[0][0]?.ToString()))
+                    {
+                        billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Cheque Rejected</u></b></font><br/>{dtBillTransactionIssueECol6.Rows[0][0]?.ToString()!.Replace("$", "<br/>")}</font>";
+                        billChequeApprovalResponse!.GotRejectedPreviously = true;
+                    }
+
+                    if (billChequeApprovalResponse!.Status == "Waiting For Cheque Approval")
+                    {
+                        using DataTable dtChequeReject = await _advanceRepository.GetBillApprovalAdvanceBillTransactionIssueChequeECol6(billChequeApprovalResponse!.TransID!);
+                        if (dtChequeReject.Rows.Count > 0 && !string.IsNullOrWhiteSpace(dtChequeReject.Rows[0][0]?.ToString()))
+                        {
+                            billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='green'><font color='blue'><b><u>For Cheque Approved</u></b></font><br/>{dtChequeReject.Rows[0][0]?.ToString()?.Replace("$", "<br/>")?.Replace("@", "<br/>")}</font>";
+                        }
+
+                        billChequeApprovalResponse!.ExtraTypeString = "Bill Approved";
+
+                        using DataTable dtBillApprovalAuthorities = await _advanceRepository.GetBillApprovalAdvanceBillApprovalAuthorities(billChequeApprovalResponse!.TransID!);
+                        if (dtBillApprovalAuthorities.Rows.Count > 0)
+                        {
+                            billChequeApprovalResponse!.BillApprovedAuthsString += "<br/>" + dtBillApprovalAuthorities.Rows[0][1]?.ToString() ?? string.Empty;
+                        }
+
+                        billChequeApprovalResponse!.BillApprovedAuthsString += $"<br/><span style='color:blue;'>{billChequeApprovalResponse!.BillNameBy}</span><br/>";
+
+                        using DataTable dtBillChequeAuthorities = await _advanceRepository.GetBillApprovalAdvanceBillChequeApprovalAuthorities(billChequeApprovalResponse!.TransID!, billChequeApprovalResponse!.SequenceID!);
+                        bool rej = false;
+
+                        if (dtBillChequeAuthorities.Rows.Count > 0)
+                        {
+                            billChequeApprovalResponse!.BillChequeApprovalAuthsString = dtBillChequeAuthorities.Rows[0][1]?.ToString() ?? string.Empty;
+
+
+                            if (dtBillChequeAuthorities.Rows[0][0].ToString()!.Contains(employeeId) || (getBillApprovalRequest?.AdditionalEmployeeCode != "" && dtBillChequeAuthorities.Rows[0][0]!.ToString()!.Contains(getBillApprovalRequest?.AdditionalEmployeeCode!)))
+                            {
+                                mypend = true;
+                            }
+
+                            if (dtBillChequeAuthorities.Rows[0][2].ToString()!.Replace(",", "").Trim().Length > 0)
+                            {
+                                rej = true;
+                            }
+                        }
+
+                        billChequeApprovalResponse!.BillChequeApprovalAuthsString += $"<span style='color:blue;'>{billChequeApprovalResponse!.IssuedName!}</span><br/>";
+
+                        if (!rej)
+                        {
+                            using DataTable dtApprovalAuthoritiesBillCheckLimit = await _advanceRepository.GetBillApprovalAdvanceBillChequeApprovalAuthoritiesLimit(billChequeApprovalResponse!.TransID!, billChequeApprovalResponse!.SequenceID!);
+
+                            if (dtApprovalAuthoritiesBillCheckLimit.Rows.Count <= 0)
+                            {
+                                billChequeApprovalResponse!.CanApprove = false;
+                                billChequeApprovalResponse!.CanReject = false;
+                            }
+                            else
+                            {
+                                if (billChequeApprovalResponse!.Cond45 != "R")
+                                {
+                                    if ((Convert.ToDateTime(billChequeApprovalResponse!.Cond45) == DateTime.Now.Date))
+                                    {
+                                        billChequeApprovalResponse!.DiscountForeColor = System.Drawing.Color.Yellow;
+                                    }
+                                    else
+                                    {
+                                        if ((Convert.ToDateTime(billChequeApprovalResponse!.Cond45) < DateTime.Now.Date))
+                                        {
+                                            billChequeApprovalResponse!.DiscountForeColor = System.Drawing.Color.Red;
+                                        }
+                                        else
+                                        {
+                                            billChequeApprovalResponse!.DiscountForeColor = System.Drawing.ColorTranslator.FromHtml("#FF00FF");
+                                        }
+                                    }
+                                }
+                                if (Convert.ToDateTime(billChequeApprovalResponse!.MyINICheck).AddDays(Convert.ToInt32(dtApprovalAuthoritiesBillCheckLimit.Rows[0]["Limit"].ToString())) == DateTime.Now.Date)
+                                {
+
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFCC");
+                                    if (Convert.ToDateTime(billChequeApprovalResponse!.MyEntryCheck).AddDays(Convert.ToInt32(dtApprovalAuthoritiesBillCheckLimit.Rows[0]["Limit"].ToString())) == DateTime.Now.Date)
+                                    {
+                                        billChequeApprovalResponse!.Col10BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFCC");
+                                    }
+                                    else
+                                    {
+                                        billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFCC");
+                                    }
+                                }
+                                if (Convert.ToDateTime(billChequeApprovalResponse!.MyINICheck).AddDays(Convert.ToInt32(dtApprovalAuthoritiesBillCheckLimit.Rows[0]["Limit"].ToString())) < DateTime.Now.Date)
+                                {
+                                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                    billChequeApprovalResponse!.Col6ForeColor = System.Drawing.Color.White;
+                                    if (Convert.ToDateTime(billChequeApprovalResponse!.MyINICheck).AddDays(Convert.ToInt32(dtApprovalAuthoritiesBillCheckLimit.Rows[0]["Limit"].ToString())) == DateTime.Now.Date)
+                                    {
+                                        billChequeApprovalResponse!.Col10BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                        billChequeApprovalResponse!.Col10ForeColor = System.Drawing.Color.White;
+                                    }
+                                    else
+                                    {
+                                        billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#FF5555");
+                                        billChequeApprovalResponse!.Col9ForeColor = System.Drawing.Color.White;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            billChequeApprovalResponse!.ShowRow = false;
+                            billChequeApprovalResponse!.CanApprove = false;
+                            billChequeApprovalResponse!.CanReject = false;
+                        }
+
+                    }
+
+                    if (!mypend)
+                    {
+                        billChequeApprovalResponse!.CanApprove = false;
+                        billChequeApprovalResponse!.CanReject = false;
+                    }
+                }
+
+                if (billChequeApprovalResponse!.IsSpecial == "True" || billChequeApprovalResponse!.ForType == "Advance Bill")
+                {
+                    billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#8CDAFF");
+                    billChequeApprovalResponse!.Col6ForeColor = System.Drawing.Color.Black;
+                    billChequeApprovalResponse!.Col9BackColor = System.Drawing.ColorTranslator.FromHtml("#8CDAFF");
+                    billChequeApprovalResponse!.Col9ForeColor = System.Drawing.Color.Black;
+                    billChequeApprovalResponse!.Col10BackColor = System.Drawing.ColorTranslator.FromHtml("#8CDAFF");
+                    billChequeApprovalResponse!.Col10ForeColor = System.Drawing.Color.Black;
+                }
+
+                using DataTable dtIsBillLate = await _advanceRepository.GetBillApprovalAdvanceIsBillLate(billChequeApprovalResponse!.TransID!);
+
+                if (dtIsBillLate.Rows.Count > 0)
+                {
+                    billChequeApprovalResponse!.IsBillLate = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(billChequeApprovalResponse!.Col5) && !billChequeApprovalResponse!.Col5!.Contains("---"))
+                {
+                    billChequeApprovalResponse!.CanOpenFirmPaidReport = true;
+                }
+
+                if (billChequeApprovalResponse!.BVId == "262")
+                {
+                    billChequeApprovalResponse!.CanOpenFirmRejectionReport = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(billChequeApprovalResponse!.ChequeVendor))
+                {
+                    string NewAddon = "";
+                    string[] Splited = billChequeApprovalResponse!.ChequeVendor!.Split('#');
+
+                    if (Splited[3].Trim().ToUpper() != "" && Splited[3].Trim().ToUpper() != "---" && Splited[3].Trim().ToUpper() != billChequeApprovalResponse!.Col5!.ToString().Trim().ToUpper())
+                    {
+                        NewAddon = NewAddon + "<span style='color:brown; font-weight:bold;'> ( <a href='#'  style='color:brown;' onclick=\"openPopUpEnc('Reports/FirmPaidReport.aspx?VId=$$$&SubId=M','" + Splited[3].Trim().ToUpper() + "" + "'); return false;\"><u>" + Splited[3].Trim().ToUpper() + "</u></a> ) </span><br/>";
+                    }
+
+                    if (Splited[0] != billChequeApprovalResponse!.BVId)
+                    {
+                        if (Splited[2].Trim().ToUpper() != "" && !Splited[2].Trim().ToUpper().Contains("---"))
+                        {
+                            NewAddon = NewAddon + "<b><span><a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?VId=" + Splited[0] + "&SubId=" + Splited[2] + "`,0,0); return false;'><u>" + Splited[1] + " (" + Splited[2] + ")</u></a></span></b><br/>";
+                        }
+                        else
+                        {
+                            NewAddon = NewAddon + "<b><span><a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?VId=" + Splited[0] + "&SubId=`,0,0); return false;'><u>" + Splited[1] + "</u></a></span></b><br/>";
+                        }
+                    }
+
+                    if (NewAddon != "")
+                    {
+                        billChequeApprovalResponse!.ChequeVendorString += $"<hr style='margin: 5px 0px;border: 1px dashed black;border-bottom: 0px;'/><h6 class='no-margin text-bold'>Payment To</h6><hr style='margin: 5px 0px;border: 1px dashed black;border-bottom: 0px;'/>{NewAddon}";
+                    }
+                }
+
+
+                billChequeApprovalResponse!.INI = billChequeApprovalResponse!.INI!.Replace("$", "<br/>");
+
+                using DataTable dtAllBillDetails = await _advanceRepository.GetBillApprovalAdvanceAllBillDetails(billChequeApprovalResponse!.TransID!);
+
+
+                if (dtAllBillDetails.Rows.Count > 0)
+                {
+                    for (int i = 0; i < dtAllBillDetails.Rows.Count; i++)
+                    {
+                        BillApprovalBillBaseAllDetails billApprovalBillBaseAllDetails = new BillApprovalBillBaseAllDetails(dtAllBillDetails.Rows[i]);
+
+                        billChequeApprovalResponse!.BillRecords.Add(billApprovalBillBaseAllDetails);
+                    }
+
+
+                    using DataTable dtAllBillDetailsIssue = await _advanceRepository.GetBillApprovalAdvanceAllBillDetailsIssue(billChequeApprovalResponse!.TransID!);
+
+                    foreach (DataRow drPayments in dtAllBillDetailsIssue.Rows)
+                    {
+                        BillApprovalBillBaseTransactionDetails billApprovalBillBaseTransactionDetails = new BillApprovalBillBaseTransactionDetails(drPayments);
+
+                        using DataTable dtIssueAuthorities = await _advanceRepository.GetBillApprovalAdvanceAllBillDetailsIssueAuthoritiesStatus(billChequeApprovalResponse!.TransID!, billApprovalBillBaseTransactionDetails!.SequenceID!);
+
+                        if (dtIssueAuthorities.Rows.Count <= 0)
+                        {
+                            if (!string.IsNullOrWhiteSpace(billApprovalBillBaseTransactionDetails.IssuedOn))
+                            {
+                                billApprovalBillBaseTransactionDetails.Issued = true;
+                            }
+                            if (!string.IsNullOrWhiteSpace(billApprovalBillBaseTransactionDetails.SignedOn))
+                            {
+                                billApprovalBillBaseTransactionDetails.Signed = true;
+                            }
+                            if (!string.IsNullOrWhiteSpace(billApprovalBillBaseTransactionDetails.ReceivedOn))
+                            {
+                                billApprovalBillBaseTransactionDetails.Recieved = true;
+                            }
+                            if (!string.IsNullOrWhiteSpace(billApprovalBillBaseTransactionDetails.ClearOn))
+                            {
+                                billApprovalBillBaseTransactionDetails.Cleared = true;
+                            }
+                        }
+                        else
+                        {
+                            billApprovalBillBaseTransactionDetails!.RejectString = $"Reject By : {dtIssueAuthorities.Rows[0]["EmployeeDetails"].ToString()}";
+                        }
+
+                        billChequeApprovalResponse!.BillRecords[0].TransactionDetails.Add(billApprovalBillBaseTransactionDetails);
+                    }
+
+
+                    using DataTable dtHostelDistribution = await _advanceRepository.GetBillApprovalAdvanceAllBillDetailsIssueHostelDistribution(billChequeApprovalResponse!.TransID!);
+
+                    foreach (DataRow drHostel in dtHostelDistribution.Rows)
+                    {
+                        BillApprovalIssueHostelWiseDistribution billApprovalIssueHostelWiseDistribution = new BillApprovalIssueHostelWiseDistribution(drHostel);
+                        billChequeApprovalResponse!.BillRecords[0].HostelDistributionDetails.Add(billApprovalIssueHostelWiseDistribution);
+                    }
+
+                    if (dtHostelDistribution.Rows.Count <= 0)
+                    {
+                        using DataTable dtVehicleDistribution = await _advanceRepository.GetBillApprovalAdvanceAllBillDetailsIssueVehicleDistribution(billChequeApprovalResponse!.TransID!);
+
+                        foreach (DataRow drVehicle in dtVehicleDistribution.Rows)
+                        {
+                            BillApprovalIssueVehicleDistribution billApprovalIssueVehicleDistribution = new BillApprovalIssueVehicleDistribution(drVehicle);
+                            billChequeApprovalResponse!.BillRecords[0].VehicleDistributionDetails.Add(billApprovalIssueVehicleDistribution);
+                        }
+
+                        if (dtVehicleDistribution.Rows.Count > 0)
+                        {
+                            using DataTable dtVehiclePreviousBills = await _advanceRepository.GetBillApprovalAdvanceAllBillDetailsIssueVehiclePreviousBills(billChequeApprovalResponse!.TransID!);
+
+                            foreach (DataRow drVehicleHistory in dtVehiclePreviousBills.Rows)
+                            {
+                                BillApprovalVehiclePreviousBills billApprovalVehiclePreviousBills = new BillApprovalVehiclePreviousBills(drVehicleHistory);
+                                billChequeApprovalResponse!.BillRecords[0].VehiclePreviousBills.Add(billApprovalVehiclePreviousBills);
+                            }
+                        }
+                    }
+                }
+
+                billApprovalResponses.Add(billChequeApprovalResponse!);
+            }
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", billApprovalResponses);
+        }
+        public async Task<ApiResponse> GetChequeAuthority()
+        {
+            List<TextValues> chequeAuthorityResponses = new List<TextValues>();
+            using DataTable dtChequeAuthorities = await _advanceRepository.GetChequeAuth();
+            foreach (DataRow dr in dtChequeAuthorities.Rows)
+            {
+                TextValues chequeAuthorityResponse = new TextValues(dr);
+                chequeAuthorityResponses.Add(chequeAuthorityResponse);
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "Success", chequeAuthorityResponses);
+        }
+
+        public async Task<ApiResponse> GetPayentDetails()
+        {
+            using(DataTable dt=await _advanceRepository.PaymentDetails())
+            {
+                List<TextValues> paymentDetailsResponses = new List<TextValues>();
+                foreach(DataRow dr in dt.Rows)
+                {
+                    TextValues paymentDetailsResponse = new TextValues(dr);
+                    paymentDetailsResponses.Add(paymentDetailsResponse);
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", paymentDetailsResponses);
+            }
+        }
+
+
+        public async Task<ApiResponse> SaveChequeDetails(string EmpCode, string Type,string EmpName, SaveCheDetailsRequest req)
+        {
+            int iss = 0;
+            if(req.PaymentType=="Full" || req.PaymentType=="Custom")
+            {
+                int.TryParse(req.IssuedAmount, out iss);
+            }
+            if(req.PaymentType=="Installment")
+            {
+                int over = 0;
+                int.TryParse(req.IssuedAmount, out iss);
+                int.TryParse(req.Remaining, out over);
+                if (iss == 0 || over == 0)
+                {
+                    iss = 0;
+                }
+                else
+                {
+                    iss = (over / iss);
+                }
+            }
+            if(req.PaymentType=="%")
+            {
+                int over = 0;
+                int.TryParse(req.IssuedAmount, out iss);
+                int.TryParse(req.Remaining, out over);
+
+                if (iss == 0 || over == 0)
+                {
+                    iss = 0;
+                }
+                else
+                {
+                    iss = ((over * iss) / 100);
+                }
+            }
+            req.IssuedAmount= iss.ToString();
+            DataTable TransNo=await _advanceRepository.GetTransactionNo(req.TransId??"");
+
+            req.SequenceId= TransNo.Rows[0][0].ToString();
+            //update bill base amount
+            int updatebillbase = await _advanceRepository.UpdateBillBase(EmpCode,EmpName,iss.ToString(),req.TransId);
+
+            //insert details
+            int ins = await _advanceRepository.InsertBillTransactionIssue(EmpCode, EmpName, req);
+
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Cheque Upload Successfully");
+        }
+
+
+    }
 }

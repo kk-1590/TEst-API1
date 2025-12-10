@@ -24,6 +24,7 @@
         bool ViewPreviousRate(string? type);
         bool ValidatePdfFile(IFormFile file);
         string Encrypt(string clearText);
+        string EncryptWithoutHour(string clearText);
 
     }
 }

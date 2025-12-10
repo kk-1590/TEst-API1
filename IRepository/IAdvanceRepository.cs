@@ -1,4 +1,5 @@
 ﻿using AdvanceAPI.DTO.Advance;
+using AdvanceAPI.DTO.Advance.Bill;
 using AdvanceAPI.DTO.DB;
 using System.Data;
 
@@ -87,6 +88,64 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetIssuedAmounREadyApproval(string TransId);
         Task<int> UpdateBillBase(string Cond, string TransId, string WarId, List<SQLParameters> lst);
         Task<int> UpdateRemark(string Remark, string TransId);
+        Task<DataTable> GetEditBillDetails(string RefNo);
+        Task<DataTable> GetRefAuth(string refNo);
+        Task<int> UpdateDeleteStatus(string BillId);
+        Task<int> InsertDeleteLog(string BillId, string EmpCode);
+        Task<int> DeleteBillBase(string BillId);
+        Task<int> DeleteBillAuth(string BillId);
+        Task<int> UpdateBill(string EmpCode, string EmpName, AddBillGenerateRequest req, string BillBaseREfNo);
+        Task<DataTable> GetBillDetails(string TransId);
+        Task<DataTable> GetImprestByBillTransactionId(string TransId);
+        Task<DataTable> GetWorkshopBillDetails(string TransId);
+        Task<DataTable> GetRelativeContactNo(string EmpCode);
+        Task<DataTable> GetApprovalsAuthSummary(string TransId);
+        Task<DataTable> GetBillIssues(string TransId);
+        Task<DataTable> RowColor(string TransId);
+        Task<DataTable> RowColorReadyAmount(string TransId);
+        Task<DataTable> GetAuthStatusBill(string TransId);
+        Task<DataTable> GetVenderRegisterDetails(string VendorId);
+        Task<DataTable> GetTransDetails(string TransId);
+        Task<DataTable> BillBaseDetails(string TransId);
+        Task<DataTable> CheucqAuth(string TransId, string SeqNo);
+        Task<DataTable> GEtSpecialVendor(string VendorId);
+        Task<DataTable> GetPerson(string campusCode);
+        Task<DataTable> GetBillauth(string campusCode);
+        Task<DataTable> GetFirstSecond(string campusCode);
+
+        Task<DataTable> GetBillApprovalFilterSessions();
+        Task<DataTable> GetBillApprovalFilterInitiatedBy();
+        Task<DataTable> GetBillApprovalFilterChequeBy();
+        Task<DataTable> GetBillApprovalAgencyBillIds();
+        Task<DataTable> GetBillApprovalDetails(GetBillApprovalRequest? getBillApprovalRequest, string employeeId, string role);
+        Task<DataTable> GetBillApprovalAdvanceBudgetSummary(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceExcludeMedBudgetSummary(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceBudgetSummaryApprovalDetails(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceMedReleaseOrder(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceUserIdentity(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceImprestDetails(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceBillApprovalAuthorities(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvancePreviousRejections(string type, string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceBillBaseExtra7Details(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceBillApprovalAuthoritiesTimeLimit(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceBillTransactionIssueECol6(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceApprovalAuthoritiesLimit(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceBillTransactionIssueChequeECol6(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceBillChequeApprovalAuthorities(string referenceNo, string sequenceId);
+        Task<DataTable> GetBillApprovalAdvanceBillChequeApprovalAuthoritiesLimit(string referenceNo, string sequenceId);
+        Task<DataTable> GetBillApprovalAdvanceIsBillLate(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceAllBillDetails(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceAllBillDetailsIssue(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceAllBillDetailsIssueAuthoritiesStatus(string referenceNo, string sequenceId);
+        Task<DataTable> GetBillApprovalAdvanceAllBillDetailsIssueHostelDistribution(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceAllBillDetailsIssueVehicleDistribution(string referenceNo);
+        Task<DataTable> GetBillApprovalAdvanceAllBillDetailsIssueVehiclePreviousBills(string referenceNo);
+
+        Task<DataTable> GetChequeAuth();
+        Task<DataTable> PaymentDetails();
+        Task<DataTable> GetTransactionNo(string TransId);
+        Task<int> UpdateBillBase(string EmpCode, string EmpName, string PaidAmount, string TransId);
+        Task<int> InsertBillTransactionIssue(string EmpCode, string EmpName, SaveCheDetailsRequest req);
 
     }
 }
