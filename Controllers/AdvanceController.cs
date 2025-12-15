@@ -1,6 +1,7 @@
 ﻿using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Advance;
 using AdvanceAPI.DTO.Advance.Bill;
+using AdvanceAPI.DTO.Advance.BillApproval;
 using AdvanceAPI.IServices.Advance;
 using AdvanceAPI.IServices.VenderPriceComp;
 using Microsoft.AspNetCore.Authorization;
@@ -1121,17 +1122,20 @@ namespace AdvanceAPI.Controllers
         }
         [HttpPost]
         [Route("save-transaction-details")]
-        
-        public async Task<IActionResult> SaveDetails([FromBody] SaveCheDetailsRequest req)
+        public async Task<IActionResult> SaveDetails( SaveCheDetailsRequest req)
         {
             try
             {
-                string employeeId = "GLA308508";
-                string role = "Account";
-                string name = "Devendra Saras";
-                //string employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                //string role = User.FindFirstValue(ClaimTypes.Authentication)!;
-                //string name = User.FindFirstValue(ClaimTypes.Name)!;
+                //string employeeId = "GLA308508";
+                //string role = "Account";
+                //string name = "Devendra Saras";
+                if(!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                string role = User.FindFirstValue(ClaimTypes.Authentication)!;
+                string name = User.FindFirstValue(ClaimTypes.Name)!;
                 if (string.IsNullOrWhiteSpace(employeeId) || string.IsNullOrWhiteSpace(role) || string.IsNullOrWhiteSpace(name))
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
@@ -1147,8 +1151,138 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
-
-
-
+        [HttpGet]
+        [Route("get-other-pending-transaction/{TransId}/{SeqId}")]
+        public async Task<IActionResult> GetOtherTransactionDetails([FromRoute] string TransId, [FromRoute] string SeqId)
+        {
+            try
+            {
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }//Task<ApiResponse> GetBillDetails(string TransId,string EmpName)
+                ApiResponse response = await _advanceService.GetOtherTransactionDetails(employeeId, EmpName!, TransId, SeqId);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"get-other-transaction-details/{TransId}/{SeqId}");
+                throw;
+            }
+        }
+        [HttpPost]
+        [Route("bill-approved")]
+        public async Task<IActionResult> ApprovedBill([FromBody] ApprovalRequest req)
+        {
+            try
+            {
+                if(!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? AddEmpCode = User.FindFirstValue(ClaimTypes.AuthorizationDecision);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }//Task<ApiResponse> GetBillDetails(string TransId,string EmpName)
+                ApiResponse response = await _advanceService.ApprovedTransection(employeeId, AddEmpCode!, EmpName!, req.TransactionId!,req.SeqNo!,req.Remark!,req.Designation!);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"bill-approved");
+                throw;
+            }
+        }
+        [HttpPost]
+        [Route("bill-Reject")]
+        public async Task<IActionResult> RejectBill([FromBody] ApprovalRequest req)
+        {
+            try
+            {
+                if(!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? AddEmpCode = User.FindFirstValue(ClaimTypes.AuthorizationDecision);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }//Task<ApiResponse> GetBillDetails(string TransId,string EmpName)
+                ApiResponse response = await _advanceService.BillRejectApproval(employeeId, AddEmpCode!, EmpName!, req);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"bill-Reject");
+                throw;
+            }
+        }
+        [HttpDelete]
+        [Route("delete-cheque/{TransId}/{SeqNo}")]
+        public async Task<IActionResult> DeleteCheque([FromRoute]string TransId, [FromRoute]string SeqNo)
+        {
+            try
+            {
+                if(!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? AddEmpCode = User.FindFirstValue(ClaimTypes.AuthorizationDecision);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }//Task<ApiResponse> GetBillDetails(string TransId,string EmpName)
+                ApiResponse response = await _advanceService.DeleteCheque(EmpName,employeeId,TransId,SeqNo);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"bill-Reject");
+                throw;
+            }
+        }
+        [HttpGet]
+        [Route("get-timeline/{RefNo}")]
+        public async Task<IActionResult> GetTimeLine([FromRoute]string RefNo)
+        {
+            try
+            {
+               
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+                string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
+                string? AddEmpCode = User.FindFirstValue(ClaimTypes.AuthorizationDecision);
+                if (string.IsNullOrEmpty(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }//Task<ApiResponse> GetBillDetails(string TransId,string EmpName)
+                ApiResponse response = await _advanceService.GetTimeLineDetails(RefNo);
+                return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.LogError(e.Message, $"bill-Reject");
+                throw;
+            }
+        }
+        
     }
 }

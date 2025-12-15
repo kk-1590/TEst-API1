@@ -146,6 +146,37 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetTransactionNo(string TransId);
         Task<int> UpdateBillBase(string EmpCode, string EmpName, string PaidAmount, string TransId);
         Task<int> InsertBillTransactionIssue(string EmpCode, string EmpName, SaveCheDetailsRequest req);
+        Task<int> UploadChequeApproval(string EmpCode, string EmpName, SaveCheDetailsRequest req);
+        Task<int> SaveFileCheque(string EmpCode, string EmpName, SaveCheDetailsRequest req);
+        Task<DataTable> GetOtherApproval(string EmpCode, string AddEmpCode, string TransId, string SeqId);
+
+
+        Task<int> UpdateApprovalAuthorityWithOutSeqNo(string EmpCode, string EmpAddCode, string EmpName, string TransId, string Designation);
+        Task<DataTable> GetPendingAuthority(string TransId);
+        Task<int> UpdateBillStatus(string EmpName, string Reason, string TransId);
+        Task<int> UpdateBillReason(string EmpName, string Reason, string TransId);
+        Task<int> ApprovalAuthWithSeqNo(string EmpCode, string EmpAddCode, string EmpName, string Designation, string TransId, string SeqNo);
+        Task<DataTable> GetCequePendingAuthority(string TransId, string SeqNo);
+        Task<DataTable> GetSmsDetails(string TransId);
+        Task<int> UpdateScheduled(string TransId);
+        Task<int> UpdateTransactionIssued(string Sms, string TransId, string SeqNo, string Remark, string EmpName);
+        Task<int> UpdateBillTransactionIssuedTblAllAuthApproved(string EmpName, string Reason, string TransId, string SeqId);
+        Task<DataTable> GetPendingRejectedRecord(string TransId);
+        Task<int> UpdateREadyToIssueAmount(string TransId);
+        Task<int> ApproveApplication(string EmpCode, string TransId);
+        Task<int> UpdateRejectRecord(string EmpCode, string EmpName, string EmpAddCode, string Designation, string TransId);
+        Task<int> UpdateBillBaseReject(string TransId, string Reason, string EmpName);
+        Task<int> UpdateAppAuthWithSeq(string EmpCode, string EmpAddCode, string Designation, string EmpName, string TransId, string SeqNo);
+        Task<int> UpdateBillTransactionIssueReject(string EmpCode, string TransId, string SeqNo, string Reason, string EmpName);
+        Task<int> UpdateBillRejectStatus(string TransId);
+        Task<int> BillAmountUpdate(string TransId, string SeqNo,string EmpName);
+        Task<int> InsertInBackUpDeleteCheque(string EmpName, string TransId, string SeqNo);
+        Task<int> DeleteChequeTransaction(string TransId, string SeqNo);
+        Task<int> UpdateAmount(string EmpName, string TransId, string SeqNo);
+        Task<DataTable> Purchasetime(string RefNo);
+        Task<DataTable> AdvanceSummary(string RefNo);
+        Task<DataTable> BillSummary(string Ids);
+        Task<DataTable> ChequeDetails(string Ids);
 
     }
 }

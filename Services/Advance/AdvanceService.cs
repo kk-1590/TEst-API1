@@ -1,6 +1,8 @@
 ﻿using AdvanceAPI.DTO;
 using AdvanceAPI.DTO.Advance;
 using AdvanceAPI.DTO.Advance.Bill;
+using AdvanceAPI.DTO.Advance.BillApproval;
+using AdvanceAPI.DTO.Advance.TimeLine;
 using AdvanceAPI.DTO.DB;
 using AdvanceAPI.DTO.Inclusive;
 using AdvanceAPI.IRepository;
@@ -123,8 +125,6 @@ namespace AdvanceAPI.Services.Advance
                     return new ApiResponse(StatusCodes.Status200OK, "Warning", "Sorry! Previous Advance Approval Is Still Pending To Approve For Same Purchase Approval Initiated By " + dt.Rows[0]["IniName"].ToString() + " on " + dt.Rows[0]["AppDate"].ToString() + " of Amount : " + dt.Rows[0]["Amount"].ToString() + " Rs/-");
                 }
             }
-
-
 
             req.ApprovalType = req.ApprovalType + " Advance Form";
             if (Convert.ToDateTime(req.AppDate) > Convert.ToDateTime(req.BillTill))
@@ -1765,6 +1765,7 @@ namespace AdvanceAPI.Services.Advance
                                 {
                                     /*dtn.Tables[0].Rows[i]["Purpose"] = "Completed";
                                     mytab.ImportRow(dtn.Tables[0].Rows[i]);*/
+                                    continue;
                                 }
                             }
                             else
@@ -1943,14 +1944,29 @@ namespace AdvanceAPI.Services.Advance
                     {
                         using (DataTable rowcolo = await _advanceRepository.RowColorReadyAmount(mytab.Rows[i]["Trans. ID"].ToString()))
                         {
-                            if (Convert.ToDateTime(mytab.Rows[i]["MyINICheck"].ToString()).AddDays(Convert.ToInt32(rowcolo.Rows[0]["Limit"].ToString())) == DateTime.Now.Date)
+
+
+                            DateTime myDate;
+                            if (DateTime.TryParseExact(
+                                    mytab.Rows[i]["MyINICheck"].ToString(),
+                                    "MM/dd/yyyy",
+                                    System.Globalization.CultureInfo.InvariantCulture,
+                                    System.Globalization.DateTimeStyles.None,
+                                    out myDate))
                             {
-                                ls.BackColor = "#FFFFCC";
+                                DateTime limitDate = myDate.AddDays(Convert.ToInt32(rowcolo.Rows[0]["Limit"].ToString()));
+
+                                if (limitDate == DateTime.Now.Date)
+                                    ls.BackColor = "#FFFFCC";
+                                else if (limitDate < DateTime.Now.Date)
+                                    ls.BackColor = "#FF5555";
                             }
-                            if (Convert.ToDateTime(mytab.Rows[i]["MyINICheck"].ToString()).AddDays(Convert.ToInt32(rowcolo.Rows[0]["Limit"].ToString())) < DateTime.Now.Date)
+                            else
                             {
-                                ls.BackColor = "#FF5555";
+                                // Handle invalid date string gracefully
+                                ls.BackColor = "#CCCCCC"; // Gray fallback
                             }
+
                         }
                     }
                     if (mytab.Rows[i]["IsSpecial"].ToString() == "True")
@@ -1986,6 +2002,14 @@ namespace AdvanceAPI.Services.Advance
                     {
                         ls.CanEdit = false;
                         ls.CanDelete = false;
+                        if(Convert.ToInt32(ls.AmountRemaining) > 0 && Type == "ACCOUNTS")
+                        {
+                            ls.CanUploadCheque=true;
+                        }
+                        else
+                        {
+                            ls.CanUploadCheque=false;
+                        }
                     }
 
                     lst.Add(ls);
@@ -2585,6 +2609,13 @@ namespace AdvanceAPI.Services.Advance
                 string FolderPath = Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills");
                 foreach (DataRow dr in dt.Rows) 
                 {
+                    bool canDelete = false;
+                    if (dr["SignedOn"].ToString()=="" && dr["ReceivedOn"].ToString()=="" && dr["ClearOn"].ToString()=="")
+                    {
+                        canDelete = true;
+                    }
+
+
                     DataTable Auth = await _advanceRepository.CheucqAuth(TransId, dr["SequenceID"].ToString());
                     lst.Add(new LoadTransactionDetailsRespomse
                     {
@@ -2610,6 +2641,7 @@ namespace AdvanceAPI.Services.Advance
                         ClearOn = dr["ClearOn"].ToString(),
                         Status = Auth.Rows.Count > 0 ? Auth.Rows[0]["Status"].ToString() : "",
                         EmpDetails = Auth.Rows.Count > 0 ? Auth.Rows[0]["EmployeeDetails"].ToString() : "" ,
+                        CanDelete= canDelete
 
                     });
                 }
@@ -2623,6 +2655,7 @@ namespace AdvanceAPI.Services.Advance
                     ls.AdditionalName= billBase.Rows[0]["Col5"].ToString();
                     ls.Purpose= billBase.Rows[0]["Remark"].ToString();
                     ls.FirmName= billBase.Rows[0]["FirmName"].ToString();
+                    ls.VendorId= billBase.Rows[0]["VendorID"].ToString();
                     ls.Sub_Firm= billBase.Rows[0]["col3"].ToString();
                     if (billBase.Rows[0]["ForType"].ToString()== "Advance Bill")
                     {
@@ -3530,7 +3563,7 @@ namespace AdvanceAPI.Services.Advance
                     iss = (over / iss);
                 }
             }
-            if(req.PaymentType=="%")
+            if(req.PaymentType=="Percentage")
             {
                 int over = 0;
                 int.TryParse(req.IssuedAmount, out iss);
@@ -3555,10 +3588,247 @@ namespace AdvanceAPI.Services.Advance
             //insert details
             int ins = await _advanceRepository.InsertBillTransactionIssue(EmpCode, EmpName, req);
 
+            //insert into approval authority
 
+            int insauth = await _advanceRepository.UploadChequeApproval(EmpCode, EmpName, req);
+
+            //save file
+            string ParentPath = Directory.GetCurrentDirectory();
+            if (!Directory.Exists(Path.Combine(ParentPath, "Upload_Bills")))
+            {
+                Directory.CreateDirectory(Path.Combine(ParentPath, "Upload_Bills"));
+            }
+            if (req.PdfFile!=null && req.PdfFile.Length>0)
+            {
+               if(File.Exists(Path.Combine(ParentPath, "Upload_Bills", req.TransId + "_" + req.SequenceId + ".pdf")))
+                {
+                    File.Delete(Path.Combine(ParentPath, "Upload_Bills", req.TransId + "_" + req.SequenceId + ".pdf"));
+                }
+                string davePdf = await _inclusiveService.SaveFile(req.TransId + "_" + req.SequenceId, "Upload_Bills", req.PdfFile, ".pdf");
+            }
+            if(req.ExcelFile!=null && req.ExcelFile.Length>0)
+            {
+                if (File.Exists(Path.Combine(ParentPath, "Upload_Bills", req.TransId + "_" + req.SequenceId + ".xlsx")))
+                {
+                    File.Delete(Path.Combine(ParentPath, "Upload_Bills", req.TransId + "_" + req.SequenceId + ".xlsx"));
+                }
+                string davePdf = await _inclusiveService.SaveFile(req.TransId + "_" + req.SequenceId, "Upload_Bills", req.ExcelFile, ".xlsx");
+            }
+            int saveFileRecord = await _advanceRepository.SaveFileCheque(EmpCode,EmpName,req);
             return new ApiResponse(StatusCodes.Status200OK, "Success", "Cheque Upload Successfully");
         }
 
+
+        public async Task<ApiResponse> GetOtherTransactionDetails(string EmpCode, string AddEmpCode, string TransId, string SeqId)
+        {
+            //Task<DataTable> GetOtherApproval(string EmpCode,string AddEmpCode,string TransId,string SeqId)
+            List<OtherTransactionDetailsResponse> otherTransactionDetailsResponses = new List<OtherTransactionDetailsResponse>();
+            using (DataTable dt = await _advanceRepository.GetOtherApproval(EmpCode, AddEmpCode, TransId, SeqId))
+            {
+                foreach (DataRow dr in dt.Rows)
+                {
+                    OtherTransactionDetailsResponse otherTransactionDetailsResponse = new OtherTransactionDetailsResponse(dr);
+                    otherTransactionDetailsResponses.Add(otherTransactionDetailsResponse);
+                }
+                return new ApiResponse(StatusCodes.Status200OK, "Success", otherTransactionDetailsResponses);
+            }
+
+        }
+
+        public async Task<ApiResponse> ApprovedTransection(string EmpCode,string EmpAddCode,string EmpName,string TransactionId,string SeqId,string Remark,string Designation)
+        {
+            if (SeqId == "---")
+            {
+                int UpdateAppAuth=await _advanceRepository.UpdateApprovalAuthorityWithOutSeqNo(EmpCode,EmpAddCode, EmpName, TransactionId, Designation);
+                if(UpdateAppAuth>0)
+                {
+                    using (DataTable PendingAuth = await _advanceRepository.GetPendingAuthority(TransactionId))
+                    {
+                        if(PendingAuth.Rows.Count <= 0)
+                        {
+                            int UpdateStatusWithRemark = await _advanceRepository.UpdateBillStatus( EmpName, Remark, TransactionId);
+                        }
+                        else
+                        {
+                            if(!string.IsNullOrEmpty(Remark))
+                            {
+                                int UpdtaeRemarkOnly = await _advanceRepository.UpdateBillReason(EmpName,Remark,TransactionId);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                int UpdateAuth=await _advanceRepository.ApprovalAuthWithSeqNo(EmpCode,EmpAddCode, EmpName, Designation, TransactionId, SeqId);
+
+                using(DataTable dt=await _advanceRepository.GetCequePendingAuthority(TransactionId,SeqId))
+                {
+                    if(dt.Rows.Count <= 0)
+                    {
+                        // int UpdateStatusWithRemark = await _advanceRepository.UpdateBillStatus( EmpName, Remark, TransactionId);
+
+                        string sms = "Waiting To Send";
+                        using DataTable SmsDetail = await _advanceRepository.GetSmsDetails(TransactionId);
+                        if (SmsDetail.Rows.Count > 0)
+                        {
+                            if (SmsDetail.Rows[0][0].ToString() == "No")
+                            {
+                                sms = "SMS Blocked";
+                            }
+                        }
+                        //bill receive
+                        int receive = await _advanceRepository.UpdateTransactionIssued(sms, TransactionId, SeqId, Remark, EmpName);
+
+                        //update schedule
+                        int scheduled = await _advanceRepository.UpdateScheduled(TransactionId);
+
+                    }
+                    else
+                    {
+                        int updateapp = await _advanceRepository.UpdateBillTransactionIssuedTblAllAuthApproved(EmpName, Remark, TransactionId, SeqId);
+                    }
+
+                    //in ready To issues Amount
+                    using DataTable PendingReject=await _advanceRepository.GetPendingRejectedRecord(TransactionId);
+                    if (PendingReject.Rows.Count <= 0)
+                    {
+                        int REadyToissueAmount = await _advanceRepository.UpdateREadyToIssueAmount(TransactionId);
+                    }
+                }
+
+            }
+            //approve applicationnew
+            int ApproveApplication = await _advanceRepository.ApproveApplication(EmpCode, TransactionId);
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Transaction Approved Successfully");
+        }
+
+        public async Task<ApiResponse> BillRejectApproval(string EmpCode,string EmpAddCode,string EmpName, ApprovalRequest req)
+        {
+            if(req.SeqNo=="---")
+            {
+                //update bill_transaction_issue
+                int UpdateRecord = await _advanceRepository.UpdateRejectRecord(EmpCode,EmpName,EmpAddCode,req.Designation!,req.TransactionId!);
+                //update reject billbase
+                int RejectBill = await _advanceRepository.UpdateBillBaseReject(req.TransactionId!,req.Remark!,EmpName);
+
+            }
+            else
+            {
+                int UpdateRecord = await _advanceRepository.UpdateAppAuthWithSeq(EmpCode,EmpAddCode,req.Designation,EmpName,req.TransactionId,req.SeqNo);
+                //update bill Transa issue
+                int Updatedetails = await _advanceRepository.UpdateBillTransactionIssueReject(EmpCode,req.TransactionId,req.SeqNo,req.Remark??"",EmpName);
+
+                //updtae readyto issue
+                int upd = await _advanceRepository.UpdateBillRejectStatus(req.TransactionId!);
+
+                //update bill base balance
+                int amount_update = await _advanceRepository.BillAmountUpdate(req.TransactionId,req.SeqNo,EmpName);
+            }
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Record Update Successfully");
+        }
+
+        public async Task<ApiResponse> DeleteCheque(string EmpName,string EmpCode,string TransId,string SeqId)
+        {
+            //update bill base
+            int updateBillBase= await _advanceRepository.UpdateAmount(EmpName,TransId,SeqId);
+
+            //add backup
+            int insBackup= await _advanceRepository.InsertInBackUpDeleteCheque(EmpName,TransId,SeqId);
+            //delete record
+            int delete=await _advanceRepository.DeleteChequeTransaction(TransId,SeqId);
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", "Cheque Deleted Successfully");
+        }
+
+
+        public async Task<ApiResponse> GetTimeLineDetails(string RefNo)
+        {
+            GetTimeLineResponse res=new GetTimeLineResponse();
+            string BillId="";
+            //Purchase
+            using (DataTable dt=await _advanceRepository.Purchasetime(RefNo))
+            {
+                if(dt.Rows.Count>0)
+                {
+                    int TotalApprovalAuth = 0;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App1DoneOn"].ToString()) && dt.Rows[0]["App1DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App2DoneOn"].ToString()) && dt.Rows[0]["App2DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App3DoneOn"].ToString()) && dt.Rows[0]["App3DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App4DoneOn"].ToString()) && dt.Rows[0]["App4DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+
+                    int TotalAuth = 0;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App1ID"].ToString()) && dt.Rows[0]["App1ID"].ToString().Length > 0) TotalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App2ID"].ToString()) && dt.Rows[0]["App2ID"].ToString().Length > 0) TotalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App3ID"].ToString()) && dt.Rows[0]["App3ID"].ToString().Length > 0) TotalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App4ID"].ToString()) && dt.Rows[0]["App4ID"].ToString().Length > 0) TotalAuth++;
+
+                    PurchaseDetails purchasedetails = new PurchaseDetails();
+                    purchasedetails.Amount= dt.Rows[0]["Amount"].ToString();
+                    purchasedetails.Status= dt.Rows[0]["Status"].ToString();
+                    purchasedetails.TotalApproved= TotalApprovalAuth;
+                    purchasedetails.TotalAuth= TotalAuth;
+                    purchasedetails.MyType= dt.Rows[0]["MyType"].ToString();
+                    BillId+= dt.Rows[0]["BillId"].ToString();
+                    res.purchase = purchasedetails;
+                }
+            }
+            using(DataTable dt= await _advanceRepository.AdvanceSummary(RefNo))
+            {
+                if (dt.Rows.Count > 0)
+                {
+
+                    int TotalApprovalAuth = 0;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App1DoneOn"].ToString()) && dt.Rows[0]["App1DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App2DoneOn"].ToString()) && dt.Rows[0]["App2DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App3DoneOn"].ToString()) && dt.Rows[0]["App3DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App4DoneOn"].ToString()) && dt.Rows[0]["App4DoneOn"].ToString().Length > 0) TotalApprovalAuth++;
+
+                    int TotalAuth = 0;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App1ID"].ToString()) && dt.Rows[0]["App1ID"].ToString().Length > 0) TotalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App2ID"].ToString()) && dt.Rows[0]["App2ID"].ToString().Length > 0) TotalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App3ID"].ToString()) && dt.Rows[0]["App3ID"].ToString().Length > 0) TotalAuth++;
+                    if (!string.IsNullOrEmpty(dt.Rows[0]["App4ID"].ToString()) && dt.Rows[0]["App4ID"].ToString().Length > 0) TotalAuth++;
+
+                    PurchaseDetails purchasedetails = new PurchaseDetails();
+                    purchasedetails.Amount = dt.Rows[0]["Amount"].ToString();
+                    purchasedetails.Status = dt.Rows[0]["Status"].ToString();
+                    purchasedetails.TotalApproved = TotalApprovalAuth;
+                    purchasedetails.TotalAuth = TotalAuth;
+                    purchasedetails.MyType = dt.Rows[0]["MyType"].ToString();
+                    BillId += dt.Rows[0]["BillId"].ToString();
+                    res.Advance = purchasedetails;
+                }
+            }
+            using(DataTable dt=await _advanceRepository.BillSummary(BillId))
+            {
+                if(dt.Rows.Count> 0 && dt.Rows[0]["Amount"].ToString() != "0")
+                {
+                    PurchaseDetails purchasedetails = new PurchaseDetails();
+                    purchasedetails.Amount = dt.Rows[0]["Amount"].ToString();
+                    purchasedetails.TotalApproved =Convert.ToInt32(dt.Rows[0]["Count"].ToString());
+                    purchasedetails.MyType = dt.Rows[0]["TransId"].ToString();
+                    res.Bill = purchasedetails;
+                }
+            }
+            using(DataTable dt=await _advanceRepository.ChequeDetails(BillId))
+            {
+                if(dt.Rows.Count>0  && dt.Rows[0]["Amount"].ToString()!="0")
+                {
+                    PurchaseDetails purchasedetails = new PurchaseDetails();
+                    purchasedetails.Amount = dt.Rows[0]["Amount"].ToString();
+                    purchasedetails.TotalApproved =Convert.ToInt32(dt.Rows[0]["Count"].ToString());
+                    purchasedetails.MyType = dt.Rows[0]["TransId"].ToString();
+                    res.Cheque = purchasedetails;
+                }
+            }
+
+
+
+
+
+            return new ApiResponse(StatusCodes.Status200OK, "Success", res);
+        }
 
     }
 }

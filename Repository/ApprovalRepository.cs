@@ -477,6 +477,11 @@ namespace AdvanceAPI.Repository
                         extraCondition.Append(" And CampusCode= @CampusCode");
                         parameters.Add(new SQLParameters("@CampusCode", search.CampusCode ?? string.Empty));
                     }
+                    if(!string.IsNullOrEmpty(search?.Department))
+                    {
+                        extraCondition.Append(" And RelativeDepartment=@Department");
+                        parameters.Add(new SQLParameters("@Department", search.Department));
+                    }
                 }
 
                 parameters.Add(new SQLParameters("@LimitItems", search?.NoOfItems ?? 0));
@@ -927,7 +932,7 @@ namespace AdvanceAPI.Repository
                 }
                 if (!string.IsNullOrEmpty(details.Department))
                 {
-                    Condition += " And ForDepartment==@Department";
+                    Condition += " And ForDepartment=@Department";
                     sqlParametersList.Add(new SQLParameters("@Department", details.Department));
                 }
                 if (!string.IsNullOrEmpty(details.Status))

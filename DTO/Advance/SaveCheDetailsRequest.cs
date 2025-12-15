@@ -10,9 +10,9 @@ namespace AdvanceAPI.DTO.Advance
         public string? IssuedAmount { get; set; }
         [Required]
         public string? TaxAmount { get; set; }
-        [Required]
+       
         public string? OtherAmount { get; set; }
-        [Required]
+    
         public string? OtherType { get; set; }
         [Required]
         public string? PaidAmount { get; set; }
@@ -24,7 +24,9 @@ namespace AdvanceAPI.DTO.Advance
         [Required]
         public string? ChequeNo { get; set; }
         [Required]
-        public string? ApprovalAuth { get; set; }
+        public string? ApprovalAuthText { get; set; }
+        [Required]
+        public string? ApprovalAuthValue { get; set; }
         [Required]
         public string? Firm { get; set; }
         [Required]
@@ -45,15 +47,15 @@ namespace AdvanceAPI.DTO.Advance
         [Required]
         public string? Message { get; set; }
         //Repeatation Day After Expiration
-        [Required]
+       
         public string? RepeatDay { get; set; }
-        [Required]
+       
         public string? MessageTo { get; set; }
         [Required]
         public string? Remaining { get; set; }
 
-        //public IFormFile? PdfFile { get;set; }
-        //public IFormFile? ExcelFile { get;set; }
+        public IFormFile? PdfFile { get; set; }
+        public IFormFile? ExcelFile { get; set; }
         [Required]
         public string? PaymentAsset { get;  set; }
         [Required]
@@ -62,7 +64,7 @@ namespace AdvanceAPI.DTO.Advance
         public string? CampusCode { get;  set; }
         [Required]
         public string? CampusName { get; set; }
-        [Required]
+       
         public string? SequenceId { get; set; }
     }
 }

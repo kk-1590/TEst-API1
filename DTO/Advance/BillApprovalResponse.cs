@@ -35,6 +35,7 @@
         public string? BackColor { get; set; }
         public bool CanEdit { get; set; }
         public bool CanDelete { get; set; }
+        public bool CanUploadCheque { get; set; }
     }
     public class Authorities
     {

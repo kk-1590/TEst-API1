@@ -838,9 +838,13 @@ namespace AdvanceAPI.Repository
                 }
                 if (ids.Length > 0)
                 {
-                    string[] spl = ids.Split(",");
-                   
-                    Cond += " And ReferenceNo in (" +  string.Join(",","'"+spl+"'") + ")";
+                    string[] spl = ids.Split(',');
+
+                    // Wrap each element in single quotes
+                    string inClause = string.Join(",", spl.Select(x => $"'{x}'"));
+
+                    Cond += " And ReferenceNo in (" + inClause + ")";
+
                 }
 
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_DETAILS_FOR_CAN_BILL_UPLOAD.Replace("@Condition", Cond), param, DBConnections.Advance);
@@ -1102,7 +1106,7 @@ namespace AdvanceAPI.Repository
                     }
                 }
                 //  DataTable VenderDetails = await GetVendorDetails(Details.Rows[0]["VendorId"].ToString() ?? "");
-                if(string.IsNullOrEmpty(req.RefNo))
+                if (string.IsNullOrEmpty(req.RefNo))
                 {
                     req.RefNo = "";
                 }
@@ -1110,10 +1114,10 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@TransactionID", BillBaseREfNo));
                 param.Add(new SQLParameters("@Session", _general.GetFinancialSession(DateTime.Now)));
                 param.Add(new SQLParameters("@ForType", req.ForTypeOf));
-                param.Add(new SQLParameters("@RelativePersonID",req.RefNo==""?req.RelativePersonId??"": Details.Rows[0]["RelativePersonID"].ToString() ?? string.Empty));
-                param.Add(new SQLParameters("@RelativePersonName",req.RefNo==""?req.RelativePersonName??"": Details.Rows[0]["RelativePersonName"].ToString() ?? string.Empty));
-                param.Add(new SQLParameters("@RelativeDesignation",req.RefNo==""?req.RelativeDesignation??"": Details.Rows[0]["RelativeDesignation"].ToString() ?? string.Empty));
-                param.Add(new SQLParameters("@RelativeDepartment",req.RefNo==""?req.RelativeDepartment??"": Details.Rows[0]["RelativeDepartment"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@RelativePersonID", req.RefNo == "" ? req.RelativePersonId ?? "" : Details.Rows[0]["RelativePersonID"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@RelativePersonName", req.RefNo == "" ? req.RelativePersonName ?? "" : Details.Rows[0]["RelativePersonName"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@RelativeDesignation", req.RefNo == "" ? req.RelativeDesignation ?? "" : Details.Rows[0]["RelativeDesignation"].ToString() ?? string.Empty));
+                param.Add(new SQLParameters("@RelativeDepartment", req.RefNo == "" ? req.RelativeDepartment ?? "" : Details.Rows[0]["RelativeDepartment"].ToString() ?? string.Empty));
                 param.Add(new SQLParameters("@FirmName", req.RefNo == "" ? req.FirmName ?? "" : Details.Rows[0]["FirmName"].ToString() ?? ""));
                 param.Add(new SQLParameters("@FirmPerson", req.RefNo == "" ? req.FirmPerson ?? "" : Details.Rows[0]["FirmPerson"].ToString() ?? string.Empty));
                 param.Add(new SQLParameters("@FirmEmail", req.RefNo == "" ? req.FirmEmail ?? "" : Details.Rows[0]["FirmEmail"].ToString() ?? string.Empty));
@@ -1848,7 +1852,7 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-       
+
 
         public async Task<int> UpdateDeleteStatus(string BillId)
         {
@@ -1911,8 +1915,8 @@ namespace AdvanceAPI.Repository
         }
         public async Task<int> UpdateBill(string EmpCode, string EmpName, AddBillGenerateRequest req, string BillBaseREfNo)
         {
-            try 
-            { 
+            try
+            {
                 DataTable Details = new DataTable();
                 if (req.ForTypeOf == "Advance Bill")
                 {
@@ -2018,11 +2022,11 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
-                param.Add(new SQLParameters("@TransId",TransId));
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_BILL_PRINT_DETAILS, param, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetBillDetails...");
                 throw;
@@ -2032,11 +2036,11 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
-                param.Add(new SQLParameters("@TransId",TransId));
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_IMPREST_BILL_TRANS, param, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetBillDetails...");
                 throw;
@@ -2046,11 +2050,11 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
-                param.Add(new SQLParameters("@TransId",TransId));
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
                 return await _dbOperations.SelectAsync(AdvanceSql.WORK_SHOP_BILLL_DETAILS, param, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetBillDetails...");
                 throw;
@@ -2060,11 +2064,11 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
-                param.Add(new SQLParameters("@TransId",TransId));
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_APPROVAL_AUTH_SUMMARY, param, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetBillDetails...");
                 throw;
@@ -2074,11 +2078,11 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
-                param.Add(new SQLParameters("@TransId",TransId));
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_ISSUED_DETAILS, param, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetBillDetails...");
                 throw;
@@ -2088,11 +2092,11 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                List<SQLParameters> param=new List<SQLParameters>();
+                List<SQLParameters> param = new List<SQLParameters>();
                 param.Add(new SQLParameters("@EmpCode", EmpCode));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_EMPBASIC_DETAILS, param, DBConnections.Advance);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetRelativeContactNo...");
                 throw;
@@ -2162,7 +2166,7 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@TransId", TransId));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_TRANSACTION_DETAILS, param, DBConnections.Advance);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetTransDetails...");
                 throw;
@@ -2176,13 +2180,13 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@TransId", TransId));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_BILL_BASE_DETAILS, param, DBConnections.Advance);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error During BillBaseDetails...");
                 throw;
             }
         }
-        public async Task<DataTable> CheucqAuth(string TransId,string SeqNo)
+        public async Task<DataTable> CheucqAuth(string TransId, string SeqNo)
         {
             try
             {
@@ -2191,7 +2195,7 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@SeqNo", SeqNo));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_BILL_CHEQUE_AUTH, param, DBConnections.Advance);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error During BillBaseDetails...");
                 throw;
@@ -2205,20 +2209,20 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@VendorId", VendorId));
                 return await _dbOperations.SelectAsync(AdvanceSql.GET_SPECIAL_VENDOR, param, DBConnections.Advance);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GEtSpecialVendor...");
                 throw;
-                   
+
             }
         }
         public async Task<DataTable> GetPerson(string campusCode)
         {
             try
             {
-                return await _dbOperations.SelectAsync(AdvanceSql.GET_PERSON_BILL_PERSON.Replace("@Condition", " and CampusCode in (" + (campusCode == "103" ? "101" : campusCode) + ") ORDER BY first_name,deisgnation desc"),DBConnections.Advance);
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_PERSON_BILL_PERSON.Replace("@Condition", " and CampusCode in (" + (campusCode == "103" ? "101" : campusCode) + ") ORDER BY first_name,deisgnation desc"), DBConnections.Advance);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetPerson...");
                 throw;
@@ -2228,9 +2232,9 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                return await _dbOperations.SelectAsync(AdvanceSql.GET_AUTHORITY_FOR_BILL.Replace("@Condition", " and FIND_IN_SET('" + campusCode + "',B.CampusCodes) ORDER BY MyOrder"),DBConnections.Advance);
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_AUTHORITY_FOR_BILL.Replace("@Condition", " and FIND_IN_SET('" + campusCode + "',B.CampusCodes) ORDER BY MyOrder"), DBConnections.Advance);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetBillauth...");
                 throw;
@@ -2240,9 +2244,9 @@ namespace AdvanceAPI.Repository
         {
             try
             {
-                return await _dbOperations.SelectAsync(AdvanceSql.GET_FIRST_SECOND_AUTH.Replace("@Condition", " and CampusCode in (" + (campusCode == "103" ? "101" : campusCode) + ") ORDER BY first_name"),DBConnections.Advance);
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_FIRST_SECOND_AUTH.Replace("@Condition", " and CampusCode in (" + (campusCode == "103" ? "101" : campusCode) + ") ORDER BY first_name"), DBConnections.Advance);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error During GetBillauth...");
                 throw;
@@ -2360,14 +2364,14 @@ namespace AdvanceAPI.Repository
                 {
                     if (mychqcond == "")
                     {
-                        query = $"select * from ((select DISTINCT CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID And B.Type='Bills Approval' {mybillcond} {showcond} And `Session`=@Session And (A.`Status` ='Waiting For Bills Approval' OR IF(A.AmountRemaining>0 And A.Status='Ready To Issue Amount',TRUE,false) ) AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4) UNION (select DISTINCT  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45',CAST(CONCAT('Chq:',IssuedAmount) as CHAR) as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4)) A1 ORDER BY A1.BillExtra4,A1.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                        query = $"select * from ((select DISTINCT CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m-%d-%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m-%d-%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m-%d-%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID And B.Type='Bills Approval' {mybillcond} {showcond} And `Session`=@Session And (A.`Status` ='Waiting For Bills Approval' OR IF(A.AmountRemaining>0 And A.Status='Ready To Issue Amount',TRUE,false) ) AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4) UNION (select DISTINCT  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m-%d-%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m-%d-%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m-%d-%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m-%d-%Y'),'R'),'R') 'Cond45',CAST(CONCAT('Chq:',IssuedAmount) as CHAR) as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4)) A1 ORDER BY A1.BillExtra4,A1.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                         parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                         parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
                     }
                     else
                     {
-                        query = $"select * from ((select DISTINCT  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',IssuedAmount 'Santioned',PaidAmount 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type = 'Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4)) A1 ORDER BY A1.BillExtra4,A1.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                        query = $"select * from ((select DISTINCT  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',IssuedAmount 'Santioned',PaidAmount 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type = 'Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4)) A1 ORDER BY A1.BillExtra4,A1.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                         parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                         parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
@@ -2385,7 +2389,7 @@ namespace AdvanceAPI.Repository
                         parameters.Add(new SQLParameters("@ReferenceNo", getBillApprovalRequest.ReferenceNo));
                     }
 
-                    query = $"select distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID {trcond} And B.Type='Bills Approval' {mybillcond} {showcond} And `Session`=@Session And A.`Status` ='Waiting For Bills Approval' AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                    query = $"select distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID {trcond} And B.Type='Bills Approval' {mybillcond} {showcond} And `Session`=@Session And A.`Status` ='Waiting For Bills Approval' AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                     parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                     parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
@@ -2407,14 +2411,14 @@ namespace AdvanceAPI.Repository
 
                     if (mychqcond == "")
                     {
-                        query = $"select   distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL And A.BillDate is not null And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45',CAST(CONCAT('Chq:',IssuedAmount) as CHAR) as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                        query = $"select   distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL And A.BillDate is not null And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45',CAST(CONCAT('Chq:',IssuedAmount) as CHAR) as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                         parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                         parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
                     }
                     else
                     {
-                        query = $"select  distinct  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',IssuedAmount 'Santioned',PaidAmount 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                        query = $"select  distinct  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',IssuedAmount 'Santioned',PaidAmount 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                         parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                         parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
@@ -2427,14 +2431,14 @@ namespace AdvanceAPI.Repository
 
                     if (mychqcond == "")
                     {
-                        query = $"Select * from ((select distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID {trcond} And B.Type='Bills Approval' {mybillcond} {showcond} And `Session`=@Session And A.`Status` ='Waiting For Bills Approval' AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4) UNION (select   distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45',CAST(CONCAT('Chq:',IssuedAmount) as CHAR) as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4)) A order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                        query = $"Select * from ((select distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID {trcond} And B.Type='Bills Approval' {mybillcond} {showcond} And `Session`=@Session And A.`Status` ='Waiting For Bills Approval' AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4) UNION (select   distinct CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45',CAST(CONCAT('Chq:',IssuedAmount) as CHAR) as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond} {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4)) A order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                         parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                         parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
                     }
                     else
                     {
-                        query = $"select  distinct  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',IssuedAmount 'Santioned',PaidAmount 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond}  {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                        query = $"select  distinct  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(C.IssuedByName ,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID',Type as 'MyType',CAST(B.SequenceNo as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',C.Remark 'Purpose',IssuedAmount 'Santioned',PaidAmount 'Paid',DATE_FORMAT(C.IssuedOn,'%b %d,%Y') 'On','Waiting For Cheque Approval' as  'Status',DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,CONCAT(CAST(CVId as CHAR),'#',CVName,'#',CVSubFirm,'#',CVAddName) as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID'   from bill_base A, approvals_authority B,bill_transaction_issue C where B.TransactionID=C.TransactionID {trcond} And B.SequenceNo=C.SequenceID And A.TransactionID=B.TransactionID {mychqcond}  {showcond} And B.Type ='Bills Approval -> Cheque Approval' And `Session`=@Session And C.SignedOn is NULL AND FIND_IN_SET(ForType,@ForTypes)  order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                         parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                         parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
@@ -2452,7 +2456,7 @@ namespace AdvanceAPI.Repository
                         parameters.Add(new SQLParameters("@ReferenceNo", getBillApprovalRequest.ReferenceNo));
                     }
 
-                    query = $"select distinct  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%m/%d/%Y'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID {trcond} And B.Type='Bills Approval' {mybillcond}  {showcond} And `Session`=@Session And A.AmountRemaining>0 And A.Status='Ready To Issue Amount' AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
+                    query = $"select distinct  CONCAT(IF(DATE_FORMAT(A.Col2,'%d %b, %y') is Not NULL And A.VendorID!=827,CONCAT('App Dt :',DATE_FORMAT(A.Col2,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra4,'%d %b, %y') is Not NULL  And A.BillDate is not null  And A.BillExtra4!=A.BillDate  And A.VendorID!=827,CONCAT('Test Dt :',DATE_FORMAT(A.BillExtra4,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillExtra1,'%d %b, %y') is Not NULL,CONCAT('Exp Dt :',DATE_FORMAT(A.BillExtra1,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.BillDate,'%d %b, %y') is Not NULL,CONCAT('Bill Dt :',DATE_FORMAT(A.BillDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.IssuedOn,'%d %b, %y') is Not NULL,CONCAT('Upl Dt :',DATE_FORMAT(A.IssuedOn,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y') is Not NULL,CONCAT('Dept Dt :',DATE_FORMAT(A.DepartmentApprovalDate,'%d %b, %y'),'$'),''),IF(DATE_FORMAT(A.ApprovedOn,'%d %b, %y') is Not NULL,CONCAT('Pass Dt :',DATE_FORMAT(A.ApprovedOn,'%d %b, %y'),'$'),''),IF(A.Col4 is Not NULL And A.Col4!='---'  And WEEKDAY(A.Col4) is not null,CONCAT('Pub. Dt :',DATE_FORMAT(A.Col4,'%d %b, %y'),'$'),'')) 'INI',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'IssuedName',CONCAT(A.IssuedName,' (',CAST(DATE_FORMAT(A.IssuedOn,'%d %b, %y') as CHAR),')') 'BillNameBy',ForType,A.TransactionID 'TransID','Bills Approval' as 'MyType',CAST('---' as CHAR) as 'SequenceID',RelativePersonName 'Initiated By',if(A.Col3 is NULL or A.Col3='----',CONCAT(FirmName,'#',RelativePersonName),CONCAT(FirmName,'( ',A.Col3,' )','#',RelativePersonName)) 'Firm Name',Remark 'Purpose',AmountRequired 'Santioned',AmountPaid 'Paid',DATE_FORMAT(IssuedOn,'%b %d,%Y') 'On',A.Status,DATE_FORMAT(ADDDATE(AssignedOn,INTERVAL `Limit` DAY),'%m/%d/%Y') 'Till',A.Col2 as 'MyIssue',A.TransactionID,IFNULL(DATE_FORMAT(if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,IFNULL(A.BillDate,A.Col2) ),'%m/%d/%Y'),'') 'MyINICheck',IFNULL(DATE_FORMAT(A.IssuedOn,'%m/%d/%Y'),'') 'MyEntryCheck',(Select DISTINCT IsSpecial from specialvendors M where M.VendorID=A.VendorID) 'IsSpecial',CashDiscount,(A.AmountRequired-A.AmountPaid) 'Bal',if(A.BillDate is not null ,if(A.CashDiscount=0,DATE_FORMAT(ADDDATE(A.BillDate,INTERVAL 45 DAY) ,'%Y-%m-%d'),'R'),'R') 'Cond45','' as 'CheqAmt',(A.AmountRequired+CashDiscount) 'TotBill',A.BillExtra3,A.BillExtra6,REPLACE(A.BillExtra2,'$','\n') 'ShowMeNow',if(A.BillDate is not NULL And A.BillExtra4 is not NULL And A.BillDate!=A.BillExtra4,A.BillExtra4,A.Col2 ) as 'BillExtra4', A.Col5,A.Col1,'' as 'ChequeVendor',A.VendorID as 'BVId',A.RelativePersonID as 'BRPID' from bill_base A, approvals_authority B where A.TransactionID=B.TransactionID {trcond} And B.Type='Bills Approval' {mybillcond}  {showcond} And `Session`=@Session And A.AmountRemaining>0 And A.Status='Ready To Issue Amount' AND FIND_IN_SET(ForType,@ForTypes) order by A.BillExtra4,A.TransactionID LIMIT @LimitItems OFFSET @OffSetItems";
 
                     parameters.Add(new SQLParameters("@Session", getBillApprovalRequest?.Session ?? string.Empty));
                     parameters.Add(new SQLParameters("@ForTypes", getBillApprovalRequest?.Type ?? string.Empty));
@@ -2925,13 +2929,13 @@ namespace AdvanceAPI.Repository
                 param.Add(new SQLParameters("@TransactionNo", req.ChequeNo ?? ""));
                 param.Add(new SQLParameters("@IssuedOn", req.IssuedDate ?? ""));
                 param.Add(new SQLParameters("@IssuedBy", EmpCode));
-                param.Add(new SQLParameters("@myupto",  req.BillUpto == ""?null:req.BillUpto));
+                param.Add(new SQLParameters("@myupto", req.BillUpto == "" ? null : req.BillUpto));
                 param.Add(new SQLParameters("@Other", req.OtherType));
                 param.Add(new SQLParameters("@TaxOther", req.OtherAmount ?? ""));
                 param.Add(new SQLParameters("@MessageRequired", req.Message ?? ""));
                 param.Add(new SQLParameters("@MessageDay", req.RepeatDay ?? ""));
                 param.Add(new SQLParameters("@MessageTo", req.MessageTo ?? ""));
-               
+
                 param.Add(new SQLParameters("@PaymentAsset", req.PaymentAsset ?? ""));
                 param.Add(new SQLParameters("@Col9", sslt[0]));
                 param.Add(new SQLParameters("@Col10", sslt[1]));
@@ -2954,5 +2958,571 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+        public async Task<int> UploadChequeApproval(string EmpCode, string EmpName, SaveCheDetailsRequest req)
+        {
+            try
+            {
+                ///insert into approvals_authority (Type,TransactionID,SequenceNo,ApprovalNo,EmployeeID,EmployeeDetails,AssignedOn,`Limit`,`Status`) Values ('Bills Approval -> Cheque Approval',@TransId,@SeqNo,@Count,@AppId,@AppText,now(),(Select `Limit` from mylimits where LimitFor='Bills Approval -> Cheque Approval' And StepNo=1),'Pending')
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpCode", EmpCode));
+                param.Add(new SQLParameters("@EmpName", EmpName));
+                string[] AppIds = req.ApprovalAuthValue?.Split(",");
+                string[] AppTexts = req.ApprovalAuthText?.Split(",");
+                int count = 1;
+
+                for (int i = 0; i < AppIds.Length; i++)
+                {
+                    param.Add(new SQLParameters("@TransId", req.TransId ?? ""));
+                    param.Add(new SQLParameters("@SeqNo", req.SequenceId ?? ""));
+                    param.Add(new SQLParameters("@Count", count));
+                    param.Add(new SQLParameters("@AppId", AppIds[i]));
+                    param.Add(new SQLParameters("@AppText", AppTexts[i] ?? ""));
+
+                    int ins = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.INS_CHEQUE_AUTH, param, DBConnections.Advance);
+                    count++;
+                    param.Clear();
+                }
+
+                return count;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UploadChequeApproval...");
+                throw;
+            }
+        }
+        public async Task<int> SaveFileCheque(string EmpCode, string EmpName, SaveCheDetailsRequest req)
+        {
+            try
+            {
+                //insert into bill_transaction_issue_file(TransactionID,SequenceID,FileType,UploadedOn,UploadedBy,UploadedFrom) Values(@TransId,@SeqNo,@DcType,NOW(),@EmpCode,@IpAddress)
+                if (req.PdfFile != null && req.PdfFile.Length > 0)
+                {
+                    List<SQLParameters> param = new List<SQLParameters>();
+                    param.Add(new SQLParameters("@TransId", req.TransId ?? ""));
+                    param.Add(new SQLParameters("@SeqNo", req.SequenceId ?? ""));
+                    param.Add(new SQLParameters("@DcType", "PDF"));
+                    param.Add(new SQLParameters("@EmpCode", EmpCode));
+                    param.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
+                    await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.INSERT_CHEQUE_BILL_ISSUE_FILE, param, DBConnections.Advance);
+                }
+                if (req.ExcelFile != null && req.ExcelFile.Length > 0)
+                {
+                    List<SQLParameters> param = new List<SQLParameters>();
+                    param.Add(new SQLParameters("@TransId", req.TransId ?? ""));
+                    param.Add(new SQLParameters("@SeqNo", req.SequenceId ?? ""));
+                    param.Add(new SQLParameters("@DcType", "EXCEL"));
+                    param.Add(new SQLParameters("@EmpCode", EmpCode));
+                    param.Add(new SQLParameters("@IpAddress", _general.GetIpAddress()));
+                    await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.INSERT_CHEQUE_BILL_ISSUE_FILE, param, DBConnections.Advance);
+                }
+
+                return 1;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During SaveFileCheque...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetOtherApproval(string EmpCode, string AddEmpCode, string TransId, string SeqId)
+        {
+            try
+            {
+
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters("@EmpCode", EmpCode),
+                    new SQLParameters("@AddEmpCode", AddEmpCode),
+                    new SQLParameters("@TransId", TransId),
+                    new SQLParameters("@SeqId", SeqId),
+                };
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_OTHER_TRANSACTION_FOR_APPROVAL, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetOtherApproval...");
+                throw;
+            }
+        }
+
+        public async Task<int> UpdateApprovalAuthorityWithOutSeqNo(string EmpCode, string EmpAddCode, string EmpName, string TransId, string Designation)
+        {
+            try
+            {
+                //update approvals_authority set `Status`='Approved', DoneOn=now(), `Comment`='Approved & Proceed',EmployeeID=@EmpCode,EmployeeDetails=@EmpName,Col2=@Designation where TransactionID=@TransId And Type='Bills Approval' And (EmployeeID=@EmpCode or EmployeeID=@EmpAddCode)
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpCode", EmpCode));
+                param.Add(new SQLParameters("@EmpName", EmpName));
+                param.Add(new SQLParameters("@Designation", Designation));
+                param.Add(new SQLParameters("@EmpAddCode", EmpAddCode));
+                param.Add(new SQLParameters("@TransId", TransId));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPADATE_AUTHORITY_WITHOUT_SEQ, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateApprovalAuthorityWithOutSeqNo...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetPendingAuthority(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters("@TransId",TransId)
+                };
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_PENDING_AUTHORITY_DETAILS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetPendingAuthority...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateBillStatus(string EmpName, string Reason, string TransId)
+        {
+            string Remark = "";
+            if (!string.IsNullOrEmpty(Reason))
+            {
+                Remark = " ,BillExtra7=CONCAT(IF(BillExtra7 is NULL,'',CONCAT(BillExtra7,'@')),'Approved By : " + EmpName + "$Reason : " + Reason.Trim().ToUpper() + "')";
+            }
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_BILL_STATUS.Replace("@Condition", Remark), param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateBillStatus...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateBillReason(string EmpName, string Reason, string TransId)
+        {
+            string Remark = "";
+            if (!string.IsNullOrEmpty(Reason))
+            {
+                Remark = " ,BillExtra7=CONCAT(IF(BillExtra7 is NULL,'',CONCAT(BillExtra7,'@')),'Approved By : " + EmpName + "$Reason : " + Reason.Trim().ToUpper() + "')";
+            }
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_BILL_BASE_REMARK.Replace("@Condition",Remark), param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateBillStatus...");
+                throw;
+            }
+        }
+        public async Task<int> ApprovalAuthWithSeqNo(string EmpCode, string EmpAddCode, string EmpName, string Designation, string TransId, string SeqNo)
+        {
+            try
+            {
+                //update approvals_authority set `Status`='Approved', DoneOn=now(), `Comment`='Approved & Proceed',EmployeeID=@EmpCode,EmployeeDetails=@EmpName,Col2=@Designation where TransactionID=@TransId And SequenceNo=@SeqNo And Type='Bills Approval -> Cheque Approval' And (EmployeeID=@EmpCode or EmployeeID=@EmpAddCode)
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpCode", EmpCode));
+                param.Add(new SQLParameters("@EmpName", EmpName));
+                param.Add(new SQLParameters("@Designation", Designation));
+                param.Add(new SQLParameters("@TransId", TransId));
+                param.Add(new SQLParameters("@SeqNo", SeqNo));
+                param.Add(new SQLParameters("@EmpAddCode", EmpAddCode));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_AUTHORITY_WITH_SEQ, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During ApprovalAuthWithSeqNo...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetCequePendingAuthority(string TransId, string SeqNo)
+        {
+            //select * from approvals_authority where TransactionID=@TransId And SequenceNo=@SeqNo  And Type='Bills Approval -> Cheque Approval' And `Status` in ('Pending')
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters("@TransId",TransId),
+                    new SQLParameters("@SeqNo",SeqNo)
+                };
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_BILL_CHEQUE_STATUS, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetCequePendingAuthority...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetSmsDetails(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters("@TransId",TransId)
+                };
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_SMS_CAT, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetSmsDetails...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateTransactionIssued(string Sms, string TransId, string SeqNo, string Remark, string EmpName)
+        {
+            try
+            {
+                //update bill_transaction_issue set SignedBy=@Sms,SignedOn=now(),BillUpto=if(BillUpto is NULL,DATE_ADD(now(),INTERVAL (Select Distinct `Limit` from mylimits where LimitFor='Bill Upto') DAY),BillUpto) @Condition where TransactionID=@TransId And SequenceID=@SeqId"
+                string Cond = "";
+                if (!string.IsNullOrEmpty(Remark))
+                {
+                    Cond = ",ExtraCol6=CONCAT(IF(ExtraCol6 is NULL,'',CONCAT(ExtraCol6,'@')),'Approved By : " + EmpName + "$Reason : " + Remark.Trim().ToUpper() + "')";
+                }
+
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@Sms", Sms));
+                param.Add(new SQLParameters("@TransId", TransId));
+                param.Add(new SQLParameters("@SeqId", SeqNo));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_BILL_TRANSACTION_ISSUE_CHEQUE_DETAILS.Replace("@Condition", Cond), param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateTransactionIssued...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateScheduled(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.GET_SCHEDULED_BILLS, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateScheduled...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateBillTransactionIssuedTblAllAuthApproved(string EmpName, string Reason, string TransId, string SeqId)
+        {
+            try
+            {
+                string str = "update bill_transaction_issue set ExtraCol6=CONCAT(IF(ExtraCol6 is NULL,'',CONCAT(ExtraCol6,'@')),'Approved By : " + EmpName + "$Reason : " + Reason.Trim().ToUpper() + "') where TransactionID=@TransId And SequenceID=@SeqId";
+
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
+                param.Add(new SQLParameters("@SeqId", SeqId));
+                return await _dbOperations.DeleteInsertUpdateAsync(str, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateBillTransactionIssuedTblAllAuthApproved...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetPendingRejectedRecord(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters("@TransId", TransId),
+                };
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_PENDING_REJECTED_RECORD, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetBillApprovalAdvanceBillTransactionIssueChequeAllAuthApproved...");
+                throw;
+            }
+
+        }
+        public async Task<int> UpdateREadyToIssueAmount(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_READY_TO_ISSUE_AMOUNT, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateREadyToIssueAmount...");
+                throw;
+            }
+        }
+        public async Task<int> ApproveApplication(string EmpCode, string TransId)
+        {
+            try
+            {
+                string Query = AdvanceSql.GET_BILL_APPLICATION_REPORT;
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters("@BillId", TransId),
+                    new SQLParameters("@EmpCode", EmpCode),
+                };
+                DataTable Main = await _dbOperations.SelectAsync(Query, parameters, DBConnections.Advance);
+                if (Main.Rows.Count > 0)
+                {
+                    string qry = "";
+                    for (int i = 0; i < Main.Rows.Count; i++)
+                    {
+                        if (Main.Rows[i]["VerifiedByID"].ToString() == EmpCode && Main.Rows[i]["VerifiedStatus"].ToString() == "Pending")
+                        {
+                            qry = qry + "update advances.bill_applications_new set VerifiedStatus='Approved',VerifiedOn=now(),VerifiedFrom='" + _general.GetIpAddress() + "' where Id=" + Main.Rows[i]["Id"].ToString() + ";";
+                        }
+                        if (Main.Rows[i]["ApprovedByID"].ToString() == EmpCode && Main.Rows[i]["ApprovedStatus"].ToString() == "Pending")
+                        {
+                            qry = qry + "update advances.bill_applications_new set ApprovedStatus='Approved',ApprovedOn=now(),ApprovedFrom='" + _general.GetIpAddress() + "' where Id=" + Main.Rows[i]["Id"].ToString() + ";";
+                        }
+                    }
+                    qry = qry + "update advances.bill_applications_new set `Status`='Approved' where BillId=" + TransId + " And `Status`='Pending' And VerifiedStatus='Approved' And ApprovedStatus='Approved'";
+                    //MyConnections.DeleteInsertUpdate(qry, "Advance");
+                    int ins = await _dbOperations.DeleteInsertUpdateAsync(qry, parameters, DBConnections.Advance);
+                }
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During ApproveApplication...");
+                throw;
+            }
+        }
+
+        public async Task<int> UpdateRejectRecord(string EmpCode, string EmpName, string EmpAddCode, string Designation, string TransId)
+        {
+
+            List<SQLParameters> param = new List<SQLParameters>();
+            param.Add(new SQLParameters("@EmpCode", EmpCode));
+            param.Add(new SQLParameters("@EmpAddCode", EmpAddCode));
+            param.Add(new SQLParameters("@EmpName", EmpName));
+            param.Add(new SQLParameters("@TransId", TransId));
+            param.Add(new SQLParameters("@Designation", Designation));
+            try
+            {
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_APPROVAL_AUTHORITY_REJECT, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateRejectRecord...");
+                throw;
+            }
+
+        }
+        public async Task<int> UpdateBillBaseReject(string TransId, string Reason, string EmpName)
+        {
+            try
+            {
+                string Req = "update bill_base set `Status`='Bill Rejected',BillExtra7='Rejected By : " + EmpName + " ( on " + DateTime.Now.ToString("dd.MM.yyyy hh:mm:ss tt") + ")$Reason : " + Reason.Trim().ToUpper() + "' where TransactionID=@TransId";
+                List<SQLParameters> param = new List<SQLParameters>
+                {
+                    new SQLParameters("@TransId",TransId)
+                };
+                return await _dbOperations.DeleteInsertUpdateAsync(Req, param, DBConnections.Advance);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateBillBaseReject...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateAppAuthWithSeq(string EmpCode, string EmpAddCode, string Designation, string EmpName, string TransId, string SeqNo)
+        {
+            //update approvals_authority set `Status`='Rejected', DoneOn=now(), `Comment`='Rejected & Cant Proceed',EmployeeID=@EmpCode,EmployeeDetails=@EmpName,Col2=@Designation where TransactionID=@TransId  And SequenceNo=@SeqNo And Type='Bills Approval -> Cheque Approval' And  (EmployeeID=@EmpCode or EmployeeID=@EmpAddCode)
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>()
+                {
+                    new SQLParameters("@EmpCode",EmpCode),
+                    new SQLParameters("@EmpAddCode",EmpAddCode),
+                    new SQLParameters("@TransId",TransId),
+                    new SQLParameters("@Designation",Designation),
+                    new SQLParameters("@SeqNo",SeqNo)
+                };
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_APPROVAL_AUTHORITY_REJECT_SEQ_NO, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateAppAuthWithSeq...");
+                throw;
+            }
+        }
+        public async Task<int> UpdateBillTransactionIssueReject(string EmpCode, string TransId, string SeqNo, string Reason, string EmpName)
+        {
+            try
+            {
+                //update bill_transaction_issue set Col3='Rejected',ExtraCol6='Rejected By : @EmpName ( on " + DateTime.Now.ToString("dd.MM.yyyy hh:mm:ss tt") + ")$Reason : @Reason' where TransactionID=@TransId  And SequenceID=@SeqId
+                List<SQLParameters> param = new List<SQLParameters>
+                {
+                    new SQLParameters("@SeqId",SeqNo),
+                    new SQLParameters("@TransId",TransId),
+                };
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.REJECT_BILL_TRANSACTION_ISSUE.Replace("@On", DateTime.Now.ToString("dd.MM.yyyy hh: mm:ss tt")).Replace("@Reason", Reason).Replace("@EmpName", EmpName), param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateBillTransactionIssueReject...");
+                throw;
+            }
+        }
+
+        public async Task<int> UpdateBillRejectStatus(string TransId)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
+                DataTable dt = await _dbOperations.SelectAsync(AdvanceSql.GET_REJECT_AUTH, param, DBConnections.Advance);
+                if (dt.Rows.Count <= 0)
+                {
+                    int Update = await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_READY_TO_ISSUE_AMOUNT, param, DBConnections.Advance);
+                }
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateBillRejectStatus...");
+                throw;
+            }
+        }
+        public async Task<int> BillAmountUpdate(string TransId, string SeqNo, string EmpName)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>
+                {
+                    new SQLParameters("@TransId",TransId),
+                    new SQLParameters("@SeqId",SeqNo),
+                    new SQLParameters("@EmpName",EmpName)
+                };
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_BILL_BASE_AMOUNT_REJECTION_CASE, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During BillAmountUpdate...");
+                throw;
+            }
+        }
+
+        public async Task<int> InsertInBackUpDeleteCheque(string EmpName, string TransId, string SeqNo)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpName", EmpName));
+                param.Add(new SQLParameters("@TransId", TransId));
+                param.Add(new SQLParameters("@SeqNo", SeqNo));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.TRANSACTION_BILL_TRANSACTION_BACKUP, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During InsertInBackUpDeleteCheque...");
+                throw;
+            }
+        }
+        public async Task<int> DeleteChequeTransaction(string TransId, string SeqNo)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@TransId", TransId));
+                param.Add(new SQLParameters("@SeqNo", SeqNo));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.DELETE_FROM_BILL_TRANSACTION_ISSUE, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During DeleteChequeTransaction...");
+                throw;
+            }
+
+        }
+        public async Task<int> UpdateAmount(string EmpName, string TransId, string SeqNo)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpName", EmpName));
+                param.Add(new SQLParameters("@TransNo", TransId));
+                param.Add(new SQLParameters("@Seqno", SeqNo));
+                return await _dbOperations.DeleteInsertUpdateAsync(AdvanceSql.UPDATE_BILL_BASE_Before_CHEQUE_DELETE, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UpdateAmount...");
+                throw;
+            }
+        }
+
+        public async Task<DataTable> Purchasetime(string RefNo)
+        {
+            List<SQLParameters> parameters = new List<SQLParameters>
+            {
+                new SQLParameters("@RefNo", RefNo)
+            };
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_PURCHASE_TIMELINE, parameters, DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error During Purchasetime...");
+                throw;
+            }
+        }
+        public async Task<DataTable> AdvanceSummary(string RefNo)
+        {
+            List<SQLParameters> parameters = new List<SQLParameters>
+            {
+                new SQLParameters("@RefNo", RefNo)
+            };
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_TIMELINE, parameters, DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error During Purchasetime...");
+                throw;
+            }
+        }
+        public async Task<DataTable> BillSummary(string Ids)
+        {
+          
+            try
+            {
+                string str = "SELECT SUM(AmountRequired) 'Amount',GROUP_CONCAT(TransactionID) 'TransId',COUNT(TransactionID) 'Count' FROM bill_base WHERE FIND_IN_SET(TransactionID,'" + Ids + "') AND `Status`!='Bill Rejected';\r\n";
+                return await _dbOperations.SelectAsync(str,  DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error During Purchasetime...");
+                throw;
+            }
+        }
+        public async Task<DataTable> ChequeDetails(string Ids)
+        {
+            try
+            {
+                string query = "SELECT GROUP_CONCAT(TransactionID) 'TransId',SUM(PaidAmount) 'Amount',COUNT(TransactionID) 'Count' FROM bill_transaction_issue WHERE FIND_IN_SET(TransactionID,'" + Ids + "');\r\n";
+                return await _dbOperations.SelectAsync(query, DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error During ChequeDetails...");
+                throw;
+            }
+        }
+
+
     }
+
 }

@@ -8,6 +8,7 @@
         public string? AdditionalName { get; internal set; }
         public string? Purpose { get; internal set; }
         public string? FirmName { get; internal set; }
+        public string? VendorId { get; internal set; }
         public string? Sub_Firm { get; internal set; }
         public bool EnableBillUpto { get; set; }
         public bool CanMessageSend { get; set; }
@@ -35,5 +36,6 @@
         public string? Status { get; set; }
         public string? EmpDetails { get; set; }
         public string? SignedOn { get; set; }
+        public bool CanDelete { get; set; }
     }
 }
