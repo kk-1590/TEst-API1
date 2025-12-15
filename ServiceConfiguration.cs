@@ -27,6 +27,8 @@ using AdvanceAPI.IServices.Advance;
 using AdvanceAPI.Services.Advance;
 using AdvanceAPI.IServices.FirmPaideport;
 using AdvanceAPI.Services.FirmPaid;
+using AdvanceAPI.IServices.Media;
+using AdvanceAPI.Services.Media;
 
 namespace AdvanceAPI
 {
@@ -106,7 +108,7 @@ namespace AdvanceAPI
 
             // Add Swagger services
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<Logger>(new LoggerConfiguration().CreateLogger());
+            services.AddSingleton<Logger>(new LoggerConfiguration().WriteTo.Seq("http://localhost:5341").CreateLogger());
 
 
 
@@ -129,6 +131,7 @@ namespace AdvanceAPI
             services.AddScoped<IBudgetV2Repository, BudgetV2Repository>();
             services.AddScoped<IAdvanceRepository, AdvanceRepository>();
             services.AddScoped<IFirmPaidRepository, FirmPaidRepository>();
+            services.AddScoped<IMediaRepository, MediaRepository>();
 
             //Services Setup
             services.AddScoped<IGeneral, General>();
@@ -141,6 +144,7 @@ namespace AdvanceAPI
             services.AddScoped<IBudgetV2, BudgetV2Service>();
             services.AddScoped<IAdvanceService, AdvanceService>();
             services.AddScoped<IFirmPaidServices, FirmPaidService>();
+            services.AddScoped<IMediaService, MediaService>();
         }
 
     }

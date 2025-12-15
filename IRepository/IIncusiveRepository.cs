@@ -30,5 +30,6 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetEmployeeDetails(string? employeeCode);
         Task<DataTable> GetItemDetailsByItemCode(string? itemCode);
         Task<DataTable> GetEmployeeEncryptedId(string? employeeId);
+        Task<DataTable> GetCampusNameByCampusCode(string? campusCode);
     }
 }

@@ -309,5 +309,71 @@ namespace AdvanceAPI.Services
             }
             return clearText;
         }
+
+        public async Task UploadFile(IFormFile file, string filePath, string fileName)
+        {
+            try
+            {
+                if (file == null)
+                {
+                    throw new ArgumentNullException(nameof(file), "File cannot be null.");
+                }
+                if (string.IsNullOrWhiteSpace(filePath))
+                {
+                    throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
+                }
+                if (string.IsNullOrWhiteSpace(fileName))
+                {
+                    throw new ArgumentException("File name cannot be null or whitespace.", nameof(fileName));
+                }
+
+                if (!Directory.Exists(filePath))
+                {
+                    Directory.CreateDirectory(filePath);
+                }
+
+                var fullPath = Path.Combine(filePath, fileName);
+
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                }
+
+                using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    await file.CopyToAsync(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During UploadFile. Parameters: FilePath: {FilePath}, FileName: {FileName}", filePath, fileName);
+                throw;
+            }
+        }
+
+        public async Task DeleteFile(string filePath, string fileName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(filePath))
+                {
+                    throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
+                }
+                if (string.IsNullOrWhiteSpace(fileName))
+                {
+                    throw new ArgumentException("File name cannot be null or whitespace.", nameof(fileName));
+                }
+                var fullPath = Path.Combine(filePath, fileName);
+                if (File.Exists(fullPath))
+                {
+                    await Task.Run(() => File.Delete(fullPath));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During DeleteFile. Parameters: FilePath: {FilePath}, FileName: {FileName}", filePath, fileName);
+                throw;
+            }
+        }
     }
 }

@@ -446,5 +446,23 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+
+        public async Task<DataTable> GetCampusNameByCampusCode(string? campusCode)
+        {
+            try
+            {
+                var parameters = new List<SQLParameters>()
+                {
+                    new SQLParameters("@CampusCode", campusCode ?? string.Empty),
+                };
+
+                return await _dbContext.SelectAsync(InclusiveSql.GET_CAMPUS_NAME_BY_CAMPUS_CODE, parameters, DBConnections.Salary);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during GetCampusNameByCampusCode.");
+                throw;
+            }
+        }
     }
 }

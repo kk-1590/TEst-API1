@@ -522,5 +522,20 @@ namespace AdvanceAPI.Services.Inclusive
                 }
             }
         }
+
+        public async Task<string> GetCampusNameByCampusCode(string? campusCode)
+        {
+            using (DataTable dtCampusName = await _inclusive.GetCampusNameByCampusCode(campusCode))
+            {
+                if (dtCampusName.Rows.Count > 0)
+                {
+                    return dtCampusName.Rows[0]["CampusName"].ToString() ?? string.Empty;
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+        }
     }
 }

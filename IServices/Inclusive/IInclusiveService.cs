@@ -28,5 +28,6 @@ namespace AdvanceAPI.IServices.Inclusive
         Task<EmployeeDetails> GetEmployeeDetailsByEmployeeCode(string? employeeCode);
         Task<ItemDetails> GetItemDetailsByItemCode(string? itemCode);
         Task<string> GetEmployeePhotoUrl(string? employeeId);
+        Task<string> GetCampusNameByCampusCode(string? campusCode);
     }
 }

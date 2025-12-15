@@ -26,5 +26,7 @@
         string Encrypt(string clearText);
         string EncryptWithoutHour(string clearText);
 
+        Task UploadFile(IFormFile file, string filePath, string fileName);
+        Task DeleteFile(string filePath, string fileName);
     }
 }

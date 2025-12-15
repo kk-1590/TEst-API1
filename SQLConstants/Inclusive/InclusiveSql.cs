@@ -52,5 +52,7 @@
         public const string GET_ITEM_DETAILS_BY_ITEM_CODE = "SELECT ItemCode,ItemName,Make,Size,Unit from purchase.itemregister where ItemCode=@ItemCode;";
 
         public const string GET_EMPLOYEE_ENCRYPTED_ID = "SELECT EncID FROM salary_management.`emp_master` where employee_code=@EmployeeCode;";
+
+        public const string GET_CAMPUS_NAME_BY_CAMPUS_CODE = "SELECT CampusName FROM gla_student_management.campus_master WHERE CampusCode=@CampusCode;";
     }
 }
