@@ -146,7 +146,6 @@ namespace AdvanceAPI
             services.AddScoped<IFirmPaidServices, FirmPaidService>();
             services.AddScoped<IMediaService, MediaService>();
         }
-
     }
 
 }

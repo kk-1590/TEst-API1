@@ -3478,7 +3478,7 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-        public async Task<DataTable> AdvanceSummary(string RefNo)
+        public async Task<DataTable> AdvanceSummary(string RefNo, string Type)
         {
             List<SQLParameters> parameters = new List<SQLParameters>
             {
@@ -3486,7 +3486,15 @@ namespace AdvanceAPI.Repository
             };
             try
             {
-                return await _dbOperations.SelectAsync(AdvanceSql.GET_ADVANCE_TIMELINE, parameters, DBConnections.Advance);
+                string str= "";
+                if (Type != "Advance")
+                {
+                    str = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE SUBSTRING_INDEX(PExtra4,'#',1)=@RefNo and `Status`!='Rejected' AND `Status`!='Deleted'";
+                }
+                else
+                    str = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE ReferenceNo=@RefNo and `Status`!='Rejected' AND `Status`!='Deleted'";
+                
+                return await _dbOperations.SelectAsync(str, parameters, DBConnections.Advance);
             }
             catch(Exception ex)
             {
@@ -3499,7 +3507,7 @@ namespace AdvanceAPI.Repository
           
             try
             {
-                string str = "SELECT SUM(AmountRequired) 'Amount',GROUP_CONCAT(TransactionID) 'TransId',COUNT(TransactionID) 'Count' FROM bill_base WHERE FIND_IN_SET(TransactionID,'" + Ids + "') AND `Status`!='Bill Rejected';\r\n";
+                string str = "SELECT SUM(AmountRequired) 'Amount',GROUP_CONCAT(TransactionID) 'TransId',COUNT(TransactionID) 'Count',SUM(AmountPaid) 'IssuedAmount' FROM bill_base WHERE FIND_IN_SET(TransactionID,'" + Ids + "') AND `Status`!='Bill Rejected';\r\n";
                 return await _dbOperations.SelectAsync(str,  DBConnections.Advance);
             }
             catch(Exception ex)
@@ -3521,8 +3529,31 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-
-
+        public async Task<DataTable> BillDetaild(string Ids)
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_BILL_DETAILS.Replace("@Ids", Ids), DBConnections.Advance);
+                
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "Error During BillDetaild...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetAuthority(string strId)
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_APPROVAL_AUTHORITY_BILL.Replace("@TransId", strId), DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetAuthority...");
+                throw;
+            }
+        }
     }
 
 }

@@ -2,6 +2,7 @@
 using AdvanceAPI.DTO.Advance;
 using AdvanceAPI.DTO.Advance.Bill;
 using AdvanceAPI.DTO.Advance.BillApproval;
+using AdvanceAPI.DTO.FirmPaidDetails.ApplicationReport;
 using AdvanceAPI.IServices.Advance;
 using AdvanceAPI.IServices.VenderPriceComp;
 using Microsoft.AspNetCore.Authorization;
@@ -1259,12 +1260,11 @@ namespace AdvanceAPI.Controllers
             }
         }
         [HttpGet]
-        [Route("get-timeline/{RefNo}")]
-        public async Task<IActionResult> GetTimeLine([FromRoute]string RefNo)
+        [Route("get-timeline/{RefNo}/{Type}")]
+        public async Task<IActionResult> GetTimeLine([FromRoute]string RefNo, [FromRoute]string Type)
         {
             try
             {
-               
                 string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 string? EmpName = User.FindFirstValue(ClaimTypes.Name);
                 string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
@@ -1273,16 +1273,42 @@ namespace AdvanceAPI.Controllers
                 {
                     return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
                 }//Task<ApiResponse> GetBillDetails(string TransId,string EmpName)
-                ApiResponse response = await _advanceService.GetTimeLineDetails(RefNo);
+                ApiResponse response = await _advanceService.GetTimeLineDetails(RefNo,Type);
                 return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                _logger.LogError(e.Message, $"bill-Reject");
+                _logger.LogError(e.Message, $"get-timeline");
                 throw;
             }
         }
+        //[HttpPost]
+        //[Route("get-bill-details")]
+        //public async Task<IActionResult> GetBillDetais()
+        //{
+        //    try
+        //    {
+        //        string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //        string? EmpName = User.FindFirstValue(ClaimTypes.Name);
+        //        string? EmpType = User.FindFirstValue(ClaimTypes.Authentication);
+        //        string? AddEmpCode = User.FindFirstValue(ClaimTypes.AuthorizationDecision);
+        //        if (string.IsNullOrEmpty(employeeId))
+        //        {
+        //            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+        //        }//Task<ApiResponse> GetBillDetails(string TransId,string EmpName)
+        //        ApiResponse response = await _advanceService.GetTimeLineDetails(RefNo,Type);
+        //        return Ok(response.Status == StatusCodes.Status200OK ? response : BadRequest(response));
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine(e);
+        //        _logger.LogError(e.Message, $"get-timeline");
+        //        throw;
+        //    }
+        //}
         
+        
+
     }
 }

@@ -174,9 +174,11 @@ namespace AdvanceAPI.IRepository
         Task<int> DeleteChequeTransaction(string TransId, string SeqNo);
         Task<int> UpdateAmount(string EmpName, string TransId, string SeqNo);
         Task<DataTable> Purchasetime(string RefNo);
-        Task<DataTable> AdvanceSummary(string RefNo);
+        Task<DataTable> AdvanceSummary(string RefNo,string Type);
         Task<DataTable> BillSummary(string Ids);
         Task<DataTable> ChequeDetails(string Ids);
+        Task<DataTable> BillDetaild(string Ids);
+        Task<DataTable> GetAuthority(string strId);
 
     }
 }

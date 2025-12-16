@@ -287,8 +287,10 @@ namespace AdvanceAPI.SQLConstants.Advance
         public const string DELETE_FROM_BILL_TRANSACTION_ISSUE="delete from bill_transaction_issue where TransactionID=@TransId And SequenceID=@SeqNo";
         public const string UPDATE_BILL_BASE_Before_CHEQUE_DELETE= "update bill_base A,bill_transaction_issue B set AmountPaid=AmountPaid-B.PaidAmount,AmountRemaining=AmountRemaining+B.PaidAmount,LastUpdatedOn=now(),LastUpdatedBy=@EmpName \r\nwhere A.TransactionID=B.TransactionID AND B.TransactionID=@TransNo AND SequenceID=@SeqNo";
 
-        public const string GET_PURCHASE_TIMELINE = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM purchaseapprovalsummary WHERE ReferenceNo=@RefNo;\r\n";
+        public const string GET_PURCHASE_TIMELINE = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID,ReferenceBillStatus,TotalItem FROM purchaseapprovalsummary WHERE ReferenceNo=@RefNo;\r\n";
         public const string GET_ADVANCE_TIMELINE = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE ReferenceNo=@RefNo;\r\n";
 
+        public const string GET_BILL_DETAILS = "SELECT TransactionID,AmountPaid,AmountRemaining,AmountRequired,`Status`,BillNo FROM bill_base WHERE TransactionID IN (@Ids)\r\n";
+        public const string GET_APPROVAL_AUTHORITY_BILL = "SELECT EmployeeID,EmployeeDetails,`Status`,DATE_FORMAT(DoneOn,'%d.%m.%Y') 'On' FROM approvals_authority WHERE TransactionID = @TransId AND Type='Bills Approval'\r\n";
     }
 }

@@ -3742,7 +3742,7 @@ namespace AdvanceAPI.Services.Advance
         }
 
 
-        public async Task<ApiResponse> GetTimeLineDetails(string RefNo)
+        public async Task<ApiResponse> GetTimeLineDetails(string RefNo,string Type)
         {
             GetTimeLineResponse res=new GetTimeLineResponse();
             string BillId="";
@@ -3766,14 +3766,16 @@ namespace AdvanceAPI.Services.Advance
                     PurchaseDetails purchasedetails = new PurchaseDetails();
                     purchasedetails.Amount= dt.Rows[0]["Amount"].ToString();
                     purchasedetails.Status= dt.Rows[0]["Status"].ToString();
+                    purchasedetails.TotalItem= dt.Rows[0]["TotalItem"].ToString();
                     purchasedetails.TotalApproved= TotalApprovalAuth;
+                    purchasedetails.BillStatus = dt.Rows[0]["ReferenceBillStatus"].ToString();
                     purchasedetails.TotalAuth= TotalAuth;
                     purchasedetails.MyType= dt.Rows[0]["MyType"].ToString();
                     BillId+= dt.Rows[0]["BillId"].ToString();
                     res.purchase = purchasedetails;
                 }
             }
-            using(DataTable dt= await _advanceRepository.AdvanceSummary(RefNo))
+            using(DataTable dt= await _advanceRepository.AdvanceSummary(RefNo,Type))
             {
                 if (dt.Rows.Count > 0)
                 {
@@ -3795,10 +3797,15 @@ namespace AdvanceAPI.Services.Advance
                     purchasedetails.Status = dt.Rows[0]["Status"].ToString();
                     purchasedetails.TotalApproved = TotalApprovalAuth;
                     purchasedetails.TotalAuth = TotalAuth;
+
                     purchasedetails.MyType = dt.Rows[0]["MyType"].ToString();
                     BillId += dt.Rows[0]["BillId"].ToString();
                     res.Advance = purchasedetails;
                 }
+            }
+            if(Type=="Bill")
+            {
+                BillId = RefNo;
             }
             using(DataTable dt=await _advanceRepository.BillSummary(BillId))
             {
@@ -3808,6 +3815,8 @@ namespace AdvanceAPI.Services.Advance
                     purchasedetails.Amount = dt.Rows[0]["Amount"].ToString();
                     purchasedetails.TotalApproved =Convert.ToInt32(dt.Rows[0]["Count"].ToString());
                     purchasedetails.MyType = dt.Rows[0]["TransId"].ToString();
+                    purchasedetails.IssuedAmount = dt.Rows[0]["IssuedAmount"].ToString();
+
                     res.Bill = purchasedetails;
                 }
             }
@@ -3822,13 +3831,34 @@ namespace AdvanceAPI.Services.Advance
                     res.Cheque = purchasedetails;
                 }
             }
-
-
-
-
-
             return new ApiResponse(StatusCodes.Status200OK, "Success", res);
         }
+
+        public async Task<ApiResponse> BillDetails(string BillId)
+        {
+            HashSet<BillDetailsResponse1> res=new HashSet<BillDetailsResponse1>();
+            using (DataTable dt = await _advanceRepository.BillDetaild(BillId))
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    BillDetailsResponse1 billdetail = new BillDetailsResponse1(row);
+                    List<BillAutority> aut=new List<BillAutority>();
+                    DataTable AuthList = await _advanceRepository.GetAuthority(row["TransactionID"].ToString() ?? "");
+                    foreach(DataRow auth in AuthList.Rows)
+                    {
+                        aut.Add(new BillAutority(row));
+                    }
+                    billdetail.auth= aut;
+                    res.Add(billdetail);
+                }
+
+            }
+            return new ApiResponse(StatusCodes.Status200OK,"Success",res);
+        }
+
+
+
+
 
     }
 }

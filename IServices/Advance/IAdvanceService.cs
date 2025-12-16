@@ -54,6 +54,6 @@ namespace AdvanceAPI.IServices.Advance
         Task<ApiResponse> ApprovedTransection(string EmpCode, string EmpAddCode, string EmpName, string TransactionId, string SeqId, string Remark, string Designation);
         Task<ApiResponse> BillRejectApproval(string EmpCode, string EmpAddCode, string EmpName, ApprovalRequest req);
         Task<ApiResponse> DeleteCheque(string EmpName, string EmpCode, string TransId, string SeqId);
-        Task<ApiResponse> GetTimeLineDetails(string RefNo);
+        Task<ApiResponse> GetTimeLineDetails(string RefNo, string Type);
     }
 }

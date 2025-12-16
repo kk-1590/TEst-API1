@@ -7,5 +7,8 @@ namespace AdvanceAPI.DTO.FirmPaidDetails
         [AllowedValues("Y")]
         public string? IsAdvance { get; set; }
         public string? Id { get;set; }
+        public string? VId { get;set; }
+        public string? SubId { get;set; }
+        public string? CallBy { get;set; }
     }
 }

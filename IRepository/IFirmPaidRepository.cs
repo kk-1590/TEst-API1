@@ -15,5 +15,11 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetYearWiseReport(string Cond);
         Task<DataTable> PersonWiseDetails(string Cond);
         Task<DataTable> HeadWise(string Cond);
+        Task<DataTable> DepartmentWiseDetails(string Cond);
+        Task<DataTable> sessionWiseReports(string Cond);
+        Task<DataTable> VenderWiseDetails(string Cond);
+        Task<DataTable> BillApplicationNewDetails(string EmpCode);
+        Task<DataTable> SummarizedData(string EmpCode);
+        Task<string> GetRelativePerson(string billId);
     }
 }

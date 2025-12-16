@@ -151,5 +151,90 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
+        public async Task<DataTable> DepartmentWiseDetails(string Cond)
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(FirmReportSql.DEPARMENT_WISE.Replace("@Condition", Cond),DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Error During DepartmentWiseDetails..", ex);
+                throw;
+            }
+        }
+        public async Task<DataTable> sessionWiseReports(string Cond)
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(FirmReportSql.SESSION_WISE_REPORT.Replace("@Condition", Cond),DBConnections.Advance);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Error During DepartmentWiseDetails..", ex);
+                throw;
+            }
+        }
+        public async Task<DataTable> VenderWiseDetails(string Cond)
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(FirmReportSql.VENDER_WISE.Replace("@Condition", Cond), DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During VenderWiseDetails..", ex);
+                throw;
+            }
+        }
+        public async Task<DataTable> BillApplicationNewDetails(string EmpCode)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpCode", EmpCode));
+                return await _dbOperations.SelectAsync(FirmReportSql.BILL_APPLICATION_NEW_DETAILS, param, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error During BillApplicationNewDetails..", ex);
+                throw;
+            }
+        }
+        public async Task<DataTable> SummarizedData(string EmpCode)
+        {
+            try
+            {
+                List<SQLParameters> param = new List<SQLParameters>();
+                param.Add(new SQLParameters("@EmpCode",EmpCode));
+                return await _dbOperations.SelectAsync(FirmReportSql.Summarized_STATEMENT, param, DBConnections.Advance); ;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Error During SummarizedData..", ex);
+                throw;
+            }
+        }
+
+        public async Task<string> GetRelativePerson(string billId)
+        {
+            DataTable D =await _dbOperations.SelectAsync ("Select IssuedTo from advances.bill_applications_new where BillId=" + billId+"",DBConnections.Advance);
+            if (D.Rows.Count > 0)
+            {
+                return D.Rows[0][0].ToString()??"";
+            }
+            else
+            {
+                D = await _dbOperations.SelectAsync("Select RelativePersonID from advances.bill_base where TransactionID=" + billId+"",DBConnections.Advance);
+                if (D.Rows.Count > 0)
+                {
+                    return D.Rows[0][0].ToString() ?? "";
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
     }
 }
