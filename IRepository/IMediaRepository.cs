@@ -58,5 +58,8 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> GetExternalPendingOrAPprovedReleaseOrderDetailsByScheduleId(string? scheduleId);
         Task<string> AddMediaSchedule(AddMediaScheduleRequest? request, string? currentSession, string? employeeId);
         Task<int> UpdateScheduleDocumentId(string? id);
+        Task<DataTable> CheckIsMediaScheduleExistsById(string? id);
+        Task<int> DeleteMediaScheduleById(string? id);
+        Task<int> EditMediaSchedule(EditMediaScheduleRequest? request, EditMediaScheduleOldDetails? oldDetails, string? employeeId);
     }
 }

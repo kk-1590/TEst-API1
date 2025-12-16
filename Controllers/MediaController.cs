@@ -586,5 +586,97 @@ namespace AdvanceAPI.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
             }
         }
+
+        [HttpDelete]
+        [Route("delete-media-schedule/{id}")]
+        public async Task<IActionResult> DeleteMediaSchedule([FromRoute] string? id)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid request found.."));
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                ApiResponse response = await _mediaService.DeleteMediaSchedule(id);
+
+                return response.Status == 200 ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "sorry!! an error occurred while deleting media schedules (delete-media-schedule). Try after some time...");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+
+        [HttpPost]
+        [Route("edit-media-schedule")]
+        public async Task<IActionResult> EditMediaSchedule(EditMediaScheduleRequest? request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid request found.."));
+                }
+                string? employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(employeeId))
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid Request Found..."));
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                ApiResponse response = await _mediaService.EditMediaSchedule(request, employeeId);
+
+                return response.Status == 200 ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "sorry!! an error occurred while editing media schedules (edit-media-schedule). Try after some time...");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
+        [HttpPost]
+        [Route("edit-media-schedule-file")]
+        public async Task<IActionResult> EditMediaScheduleFile(EditMediaScheduleFileRequest? request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! Invalid request found.."));
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (request.SupportingDocument == null)
+                {
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Supporting document is required"));
+                }
+
+                ApiResponse response = await _mediaService.EditMediaScheduleFile(request);
+
+                return response.Status == 200 ? Ok(response) : BadRequest(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "sorry!! an error occurred while editing media schedule file (edit-media-schedule-file). Try after some time...");
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Sorry!! There is an error.. Please try after some time..."));
+            }
+        }
+
     }
 }

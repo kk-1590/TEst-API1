@@ -46,18 +46,17 @@ namespace AdvanceAPI.SQLConstants.Media
         public const string GET_PENDING_MEDIA_SCHEDULES_RO_GENERATED = "Select * from schedules where Id in (@ScheduleIds) And CampusCode=@CampusCode AND `Session`=@Session and Type=@MediaType And MediaTitle=@Title";
         public const string GET_MEDIA_SCHEDULES = "Select if(MyBillUpto is null,DATE_FORMAT(now(),'%Y-%m-%d'),DATE_FORMAT(MyBillUpto,'%Y-%m-%d')) 'MyBill',if(ScheduleTime is null,DATE_FORMAT(Schedule,'%Y-%m-%d'),DATE_FORMAT(ScheduleTime,'%Y-%m-%d')) 'MyCheck',Id,Type, MediaTitle,if(ScheduleTime is null,DATE_FORMAT(Schedule,'%d %b,%y'),DATE_FORMAT(ScheduleTime,'%d %b,%y')) 'Schedule',AdvertisementType,Edition,SizeW,SizeH,Amount,Discount,Actual,if(ExecutedOn is NULL,'----',DATE_FORMAT(ExecutedOn,'%d %b,%y')) 'ExecutedOn',CAST(if(TransactionID is NULL,'N/A',TransactionID) as CHAR) 'Billinitiated',Tax, PageNo,Rate,IFNULL(CONCAT(' ( ',CAST(DATE_FORMAT(MyBillUpto,'%d %b, %y') as CHAR),' ) '),'') as 'MMBillTill' from schedules where CampusCode=@CampusCode AND Session=@Session And Main=@ScheduleType @AdditionalCondition  @OrderByCondition LIMIT @LimitItems OFFSET @OffSetItems;";
         public const string GET_MEDIA_SCHEDULES_BY_ID = "Select if(MyBillUpto is null,DATE_FORMAT(now(),'%Y-%m-%d'),DATE_FORMAT(MyBillUpto,'%Y-%m-%d')) 'MyBill',if(ScheduleTime is null,DATE_FORMAT(Schedule,'%Y-%m-%d'),DATE_FORMAT(ScheduleTime,'%Y-%m-%d')) 'MyCheck',Id,Type, MediaTitle,if(ScheduleTime is null,DATE_FORMAT(Schedule,'%d %b,%y'),DATE_FORMAT(ScheduleTime,'%d %b,%y')) 'Schedule',AdvertisementType,Edition,SizeW,SizeH,Amount,Discount,Actual,if(ExecutedOn is NULL,'----',DATE_FORMAT(ExecutedOn,'%d %b,%y')) 'ExecutedOn',CAST(if(TransactionID is NULL,'N/A',TransactionID) as CHAR) 'Billinitiated',Tax, PageNo,Rate,IFNULL(CONCAT(' ( ',CAST(DATE_FORMAT(MyBillUpto,'%d %b, %y') as CHAR),' ) '),'') as 'MMBillTill' from schedules where Id=@Id;";
-
         public const string GET_EXTERNAL_RELEASE_ORDER_DETAILS_BY_SCHEDULE_ID = "select * from releaseorders where ROCategory='External' And ScheduleIds like  CONCAT('%',@ScheduleId,'%')   And (`Status`='Pending' or `Status`='Approved' or (`Status`='Pending' And (App1Status='Approved' OR App2Status='Approved' OR App3Status='Approved' OR App4Status='Approved') ));";
         public const string GET_INTERNAL_RELEASE_ORDER_DETAILS_BY_SCHEDULE_ID = "select * from releaseorders where (`Status`='Pending' or Status='Approved') And ROCategory='Internal' And ScheduleIds like CONCAT('%',@ScheduleId,'%');";
         public const string GET_EXTERNAL_RELEASE_ORDER_PENDING_OR_APPROVED_DETAILS_BY_SCHEDULE_ID = "select * from releaseorders where ROCategory='External' And ScheduleIds like CONCAT('%',@ScheduleId,'%')  And `Status` in ('Approved','Pending')";
         public const string GET_NEW_SCHEDULE_ID = "SELECT CAST(IFNULL((MAX(Id)+1),1) AS CHAR) AS 'NewScheduleId' FROM `schedules`;";
         public const string ADD_NEW_SCHEDULE = "insert into schedules (Id,CampusCode,Main,Type,HasChild,Schedule,MediaTitle,AdvertisementType,Edition,SizeW,SizeH,Amount,Discount,Actual,Session,AddedOn,AddedBy,Tax, PageNo,Rate,Col1,MyBillUpto) VALUES (@Id,@CampusCode,@ScheduleType,@MediaType,-1,@ScheduleDate,@MediaTitle,@AdvertisementTypes,@Editions,@SizeW,@SizeH,@Amount,@Discount,@FinalAmount,@Session,NOW(),@AddedBy,@Tax,@PageNo,@Rate,@AddingSession,@MyBillUpto);";
         public const string UPDATE_NEW_SCHEDULE_DOCUMENT_ID = "update schedules set Col4=Id where Id=@Id";
-
-
-
+        public const string CHECK_IS_MEDIA_SCHEDULE_EXISTS_BY_ID = "SELECT Id,DATE_FORMAT(`Schedule`,'%Y-%m-%d')'ScheduleOn',DATE_FORMAT(`MyBillUpto`,'%Y-%m-%d')'BillUpto',Type, MediaTitle,AdvertisementType,Edition,SizeW,SizeH,Rate,Amount,Discount, Tax,Actual,PageNo FROM `schedules` where Id=@Id;";
+        public const string DELETE_MEDIA_SCHEDULE_BY_ID = "DELETE FROM `schedules` where Id=@Id;";
+        public const string UPDATE_MEDIA_SCHEDULE_BY_ID = "update schedules  @UpdateColumns where Id=@Id;";
+        public const string LOG_UPDATE_MEDIA_SCHEDULE_BY_ID = "insert into scheduleupdates (Id,Updates,TotalUpdates,Reason,UpdatedOn,UpdatedBy) values (@ScheduleId,@Updations,@UpdationCount,@Reason,now(),@EmployeeId)";
         public const string GET_EMPLOYEE_ONLY_MEDIA_PERMISSION_DETAILS = "Select onlymedia from userroles where employee_code=@EmployeeId;";
-
 
     }
 }

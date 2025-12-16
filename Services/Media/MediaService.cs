@@ -778,5 +778,72 @@ namespace AdvanceAPI.Services.Media
             }
             return new ApiResponse(StatusCodes.Status500InternalServerError, "Error creating media schedule. Try again later.");
         }
+        public async Task<ApiResponse> DeleteMediaSchedule(string? id)
+        {
+            using DataTable dtExists = await _mediaRepository.CheckIsMediaScheduleExistsById(id);
+
+            if (dtExists.Rows.Count <= 0)
+            {
+                return new ApiResponse(StatusCodes.Status404NotFound, "Sorry!! Media Schedule not found...");
+            }
+
+            int affectedRows = await _mediaRepository.DeleteMediaScheduleById(id);
+
+            if (affectedRows > 0)
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Media Schedule deleted successfully.");
+            }
+
+            else
+            {
+                return new ApiResponse(StatusCodes.Status400BadRequest, "Failed to delete Media Schedule. Try After Some Time.");
+            }
+        }
+        public async Task<ApiResponse> EditMediaSchedule(EditMediaScheduleRequest? request, string? employeeId)
+        {
+            using DataTable dtExists = await _mediaRepository.CheckIsMediaScheduleExistsById(request?.Id);
+
+            if (dtExists.Rows.Count <= 0)
+            {
+                return new ApiResponse(StatusCodes.Status404NotFound, "Sorry!! Media Schedule not found...");
+            }
+
+            EditMediaScheduleOldDetails? editMediaScheduleOldDetails = new EditMediaScheduleOldDetails(dtExists.Rows[0]);
+
+            int affectedRows = await _mediaRepository.EditMediaSchedule(request, editMediaScheduleOldDetails, employeeId);
+
+            if (affectedRows == int.MaxValue)
+            {
+                return new ApiResponse(StatusCodes.Status409Conflict, "Sorry!! No changes detected in the Media Schedule.");
+            }
+
+            if (affectedRows > 0)
+            {
+                return new ApiResponse(StatusCodes.Status200OK, "Media Schedule updated successfully.");
+            }
+            else
+            {
+                return new ApiResponse(StatusCodes.Status400BadRequest, "Failed to update Media Schedule. Try After Some Time.");
+            }
+        }
+        public async Task<ApiResponse> EditMediaScheduleFile(EditMediaScheduleFileRequest? request)
+        {
+            using DataTable dtExists = await _mediaRepository.CheckIsMediaScheduleExistsById(request?.Id);
+
+            if (dtExists.Rows.Count <= 0)
+            {
+                return new ApiResponse(StatusCodes.Status404NotFound, "Sorry!! Media Schedule not found...");
+            }
+            if (request?.SupportingDocument != null)
+            {
+                string filePath = "Upload_Advertisement";
+                string fileName = $"{request?.Id}.pdf";
+                await _general.UploadFile(request!.SupportingDocument, filePath, fileName);
+                await _mediaRepository.UpdateScheduleDocumentId(request?.Id);
+            }
+
+            return new ApiResponse(StatusCodes.Status200OK, "Media Schedule Document updated successfully.");
+
+        }
     }
 }

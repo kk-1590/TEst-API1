@@ -824,7 +824,6 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-
         public async Task<DataTable> GetExternalPendingOrAPprovedReleaseOrderDetailsByScheduleId(string? scheduleId)
         {
             try
@@ -842,8 +841,6 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-
-
         public async Task<DataTable> GetNewMediaScheduleId()
         {
             try
@@ -856,7 +853,6 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-
         public async Task<string> AddMediaSchedule(AddMediaScheduleRequest? request, string? currentSession, string? employeeId)
         {
             try
@@ -912,7 +908,6 @@ namespace AdvanceAPI.Repository
                 throw;
             }
         }
-
         public async Task<int> UpdateScheduleDocumentId(string? id)
         {
             try
@@ -927,6 +922,309 @@ namespace AdvanceAPI.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error During UpdateScheduleDocumentId ..");
+                throw;
+            }
+        }
+        public async Task<DataTable> CheckIsMediaScheduleExistsById(string? id)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters( "@Id", id ?? string.Empty),
+                };
+
+                return await _dbOperations.SelectAsync(MediaSql.CHECK_IS_MEDIA_SCHEDULE_EXISTS_BY_ID, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During CheckIsMediaScheduleExistsById ..");
+                throw;
+            }
+        }
+        public async Task<int> DeleteMediaScheduleById(string? id)
+        {
+            try
+            {
+                List<SQLParameters> parameters = new List<SQLParameters>
+                {
+                    new SQLParameters( "@Id", id ?? string.Empty),
+                };
+
+                return await _dbOperations.DeleteInsertUpdateAsync(MediaSql.DELETE_MEDIA_SCHEDULE_BY_ID, parameters, DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During DeleteMediaScheduleById ..");
+                throw;
+            }
+        }
+        public async Task<int> EditMediaSchedule(EditMediaScheduleRequest? request, EditMediaScheduleOldDetails? oldDetails, string? employeeId)
+        {
+            try
+            {
+
+                StringBuilder additionalUpdate = new StringBuilder();
+                StringBuilder changesString = new StringBuilder();
+                int updateCount = 0;
+                List<SQLParameters> parameters = new List<SQLParameters>();
+                parameters.Add(new SQLParameters("@Id", request?.Id ?? string.Empty));
+
+                if (oldDetails?.OldScheduleOn != request?.NewScheduleOn)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET `Schedule`=@NewScheduleOn ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", `Schedule`=@NewScheduleOn ");
+                    }
+
+                    parameters.Add(new SQLParameters("@NewScheduleOn", request?.NewScheduleOn ?? string.Empty));
+                    changesString.Append($"Date : {oldDetails?.OldScheduleOn} --> {request?.NewScheduleOn}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldBillOn != request?.NewBillOn)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET MyBillUpto=@NewBillOn ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", MyBillUpto=@NewBillOn ");
+                    }
+
+                    parameters.Add(new SQLParameters("@NewBillOn", request?.NewBillOn ?? string.Empty));
+                    changesString.Append($"BillTill : {oldDetails?.OldBillOn} --> {request?.NewBillOn}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldMediaType != request?.NewMediaType)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET Type=@NewMediaType ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", Type=@NewMediaType ");
+                    }
+                    parameters.Add(new SQLParameters("@NewMediaType", request?.NewMediaType ?? string.Empty));
+                    changesString.Append($"MediaType : {oldDetails?.OldMediaType} --> {request?.NewMediaType}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldMediaTitle != request?.NewMediaTitle)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET MediaTitle=@NewMediaTitle ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", MediaTitle=@NewMediaTitle ");
+                    }
+                    parameters.Add(new SQLParameters("@NewMediaTitle", request?.NewMediaTitle ?? string.Empty));
+                    changesString.Append($"MediaTitle : {oldDetails?.OldMediaTitle} --> {request?.NewMediaTitle}^");
+                    updateCount++;
+                }
+
+                if (!(oldDetails?.OldAdvertisements is null) && !(request?.NewAdvertisements is null))
+                {
+                    var oldSet = new HashSet<string>(oldDetails.OldAdvertisements);
+                    var newSet = new HashSet<string>(request.NewAdvertisements);
+
+                    if (!oldSet.SetEquals(newSet))
+                    {
+                        if (updateCount == 0)
+                        {
+                            additionalUpdate.Append(" SET AdvertisementType=@NewAdvertisements ");
+                        }
+                        else
+                        {
+                            additionalUpdate.Append(", AdvertisementType=@NewAdvertisements ");
+                        }
+                        parameters.Add(new SQLParameters("@NewAdvertisements", $"{string.Join(", ", request?.NewAdvertisements ?? new string[] { })}, " ?? string.Empty));
+                        changesString.Append($"Adv. Type : {string.Join(", ", oldDetails?.OldAdvertisements ?? new string[] { })} --> {string.Join(", ", request?.NewAdvertisements ?? new string[] { })}^");
+                        updateCount++;
+                    }
+                }
+
+                if (!(oldDetails?.OldEditions is null) && !(request?.NewEditions is null))
+                {
+                    var oldSet = new HashSet<string>(oldDetails.OldEditions);
+                    var newSet = new HashSet<string>(request.NewEditions);
+
+                    if (!oldSet.SetEquals(newSet))
+                    {
+                        if (updateCount == 0)
+                        {
+                            additionalUpdate.Append(" SET Edition=@NewEditions ");
+                        }
+                        else
+                        {
+                            additionalUpdate.Append(", Edition=@NewEditions ");
+                        }
+                        parameters.Add(new SQLParameters("@NewEditions", $"{string.Join(", ", request?.NewEditions ?? new string[] { })}, " ?? string.Empty));
+                        changesString.Append($"Edition : {string.Join(", ", oldDetails?.OldEditions ?? new string[] { })} --> {string.Join(", ", request?.NewEditions ?? new string[] { })}^");
+                        updateCount++;
+                    }
+                }
+
+                if (oldDetails?.OldWidth != request?.NewWidth)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET SizeW=@NewWidth ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", SizeW=@NewWidth ");
+                    }
+                    parameters.Add(new SQLParameters("@NewWidth", request?.NewWidth ?? string.Empty));
+                    changesString.Append($"Width : {oldDetails?.OldWidth} --> {request?.NewWidth}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldHeight != request?.NewHeight)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET SizeH=@NewHeight ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", SizeH=@NewHeight ");
+                    }
+                    parameters.Add(new SQLParameters("@NewHeight", request?.NewHeight ?? string.Empty));
+                    changesString.Append($"Height : {oldDetails?.OldHeight} --> {request?.NewHeight}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldRate != request?.NewRate)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET Rate=@NewRate ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", Rate=@NewRate ");
+                    }
+                    parameters.Add(new SQLParameters("@NewRate", request?.NewRate ?? "0"));
+                    changesString.Append($"Rate : {oldDetails?.OldRate} --> {request?.NewRate}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldAmount != request?.NewAmount)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET Amount=@NewAmount ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", Amount=@NewAmount ");
+                    }
+                    parameters.Add(new SQLParameters("@NewAmount", request?.NewAmount ?? "0.0"));
+                    changesString.Append($"Amount (No Tax/@Dis.) : {oldDetails?.OldAmount} --> {request?.NewAmount}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldDiscount != request?.NewDiscount)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET Discount=@NewDiscount ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", Discount=@NewDiscount ");
+                    }
+                    parameters.Add(new SQLParameters("@NewDiscount", request?.NewDiscount ?? "0.0"));
+                    changesString.Append($"Discount : {oldDetails?.OldDiscount} --> {request?.NewDiscount}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldTax != request?.NewTax)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET Tax=@NewTax ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", Tax=@NewTax ");
+                    }
+                    parameters.Add(new SQLParameters("@NewTax", request?.NewTax ?? "0.0"));
+                    changesString.Append($"Tax : {oldDetails?.OldTax} --> {request?.NewTax}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldFinalAmount != request?.NewFinalAmount)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET Actual=@NewFinalAmount ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", Actual=@NewFinalAmount ");
+                    }
+                    parameters.Add(new SQLParameters("@NewFinalAmount", request?.NewFinalAmount ?? "0.0"));
+                    changesString.Append($"Paid Amount : {oldDetails?.OldFinalAmount} --> {request?.NewFinalAmount}^");
+                    updateCount++;
+                }
+
+                if (oldDetails?.OldPageNo != request?.NewPageNo)
+                {
+                    if (updateCount == 0)
+                    {
+                        additionalUpdate.Append(" SET PageNo=@NewPageNo ");
+                    }
+                    else
+                    {
+                        additionalUpdate.Append(", PageNo=@NewPageNo ");
+                    }
+                    parameters.Add(new SQLParameters("@NewPageNo", request?.NewPageNo ?? "0"));
+                    changesString.Append($"Page No. : {oldDetails?.OldPageNo} --> {request?.NewPageNo}^");
+                    updateCount++;
+                }
+
+                if (updateCount == 0)
+                {
+                    return int.MaxValue;
+                }
+
+
+                string finalQuery = MediaSql.UPDATE_MEDIA_SCHEDULE_BY_ID.Replace("@UpdateColumns", additionalUpdate.ToString());
+
+                int affectedRows = await _dbOperations.DeleteInsertUpdateAsync(finalQuery, parameters, DBConnections.Advance);
+
+                if (affectedRows > 0)
+                {
+                    parameters.Clear();
+                    parameters.Add(new SQLParameters("@ScheduleId", request?.Id ?? string.Empty));
+                    parameters.Add(new SQLParameters("@Updations", changesString.ToString() ?? string.Empty));
+                    parameters.Add(new SQLParameters("@UpdationCount", updateCount));
+                    parameters.Add(new SQLParameters("@Reason", request?.Reason?.Trim()?.ToUpper() ?? string.Empty));
+                    parameters.Add(new SQLParameters("@EmployeeId", employeeId ?? string.Empty));
+
+                    await _dbOperations.DeleteInsertUpdateAsync(MediaSql.LOG_UPDATE_MEDIA_SCHEDULE_BY_ID, parameters, DBConnections.Advance);
+
+                    return affectedRows;
+                }
+                else
+                {
+                    return affectedRows;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During EditMediaSchedule (Parameters: {@Request}, {@EmployeeId})..", request, employeeId);
                 throw;
             }
         }

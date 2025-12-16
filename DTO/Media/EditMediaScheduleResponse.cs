@@ -18,6 +18,7 @@ namespace AdvanceAPI.DTO.Media
         public bool CanEditTax { get; set; } = false;
         public bool CanEditActualPaid { get; set; } = false;
         public bool CanEditPageNo { get; set; } = false;
+        public bool CanEditBillDate { get; set; } = true;
 
 
         public EditMediaScheduleResponse()

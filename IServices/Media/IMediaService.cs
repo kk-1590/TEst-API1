@@ -35,6 +35,9 @@ namespace AdvanceAPI.IServices.Media
         Task<ApiResponse> GetMediaSchedules(GetMediaSchedulesRequest? request, string? employeeId);
         Task<ApiResponse> GetMediaScheduleToEdit(string? id);
         Task<ApiResponse> AddMediaSchedule(AddMediaScheduleRequest? request, string? employeeId);
+        Task<ApiResponse> DeleteMediaSchedule(string? id);
+        Task<ApiResponse> EditMediaSchedule(EditMediaScheduleRequest? request, string? employeeId);
+        Task<ApiResponse> EditMediaScheduleFile(EditMediaScheduleFileRequest? request);
 
     }
 }
