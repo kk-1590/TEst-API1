@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Web;
 
@@ -2859,11 +2860,21 @@ namespace AdvanceAPI.Services.Advance
                     {
                         billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/POAdvance.aspx?Id={billChequeApprovalResponse?.BillExtra3}&Switch=Y',0,0); return false;\"><u>" + HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType) + "</u></a>";
 
+                        billChequeApprovalResponse?.MainPrintOutDetails?.Link = $"Reports/POAdvance.aspx?Id={billChequeApprovalResponse?.BillExtra3}&Switch=Y";
+                        billChequeApprovalResponse?.MainPrintOutDetails?.Text = billChequeApprovalResponse?.ForType;
+
                         DataTable dtAdvanceBudgetSummary = await _advanceRepository.GetBillApprovalAdvanceBudgetSummary(billChequeApprovalResponse?.BillExtra3 ?? string.Empty);
 
                         if (dtAdvanceBudgetSummary.Rows.Count > 0)
                         {
                             billChequeApprovalResponse!.BudgetString = (!string.IsNullOrWhiteSpace(dtAdvanceBudgetSummary.Rows[0]["BudgetCommentExtra"]?.ToString()) ? dtAdvanceBudgetSummary.Rows[0]["BudgetCommentExtra"].ToString() + "<br/><br/>" : "") + "Budget : " + dtAdvanceBudgetSummary.Rows[0]["BudgetAmount"].ToString() + " Rs./-<br/>Prev. : " + dtAdvanceBudgetSummary.Rows[0]["PreviousTaken"].ToString() + " Rs./-<br/>Cur. : " + dtAdvanceBudgetSummary.Rows[0]["Amount"].ToString() + " Rs./-<br/>Status : " + dtAdvanceBudgetSummary.Rows[0]["BudgetStatus"].ToString() + "<br/>";
+
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.BudgetAmount = dtAdvanceBudgetSummary.Rows[0]["BudgetAmount"]?.ToString();
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.PreviousTaken = dtAdvanceBudgetSummary.Rows[0]["PreviousTaken"]?.ToString();
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.Amount = dtAdvanceBudgetSummary.Rows[0]["Amount"]?.ToString();
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.BudgetStatus = dtAdvanceBudgetSummary.Rows[0]["BudgetStatus"]?.ToString();
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.BudgetComment = dtAdvanceBudgetSummary.Rows[0]["BudgetCommentExtra"]?.ToString();
+
                         }
                         else
                         {
@@ -2874,9 +2885,15 @@ namespace AdvanceAPI.Services.Advance
                                 dtAdvanceBudgetSummary = await _advanceRepository.GetBillApprovalAdvanceBudgetSummaryApprovalDetails(dtAdvanceBudgetSummary.Rows[0]["PExtra4"]?.ToString()?.Split('#')[0]!);
                             }
 
+
                             billChequeApprovalResponse!.BudgetString = "Total Amount : " + dtAdvanceBudgetSummary.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtAdvanceBudgetSummary.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtAdvanceBudgetSummary.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtAdvanceBudgetSummary.Rows[0]["Status"].ToString() + "<br/><br/>";
 
                             billChequeApprovalResponse!.BudgetStringToolTip = dtAdvanceBudgetSummary.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
+
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalAmount = dtAdvanceBudgetSummary.Rows[0]["TotalAmount"]?.ToString();
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalPaid = dtAdvanceBudgetSummary.Rows[0]["TotalPaid"]?.ToString();
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalBalance = dtAdvanceBudgetSummary.Rows[0]["TotalBal"]?.ToString();
+                            billChequeApprovalResponse?.BudgetPrintOutDetails?.Status = dtAdvanceBudgetSummary.Rows[0]["Status"]?.ToString();
 
                         }
                     }
@@ -2887,13 +2904,31 @@ namespace AdvanceAPI.Services.Advance
                         {
                             billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/ReleaseOrder.aspx?Type=Old&Id={(billChequeApprovalResponse!.BillExtra3!.ToString().Replace("MED", ""))}',0,0); return false;\"><u>" + HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType) + "</u></a>";
 
+                            billChequeApprovalResponse?.MainPrintOutDetails?.Link = $"Reports/ReleaseOrder.aspx?Type=Old&Id={(billChequeApprovalResponse!.BillExtra3!.ToString().Replace("MED", ""))}";
+                            billChequeApprovalResponse?.MainPrintOutDetails?.Text = billChequeApprovalResponse?.ForType;
+
+
                             DataTable dtReleaseOrder = await _advanceRepository.GetBillApprovalAdvanceMedReleaseOrder(billChequeApprovalResponse!.BillExtra3?.Replace("MED", "")!);
                             if (dtReleaseOrder.Rows.Count > 0)
                             {
                                 if (dtReleaseOrder.Rows[0]["BudgetStatus"].ToString() == "Y")
+
+                                {
                                     billChequeApprovalResponse!.BudgetString = (!string.IsNullOrWhiteSpace(dtReleaseOrder.Rows[0]["BudgetCommentExtra"]?.ToString()) ? dtReleaseOrder.Rows[0]["BudgetCommentExtra"].ToString() + "<br/><br/>" : "") + "Budget : " + dtReleaseOrder.Rows[0]["BudgetAmount"].ToString() + " Rs./-<br/>Prev. : " + dtReleaseOrder.Rows[0]["PreviousTaken"].ToString() + " Rs./-<br/>Cur. : " + dtReleaseOrder.Rows[0]["Amount"].ToString() + " Rs./-<br/>Status : " + dtReleaseOrder.Rows[0]["CurStatus"].ToString() + "<br/><br/>";
 
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.BudgetAmount = dtReleaseOrder.Rows[0]["BudgetAmount"]?.ToString();
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.PreviousTaken = dtReleaseOrder.Rows[0]["PreviousTaken"]?.ToString();
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.Amount = dtReleaseOrder.Rows[0]["Amount"]?.ToString();
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.BudgetStatus = dtReleaseOrder.Rows[0]["CurStatus"]?.ToString();
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.BudgetComment = dtReleaseOrder.Rows[0]["BudgetCommentExtra"]?.ToString();
+                                }
+
                                 billChequeApprovalResponse!.BudgetString += "Total Amount : " + dtReleaseOrder.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtReleaseOrder.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtReleaseOrder.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtReleaseOrder.Rows[0]["Status"].ToString() + "<br/><br/>";
+
+                                billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalAmount = dtReleaseOrder.Rows[0]["TotalAmount"]?.ToString();
+                                billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalPaid = dtReleaseOrder.Rows[0]["TotalPaid"]?.ToString();
+                                billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalBalance = dtReleaseOrder.Rows[0]["TotalBal"]?.ToString();
+                                billChequeApprovalResponse?.BudgetPrintOutDetails?.Status = dtReleaseOrder.Rows[0]["Status"]?.ToString();
 
                                 billChequeApprovalResponse!.BudgetStringToolTip = dtReleaseOrder.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
                             }
@@ -2907,11 +2942,29 @@ namespace AdvanceAPI.Services.Advance
                                 {
                                     billChequeApprovalResponse!.BudgetString = "Total Amount : " + dtApprovalSummary.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtApprovalSummary.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtApprovalSummary.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtApprovalSummary.Rows[0]["Status"].ToString() + "<br/><br/>";
 
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalAmount = dtApprovalSummary.Rows[0]["TotalAmount"]?.ToString();
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalPaid = dtApprovalSummary.Rows[0]["TotalPaid"]?.ToString();
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalBalance = dtApprovalSummary.Rows[0]["TotalBal"]?.ToString();
+                                    billChequeApprovalResponse?.BudgetPrintOutDetails?.Status = dtApprovalSummary.Rows[0]["Status"]?.ToString();
+
                                     billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/NewItemReturnnonconsumableprintforbill.aspx?approvalid={billChequeApprovalResponse!.BillExtra3!.ToString()}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.SequenceID)}</u></a>";
+
+                                    billChequeApprovalResponse!.ItemReturnOnConsumableLinkDetails?.Link = $"http://hostel.glauniversity.in:84/NewItemReturnnonconsumableprintforbill.aspx?approvalid={billChequeApprovalResponse!.BillExtra3!.ToString()}&Switch=Y";
+                                    billChequeApprovalResponse!.ItemReturnOnConsumableLinkDetails?.Text = billChequeApprovalResponse!.SequenceID;
+
 
                                     billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/PO.aspx?Id={billChequeApprovalResponse!.BillExtra3!.ToString()}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
 
+                                    billChequeApprovalResponse!.MainPrintOutDetails!.Link = $"Reports/PO.aspx?Id={billChequeApprovalResponse!.BillExtra3!.ToString()}&Switch=Y";
+                                    billChequeApprovalResponse!.MainPrintOutDetails!.Text = billChequeApprovalResponse?.ForType;
+
+
                                     billChequeApprovalResponse!.MainGateRecievingLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/MainGateMaterialReceivingdetail.aspx?referenceno={billChequeApprovalResponse!.BillExtra3}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.INI)}</u></a>";
+
+                                    billChequeApprovalResponse!.MainGatePrintOutDetails!.Link = $"http://hostel.glauniversity.in:84/MainGateMaterialReceivingdetail.aspx?referenceno={billChequeApprovalResponse!.BillExtra3}&Switch=Y";
+                                    billChequeApprovalResponse!.MainGatePrintOutDetails!.Text = billChequeApprovalResponse!.INI;
+
+
 
                                     billChequeApprovalResponse!.BudgetStringToolTip = dtApprovalSummary.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
                                 }
@@ -2921,20 +2974,32 @@ namespace AdvanceAPI.Services.Advance
                         if (billChequeApprovalResponse!.BillExtra3!.Contains("PLC"))
                         {
                             billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8105/main/reports/VO.aspx?RefNo={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("PLC", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Link = $"https://glauniversity.in:8105/main/reports/VO.aspx?RefNo={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("PLC", ""))}";
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Text = billChequeApprovalResponse?.ForType;
+
                         }
                         if (billChequeApprovalResponse!.BillExtra3!.Contains("WRK"))
                         {
                             billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Workshop/WorkShopApprovalPrint.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("WRK", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Link = $"Workshop/WorkShopApprovalPrint.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("WRK", ""))}";
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Text = billChequeApprovalResponse?.ForType;
                         }
                         if (billChequeApprovalResponse!.BillExtra3!.Contains("ADM"))
                         {
                             billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8109/main/reports/VO.aspx?RefNo={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("ADM", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
+
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Link = $"https://glauniversity.in:8109/main/reports/VO.aspx?RefNo={_general.Encrypt(billChequeApprovalResponse!.BillExtra3!.Replace("ADM", ""))}";
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Text = billChequeApprovalResponse?.ForType;
                         }
                         if (billChequeApprovalResponse!.BillExtra3!.Contains("RSC"))
                         {
                             billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8085/ASP/PhdScholarPrint.aspx?ReqData={_general.EncryptWithoutHour(billChequeApprovalResponse!.BillExtra3!.ToString().Replace("RSC", ""))}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse?.ForType)}</u></a>";
-                        }
 
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Link = $"https://glauniversity.in:8085/ASP/PhdScholarPrint.aspx?ReqData={_general.EncryptWithoutHour(billChequeApprovalResponse!.BillExtra3!.ToString().Replace("RSC", ""))}";
+                            billChequeApprovalResponse!.MainPrintOutDetails!.Text = billChequeApprovalResponse?.ForType;
+                        }
                     }
                 }
                 else
@@ -2947,11 +3012,18 @@ namespace AdvanceAPI.Services.Advance
                         {
                             billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in/studentinformationfee.aspx?Stu_ID={student_id}&User={_general.Encrypt("Security")}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.SequenceID)}</u></a>";
 
+                            billChequeApprovalResponse?.ItemReturnOnConsumableLinkDetails!.Link = $"https://glauniversity.in/studentinformationfee.aspx?Stu_ID={student_id}&User={_general.Encrypt("Security")}";
+                            billChequeApprovalResponse?.ItemReturnOnConsumableLinkDetails!.Text = billChequeApprovalResponse!.SequenceID;
+
+
                             billChequeApprovalResponse!.StudentId = student_id.ToString();
 
                             if (billChequeApprovalResponse!.BillExtra3!.Contains("SEC"))
                             {
                                 billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in/RefundPrint.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.TransID!.ToString())}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
+
+                                billChequeApprovalResponse!.MainPrintOutDetails!.Link = $"https://glauniversity.in/RefundPrint.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.TransID!.ToString())}";
+                                billChequeApprovalResponse!.MainPrintOutDetails!.Text = billChequeApprovalResponse!.ForType;
                             }
                         }
                     }
@@ -2967,6 +3039,9 @@ namespace AdvanceAPI.Services.Advance
                                 {
                                     billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/POAdvance.aspx?Id={referenceNo}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
 
+                                    billChequeApprovalResponse!.MainPrintOutDetails!.Link = $"Reports/POAdvance.aspx?Id={referenceNo}";
+                                    billChequeApprovalResponse!.MainPrintOutDetails!.Text = billChequeApprovalResponse!.ForType;
+
 
                                     DataTable dtOtherApprovalSummary = await _advanceRepository.GetBillApprovalAdvanceExcludeMedBudgetSummary(referenceNo.ToString());
                                     if (dtOtherApprovalSummary.Rows.Count > 0)
@@ -2978,6 +3053,12 @@ namespace AdvanceAPI.Services.Advance
 
                                         billChequeApprovalResponse!.BudgetString = "Total Amount : " + dtOtherApprovalSummary.Rows[0]["TotalAmount"].ToString() + " Rs./-<br/>Total Paid : " + dtOtherApprovalSummary.Rows[0]["TotalPaid"].ToString() + " Rs./-<br/>Total Bal. : " + dtOtherApprovalSummary.Rows[0]["TotalBal"].ToString() + " Rs./-<br/>Status : " + dtOtherApprovalSummary.Rows[0]["Status"].ToString() + "<br/><br/>";
 
+                                        billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalAmount = dtOtherApprovalSummary.Rows[0]["TotalAmount"]?.ToString();
+                                        billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalPaid = dtOtherApprovalSummary.Rows[0]["TotalPaid"]?.ToString();
+                                        billChequeApprovalResponse?.BudgetPrintOutDetails?.TotalBalance = dtOtherApprovalSummary.Rows[0]["TotalBal"]?.ToString();
+                                        billChequeApprovalResponse?.BudgetPrintOutDetails?.Status = dtOtherApprovalSummary.Rows[0]["Status"]?.ToString();
+
+
                                         billChequeApprovalResponse!.BudgetStringToolTip = dtOtherApprovalSummary.Rows[0]["PaidComment"]?.ToString()?.Replace("@@", "\n") ?? string.Empty;
                                     }
                                 }
@@ -2986,11 +3067,19 @@ namespace AdvanceAPI.Services.Advance
                             {
                                 string referenceNo = dtUserIdentity?.Rows[0][0]?.ToString()?.Replace("-MOB", "") ?? string.Empty;
                                 billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8088/ExtraPages/MobileShowBillDetails.aspx?approvedid={_general.Encrypt(billChequeApprovalResponse!.TransID + "#" + referenceNo)}',0,0); return false;\"><u>" + HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType) + "</u></a>";
+
+
+                                billChequeApprovalResponse!.MainPrintOutDetails?.Link = $"https://glauniversity.in:8088/ExtraPages/MobileShowBillDetails.aspx?approvedid={_general.Encrypt(billChequeApprovalResponse!.TransID + "#" + referenceNo)}";
+                                billChequeApprovalResponse!.MainPrintOutDetails?.Text = billChequeApprovalResponse!.ForType;
+
                             }
                             if (dtUserIdentity?.Rows[0][0]?.ToString()?.Contains("-SAL") == true)
                             {
                                 string referenceNo = dtUserIdentity?.Rows[0][0]?.ToString()?.Replace("-SAL", "") ?? string.Empty;
                                 billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('https://glauniversity.in:8088/PrintForms/Res_Feedback.aspx?RefNo={_general.Encrypt(referenceNo)}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
+
+                                billChequeApprovalResponse!.MainPrintOutDetails?.Link = $"https://glauniversity.in:8088/PrintForms/Res_Feedback.aspx?RefNo={_general.Encrypt(referenceNo)}";
+                                billChequeApprovalResponse!.MainPrintOutDetails?.Text = billChequeApprovalResponse!.ForType;
                             }
                         }
                     }
@@ -3002,10 +3091,16 @@ namespace AdvanceAPI.Services.Advance
                     if (role == "MANAGEMENT")
                     {
                         billChequeApprovalResponse!.PurposeLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/warrenty.aspx?approvalid={billChequeApprovalResponse!.BillExtra6}&Switch=Y',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.Purpose!)}</u></a>";
+
+                        billChequeApprovalResponse!.PurposePrintOutDetails?.Link = $"http://hostel.glauniversity.in:84/warrenty.aspx?approvalid={billChequeApprovalResponse!.BillExtra6}&Switch=Y";
+                        billChequeApprovalResponse!.PurposePrintOutDetails?.Text = billChequeApprovalResponse!.Purpose!;
                     }
                     else
                     {
                         billChequeApprovalResponse!.PurposeLinkString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('http://hostel.glauniversity.in:84/warrenty.aspx?approvalid={billChequeApprovalResponse!.BillExtra6}&Switch=N',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.Purpose!)}</u></a>";
+
+                        billChequeApprovalResponse!.PurposePrintOutDetails?.Link = $"http://hostel.glauniversity.in:84/warrenty.aspx?approvalid={billChequeApprovalResponse!.BillExtra6}&Switch=N";
+                        billChequeApprovalResponse!.PurposePrintOutDetails?.Text = billChequeApprovalResponse!.Purpose!;
                     }
                 }
 
@@ -3013,6 +3108,19 @@ namespace AdvanceAPI.Services.Advance
                 string[] splt = billChequeApprovalResponse?.FirmName?.Split('#')!;
 
                 billChequeApprovalResponse!.DepartmentVendorPaidString = $"<b>Department : <a href='#' style='color:black;' onclick=\"openPopUpEnc('Reports/FirmPaidReport.aspx?VId=$$$&SubId=D','{billChequeApprovalResponse.Col1}'); return false;\"><u>{billChequeApprovalResponse.Col1}</u></a></b><br/><a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?Id={billChequeApprovalResponse.TransID}`,0,0); return false;'><u>{splt[0]}</u></a><br/><span style='color:blue;'><a href='#' style='font-weight:bold;color:blue;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?VId={billChequeApprovalResponse.BVId}&SubId=&CallBy={_general.Encrypt(billChequeApprovalResponse.BRPID!)}`,0,0); return false;'><u>{splt[1]}</u></a></span>";
+
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.Department = billChequeApprovalResponse.Col1;
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.DepartmentLink = $"Reports/FirmPaidReport.aspx?VId=$$$&SubId=D','{billChequeApprovalResponse.Col1}";
+
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.TransactionId = billChequeApprovalResponse.TransID;
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.FirmName = splt[0];
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.FirmLink = $"Reports/FirmPaidReport.aspx?Id={billChequeApprovalResponse.TransID}";
+
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.RelativePersonName = splt[1];
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.VendorId = billChequeApprovalResponse.BVId;
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.RelativePersonId = billChequeApprovalResponse.BRPID;
+                billChequeApprovalResponse!.DepartmentPrintOutDetails!.RelativePersonLink = $"Reports/FirmPaidReport.aspx?VId={billChequeApprovalResponse.BVId}&SubId=&CallBy={_general.Encrypt(billChequeApprovalResponse.BRPID!)}";
+
 
                 if (billChequeApprovalResponse!.BVId == "827")
                 {
@@ -3022,19 +3130,30 @@ namespace AdvanceAPI.Services.Advance
                         billChequeApprovalResponse!.IsImprestSummary = true;
 
                         billChequeApprovalResponse!.MainPrintOutString = $"<a href='#' style='font-weight:bold;' onclick=\"openPopUp('Reports/ImprestSummary.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.TransID + "#Yes")}',0,0); return false;\"><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.ForType)}</u></a>";
+
+                        billChequeApprovalResponse!.MainPrintOutDetails?.Link = $"Reports/ImprestSummary.aspx?Id={_general.Encrypt(billChequeApprovalResponse!.TransID + "#Yes")}";
+                        billChequeApprovalResponse!.MainPrintOutDetails?.Text = billChequeApprovalResponse!.ForType;
                     }
                 }
 
                 if (billChequeApprovalResponse!.ForType == "Advance Bill")
                 {
                     billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?IsAdvance=Y&CallBy={_general.Encrypt(billChequeApprovalResponse!.BRPID!)}`,0,0); return false;'><u>{HttpUtility.HtmlDecode(billChequeApprovalResponse!.SequenceID)}</u></a>";
+
+                    billChequeApprovalResponse?.ItemReturnOnConsumableLinkDetails?.Link = $"Reports/FirmPaidReport.aspx?IsAdvance=Y&CallBy={_general.Encrypt(billChequeApprovalResponse!.BRPID!)}";
+                    billChequeApprovalResponse?.ItemReturnOnConsumableLinkDetails?.Text = billChequeApprovalResponse!.SequenceID;
                 }
 
 
                 if (dtAgencyWork.Rows.Count > 0 && dtAgencyWork.Select("BillMappedID=" + billChequeApprovalResponse!.TransID).Length > 0)
                 {
                     billChequeApprovalResponse!.ItemReturnOnConsumableLinkString = $"<a href='#' style='font-weight:bold;' onclick='openPopUp(`OtherReports/AbsolutePrint.aspx?TransactionID={_general.Encrypt(billChequeApprovalResponse!.TransID!)}&UName={_general.Encrypt(name)}`,0,0); return false;'><u>{billChequeApprovalResponse!.SequenceID}</u></a>";
+
+                    billChequeApprovalResponse?.ItemReturnOnConsumableLinkDetails?.Link = $"OtherReports/AbsolutePrint.aspx?TransactionID={_general.Encrypt(billChequeApprovalResponse!.TransID!)}&UName={_general.Encrypt(name)}";
+                    billChequeApprovalResponse?.ItemReturnOnConsumableLinkDetails?.Text = billChequeApprovalResponse!.SequenceID;
                 }
+
+
 
                 if (billChequeApprovalResponse!.MyType == "Bills Approval")
                 {
@@ -3062,6 +3181,7 @@ namespace AdvanceAPI.Services.Advance
                                 mypend = true;
                             }
                         }
+
                         billChequeApprovalResponse!.ApprovalAuthsString += $"<span style='color:blue;'>{billChequeApprovalResponse!.BillNameBy}</span><br/>";
                     }
 
@@ -3073,6 +3193,9 @@ namespace AdvanceAPI.Services.Advance
                         {
                             billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Previous Bill Rejected</u></b></font><br/>{dtRejections.Rows[0][0]?.ToString()!.Replace("$", "<br/>")}</font>";
                             billChequeApprovalResponse!.GotRejectedPreviously = true;
+
+                            billChequeApprovalResponse!.RejectionPrintOutDetails!.PreviousBillRejected = dtRejections.Rows[0][0]?.ToString()!;
+
                         }
 
                         using DataTable dtExtra7 = await _advanceRepository.GetBillApprovalAdvanceBillBaseExtra7Details(billChequeApprovalResponse!.TransID!);
@@ -3082,10 +3205,12 @@ namespace AdvanceAPI.Services.Advance
                             if (billChequeApprovalResponse!.Status == "Waiting For Bills Approval")
                             {
                                 billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='blue'><font color='blue'><b><u>For Bill Approval</u></b></font><br/>{dtExtra7.Rows[0][0]?.ToString()!.Replace("$", "<br/>").Replace("@", "<br/>")}</font>";
+                                billChequeApprovalResponse!.RejectionPrintOutDetails!.BillApproval = dtExtra7.Rows[0][0]?.ToString()!;
                             }
                             else
                             {
                                 billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='green'><font color='blue'><b><u>For Bill Approved</u></b></font><br/>{dtExtra7.Rows[0][0]?.ToString()!.Replace("$", "<br/>").Replace("@", "<br/>")}</font>";
+                                billChequeApprovalResponse!.RejectionPrintOutDetails!.BillApproved = dtExtra7.Rows[0][0]?.ToString()!;
                             }
                         }
 
@@ -3156,6 +3281,7 @@ namespace AdvanceAPI.Services.Advance
                             {
                                 billChequeApprovalResponse!.ReadyToIssueAmountAuthsString += "<br/>" + dtBillAuthorities.Rows[0][1]?.ToString() ?? string.Empty;
                             }
+
                             billChequeApprovalResponse!.ReadyToIssueAmountAuthsString += $"<br/><span style='color:blue;'>{billChequeApprovalResponse!.BillNameBy}</span><br/>";
 
 
@@ -3236,6 +3362,9 @@ namespace AdvanceAPI.Services.Advance
                     {
                         billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Cheque Rejected</u></b></font><br/>{dtBillTransactionIssueCol6.Rows[0][0]?.ToString()!.Replace("$", "<br/>")}</font>";
                         billChequeApprovalResponse!.GotRejectedPreviously = true;
+
+                        billChequeApprovalResponse!.RejectionPrintOutDetails!.ChequeRejected = dtBillTransactionIssueCol6.Rows[0][0]?.ToString()!;
+
                     }
                 }
                 else
@@ -3248,6 +3377,8 @@ namespace AdvanceAPI.Services.Advance
                         billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Previous Bill Rejected</u></b></font><br/>{dtRejections.Rows[0][0]?.ToString()?.Replace("$", "<br/>")}</font>";
 
                         billChequeApprovalResponse!.GotRejectedPreviously = true;
+
+                        billChequeApprovalResponse!.RejectionPrintOutDetails!.PreviousBillRejected = dtRejections.Rows[0][0]?.ToString()!;
                     }
 
                     bool mypend = false;
@@ -3256,6 +3387,8 @@ namespace AdvanceAPI.Services.Advance
                     {
                         billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='red'><font color='blue'><b><u>For Cheque Rejected</u></b></font><br/>{dtBillTransactionIssueECol6.Rows[0][0]?.ToString()!.Replace("$", "<br/>")}</font>";
                         billChequeApprovalResponse!.GotRejectedPreviously = true;
+                        billChequeApprovalResponse!.RejectionPrintOutDetails!.ChequeRejected = dtBillTransactionIssueECol6.Rows[0][0]?.ToString()!;
+
                     }
 
                     if (billChequeApprovalResponse!.Status == "Waiting For Cheque Approval")
@@ -3264,6 +3397,8 @@ namespace AdvanceAPI.Services.Advance
                         if (dtChequeReject.Rows.Count > 0 && !string.IsNullOrWhiteSpace(dtChequeReject.Rows[0][0]?.ToString()))
                         {
                             billChequeApprovalResponse!.RejectionReasonString += $"<br/><font color='green'><font color='blue'><b><u>For Cheque Approved</u></b></font><br/>{dtChequeReject.Rows[0][0]?.ToString()?.Replace("$", "<br/>")?.Replace("@", "<br/>")}</font>";
+
+                            billChequeApprovalResponse!.RejectionPrintOutDetails!.ChequeApproved = dtChequeReject.Rows[0][0]?.ToString()!;
                         }
 
                         billChequeApprovalResponse!.ExtraTypeString = "Bill Approved";
@@ -3372,6 +3507,8 @@ namespace AdvanceAPI.Services.Advance
                     }
                 }
 
+
+
                 if (billChequeApprovalResponse!.IsSpecial == "True" || billChequeApprovalResponse!.ForType == "Advance Bill")
                 {
                     billChequeApprovalResponse!.Col6BackColor = System.Drawing.ColorTranslator.FromHtml("#8CDAFF");
@@ -3399,6 +3536,7 @@ namespace AdvanceAPI.Services.Advance
                     billChequeApprovalResponse!.CanOpenFirmRejectionReport = true;
                 }
 
+
                 if (!string.IsNullOrWhiteSpace(billChequeApprovalResponse!.ChequeVendor))
                 {
                     string NewAddon = "";
@@ -3407,6 +3545,10 @@ namespace AdvanceAPI.Services.Advance
                     if (Splited[3].Trim().ToUpper() != "" && Splited[3].Trim().ToUpper() != "---" && Splited[3].Trim().ToUpper() != billChequeApprovalResponse!.Col5!.ToString().Trim().ToUpper())
                     {
                         NewAddon = NewAddon + "<span style='color:brown; font-weight:bold;'> ( <a href='#'  style='color:brown;' onclick=\"openPopUpEnc('Reports/FirmPaidReport.aspx?VId=$$$&SubId=M','" + Splited[3].Trim().ToUpper() + "" + "'); return false;\"><u>" + Splited[3].Trim().ToUpper() + "</u></a> ) </span><br/>";
+
+                        billChequeApprovalResponse!.ChequeVendorPrintOutDetails!.Link = $"Reports/FirmPaidReport.aspx?VId=$$$&SubId=M','{Splited[3].Trim().ToUpper()}'";
+                        billChequeApprovalResponse!.ChequeVendorPrintOutDetails!.Text = Splited[3].Trim().ToUpper();
+
                     }
 
                     if (Splited[0] != billChequeApprovalResponse!.BVId)
@@ -3414,10 +3556,17 @@ namespace AdvanceAPI.Services.Advance
                         if (Splited[2].Trim().ToUpper() != "" && !Splited[2].Trim().ToUpper().Contains("---"))
                         {
                             NewAddon = NewAddon + "<b><span><a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?VId=" + Splited[0] + "&SubId=" + Splited[2] + "`,0,0); return false;'><u>" + Splited[1] + " (" + Splited[2] + ")</u></a></span></b><br/>";
+
+                            billChequeApprovalResponse!.ChequeVendorPrintOutDetails!.Link = $"Reports/FirmPaidReport.aspx?VId={Splited[0]}&SubId={Splited[2]}";
+                            billChequeApprovalResponse!.ChequeVendorPrintOutDetails!.Text = $"{Splited[1]} ({Splited[2]})";
+
                         }
                         else
                         {
                             NewAddon = NewAddon + "<b><span><a href='#' style='font-weight:bold;' onclick='openPopUp(`Reports/FirmPaidReport.aspx?VId=" + Splited[0] + "&SubId=`,0,0); return false;'><u>" + Splited[1] + "</u></a></span></b><br/>";
+
+                            billChequeApprovalResponse!.ChequeVendorPrintOutDetails!.Link = $"Reports/FirmPaidReport.aspx?VId={Splited[0]}&SubId=";
+                            billChequeApprovalResponse!.ChequeVendorPrintOutDetails!.Text = Splited[1];
                         }
                     }
 
@@ -3431,7 +3580,6 @@ namespace AdvanceAPI.Services.Advance
                 billChequeApprovalResponse!.INI = billChequeApprovalResponse!.INI!.Replace("$", "<br/>");
 
                 using DataTable dtAllBillDetails = await _advanceRepository.GetBillApprovalAdvanceAllBillDetails(billChequeApprovalResponse!.TransID!);
-
 
                 if (dtAllBillDetails.Rows.Count > 0)
                 {
@@ -3515,6 +3663,13 @@ namespace AdvanceAPI.Services.Advance
 
             return new ApiResponse(StatusCodes.Status200OK, "Success", billApprovalResponses);
         }
+
+        public DateTime convertDatetime(string date)
+        {
+            return DateTime.ParseExact(date,"MM/dd/yyyy", CultureInfo.InvariantCulture);
+        }
+
+
         public async Task<ApiResponse> GetChequeAuthority()
         {
             List<TextValues> chequeAuthorityResponses = new List<TextValues>();
@@ -3769,6 +3924,7 @@ namespace AdvanceAPI.Services.Advance
                     purchasedetails.TotalItem= dt.Rows[0]["TotalItem"].ToString();
                     purchasedetails.TotalApproved= TotalApprovalAuth;
                     purchasedetails.BillStatus = dt.Rows[0]["ReferenceBillStatus"].ToString();
+                    purchasedetails.ReferenceNo = dt.Rows[0]["ReferenceNo"].ToString();
                     purchasedetails.TotalAuth= TotalAuth;
                     purchasedetails.MyType= dt.Rows[0]["MyType"].ToString();
                     BillId+= dt.Rows[0]["BillId"].ToString();
@@ -3792,15 +3948,22 @@ namespace AdvanceAPI.Services.Advance
                     if (!string.IsNullOrEmpty(dt.Rows[0]["App3ID"].ToString()) && dt.Rows[0]["App3ID"].ToString().Length > 0) TotalAuth++;
                     if (!string.IsNullOrEmpty(dt.Rows[0]["App4ID"].ToString()) && dt.Rows[0]["App4ID"].ToString().Length > 0) TotalAuth++;
 
-                    PurchaseDetails purchasedetails = new PurchaseDetails();
-                    purchasedetails.Amount = dt.Rows[0]["Amount"].ToString();
-                    purchasedetails.Status = dt.Rows[0]["Status"].ToString();
-                    purchasedetails.TotalApproved = TotalApprovalAuth;
-                    purchasedetails.TotalAuth = TotalAuth;
+                    List<PurchaseDetails> purchasedetailslst = new List<PurchaseDetails>();
+                    for(int i=0;i<dt.Rows.Count;i++)
+                    {
+                        PurchaseDetails purchasedetails=new PurchaseDetails();
+                        purchasedetails.Amount = dt.Rows[i]["Amount"].ToString();
+                        purchasedetails.Status = dt.Rows[i]["Status"].ToString();
+                        purchasedetails.ReferenceNo = dt.Rows[i]["ReferenceNo"].ToString();
+                        //purchasedetails.TotalApproved = TotalApprovalAuth;
+                        //purchasedetails.TotalAuth = TotalAuth;
 
-                    purchasedetails.MyType = dt.Rows[0]["MyType"].ToString();
-                    BillId += dt.Rows[0]["BillId"].ToString();
-                    res.Advance = purchasedetails;
+                        purchasedetails.MyType = dt.Rows[0]["MyType"].ToString();
+                        BillId += dt.Rows[0]["BillId"].ToString();
+                        purchasedetailslst.Add(purchasedetails);
+                    }
+                    
+                    res.Advance = purchasedetailslst;
                 }
             }
             if(Type=="Bill")
@@ -3811,13 +3974,18 @@ namespace AdvanceAPI.Services.Advance
             {
                 if(dt.Rows.Count> 0 && dt.Rows[0]["Amount"].ToString() != "0")
                 {
-                    PurchaseDetails purchasedetails = new PurchaseDetails();
-                    purchasedetails.Amount = dt.Rows[0]["Amount"].ToString();
-                    purchasedetails.TotalApproved =Convert.ToInt32(dt.Rows[0]["Count"].ToString());
-                    purchasedetails.MyType = dt.Rows[0]["TransId"].ToString();
-                    purchasedetails.IssuedAmount = dt.Rows[0]["IssuedAmount"].ToString();
-
-                    res.Bill = purchasedetails;
+                    List<PurchaseDetails> bild = new List<PurchaseDetails>();
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        PurchaseDetails purchasedetails = new PurchaseDetails();
+                        purchasedetails.Amount = dt.Rows[i]["Amount"].ToString();
+                        //purchasedetails.TotalApproved = Convert.ToInt32(dt.Rows[0]["Count"].ToString());
+                        purchasedetails.MyType = dt.Rows[i]["TransId"].ToString();
+                        purchasedetails.IssuedAmount = dt.Rows[i]["IssuedAmount"].ToString();
+                        purchasedetails.Status = dt.Rows[i]["Status"].ToString();
+                        bild.Add(purchasedetails);
+                    }
+                    res.Bill = bild;
                 }
             }
             using(DataTable dt=await _advanceRepository.ChequeDetails(BillId))
@@ -3846,7 +4014,7 @@ namespace AdvanceAPI.Services.Advance
                     DataTable AuthList = await _advanceRepository.GetAuthority(row["TransactionID"].ToString() ?? "");
                     foreach(DataRow auth in AuthList.Rows)
                     {
-                        aut.Add(new BillAutority(row));
+                        aut.Add(new BillAutority(auth));
                     }
                     billdetail.auth= aut;
                     res.Add(billdetail);
@@ -3856,7 +4024,27 @@ namespace AdvanceAPI.Services.Advance
             return new ApiResponse(StatusCodes.Status200OK,"Success",res);
         }
 
+        public async Task<ApiResponse> GetChequeDetails(string BillId)
+        {
+            HashSet<ChequeResponse> lst = new HashSet<ChequeResponse>();
+            using(DataTable dt=await _advanceRepository.GetCheque(BillId))
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    ChequeResponse res = new ChequeResponse(row);
+                    List<BillAutority> aut = new List<BillAutority>();
+                    DataTable AuthList = await _advanceRepository.GetChequeAuthority(row["TransactionID"].ToString() ?? "");
+                    foreach (DataRow auth in AuthList.Rows)
+                    {
+                        aut.Add(new BillAutority(auth));
+                    }
+                    res.auth= aut;
+                    lst.Add(res);
+                }
 
+                return new ApiResponse(StatusCodes.Status200OK, "Success", lst);
+            }
+        }
 
 
 

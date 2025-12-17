@@ -70,6 +70,14 @@ namespace AdvanceAPI.DTO.Advance.Bill
         public string? MainPrintOutString { get; set; } = string.Empty;
         public string? MainGateRecievingLinkString { get; set; } = string.Empty;
         public string? ItemReturnOnConsumableLinkString { get; set; } = string.Empty;
+        public BillChequeApprovalPrintOutsLinkStrings? ItemReturnOnConsumableLinkDetails { get; set; } = new BillChequeApprovalPrintOutsLinkStrings();
+        public BillChequeApprovalPrintOutsLinkStrings? MainPrintOutDetails { get; set; } = new BillChequeApprovalPrintOutsLinkStrings();
+        public BillChequeApprovalPrintOutsLinkStrings? PurposePrintOutDetails { get; set; } = new BillChequeApprovalPrintOutsLinkStrings();
+        public BillChequeApprovalPrintOutsLinkStrings? MainGatePrintOutDetails { get; set; } = new BillChequeApprovalPrintOutsLinkStrings();
+        public BillChequeApprovalPrintOutsLinkStrings? ChequeVendorPrintOutDetails { get; set; } = new BillChequeApprovalPrintOutsLinkStrings();
+        public BillChequeApprovalPrintOutBudgetDetails? BudgetPrintOutDetails { get; set; } = new BillChequeApprovalPrintOutBudgetDetails();
+        public BillChequeApprovalDepartmentPrintoutDetails? DepartmentPrintOutDetails { get; set; } = new BillChequeApprovalDepartmentPrintoutDetails();
+        public BillChequeApprovalRejectionPrintOutDetails? RejectionPrintOutDetails { get; set; } = new BillChequeApprovalRejectionPrintOutDetails();
         public string? PurposeLinkString { get; set; } = string.Empty;
         public System.Drawing.Color? Col9BackColor { get; set; }
         public System.Drawing.Color? Col10BackColor { get; set; }
@@ -124,6 +132,43 @@ namespace AdvanceAPI.DTO.Advance.Bill
             BVId = dr["BVId"]?.ToString() ?? String.Empty;
             BRPID = dr["BRPID"]?.ToString() ?? String.Empty;
 
+        }
+        public class BillChequeApprovalPrintOutsLinkStrings
+        {
+            public string? Link { get; set; } = string.Empty;
+            public string? Text { get; set; } = string.Empty;
+        }
+        public class BillChequeApprovalPrintOutBudgetDetails
+        {
+            public string? BudgetAmount { get; set; } = string.Empty;
+            public string? PreviousTaken { get; set; } = string.Empty;
+            public string? Amount { get; set; } = string.Empty;
+            public string? BudgetStatus { get; set; } = string.Empty;
+            public string? BudgetComment { get; set; } = string.Empty;
+            public string? TotalAmount { get; set; } = string.Empty;
+            public string? TotalPaid { get; set; } = string.Empty;
+            public string? TotalBalance { get; set; } = string.Empty;
+            public string? Status { get; set; } = string.Empty;
+        }
+        public class BillChequeApprovalDepartmentPrintoutDetails
+        {
+            public string? Department { get; set; } = string.Empty;
+            public string? DepartmentLink { get; set; } = string.Empty;
+            public string? TransactionId { get; set; } = string.Empty;
+            public string? FirmName { get; set; } = string.Empty;
+            public string? FirmLink { get; set; } = string.Empty;
+            public string? RelativePersonName { get; set; } = string.Empty;
+            public string? RelativePersonId { get; set; } = string.Empty;
+            public string? VendorId { get; set; } = string.Empty;
+            public string? RelativePersonLink { get; set; } = string.Empty;
+        }
+        public class BillChequeApprovalRejectionPrintOutDetails
+        {
+            public string? PreviousBillRejected { get; set; } = string.Empty;
+            public string? BillApproval { get; set; } = string.Empty;
+            public string? BillApproved { get; set; } = string.Empty;
+            public string? ChequeRejected { get; set; } = string.Empty;
+            public string? ChequeApproved { get; set; } = string.Empty;
         }
 
     }

@@ -287,10 +287,12 @@ namespace AdvanceAPI.SQLConstants.Advance
         public const string DELETE_FROM_BILL_TRANSACTION_ISSUE="delete from bill_transaction_issue where TransactionID=@TransId And SequenceID=@SeqNo";
         public const string UPDATE_BILL_BASE_Before_CHEQUE_DELETE= "update bill_base A,bill_transaction_issue B set AmountPaid=AmountPaid-B.PaidAmount,AmountRemaining=AmountRemaining+B.PaidAmount,LastUpdatedOn=now(),LastUpdatedBy=@EmpName \r\nwhere A.TransactionID=B.TransactionID AND B.TransactionID=@TransNo AND SequenceID=@SeqNo";
 
-        public const string GET_PURCHASE_TIMELINE = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID,ReferenceBillStatus,TotalItem FROM purchaseapprovalsummary WHERE ReferenceNo=@RefNo;\r\n";
-        public const string GET_ADVANCE_TIMELINE = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE ReferenceNo=@RefNo;\r\n";
+        public const string GET_PURCHASE_TIMELINE = "SELECT ReferenceNo,MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID,ReferenceBillStatus,TotalItem FROM purchaseapprovalsummary WHERE ReferenceNo=@RefNo;\r\n";
+        public const string GET_ADVANCE_TIMELINE = "SELECT ReferenceNo,MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE ReferenceNo=@RefNo;\r\n";
 
-        public const string GET_BILL_DETAILS = "SELECT TransactionID,AmountPaid,AmountRemaining,AmountRequired,`Status`,BillNo FROM bill_base WHERE TransactionID IN (@Ids)\r\n";
+        public const string GET_BILL_DETAILS = "SELECT TransactionID,AmountPaid,AmountRemaining,AmountRequired,`Status`,BillNo,FirmPerson,FirmContactNo,FirmAddress,Remark,DATE_FORMAT(BillDate,'%b %d, %y') 'BillDate',\r\nDATE_FORMAT(BillReceivedOnGate,'%b %d, %y') 'OnGate',DATE_FORMAT(StoreDate,'%b %d, %y') 'StoreDate',DATE_FORMAT(ApprovedOn,'%b %d, %y') 'ApprovedOn',Col1 'Department',Col5 'Maad',BillExtra4 'TestDate',BillExtra1 'ExpDate'  FROM bill_base WHERE TransactionID IN (@Ids)\r\n";
         public const string GET_APPROVAL_AUTHORITY_BILL = "SELECT EmployeeID,EmployeeDetails,`Status`,DATE_FORMAT(DoneOn,'%d.%m.%Y') 'On' FROM approvals_authority WHERE TransactionID = @TransId AND Type='Bills Approval'\r\n";
+        public const string GET_CHEQUE_DETAILS = "SELECT TransactionID,SequenceID,TaxAmount,PaidAmount,IssuedAmount,`Mode`,TransactionNo,DATE_FORMAT(IssuedOn,'%b %d, %y') 'IssuedOn',DATE_FORMAT(SignedOn,'%b %d, %y') 'SignedOn',\r\nDATE_FORMAT(ReceivedOn,'%b %d, %y') 'ReceivedOn',DATE_FORMAT(DistributedOn,'%b %d, %y') 'DistributrOn',DistributedBy,ReceivedBy,Remark FROM bill_transaction_issue WHERE TransactionID IN (@Ids)\r\n\r\n";
+        public const string GET_APPROVAL_AUTHORITY_CHEQUE_BILL = "SELECT EmployeeID,EmployeeDetails,`Status`,DATE_FORMAT(DoneOn,'%d.%m.%Y') 'On' FROM approvals_authority WHERE TransactionID = @TransId AND Type='Bills Approval -> Cheque Approval'\r\n";
     }
 }

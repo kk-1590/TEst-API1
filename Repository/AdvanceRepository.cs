@@ -2357,6 +2357,12 @@ namespace AdvanceAPI.Repository
                     parameters.Add(new SQLParameters("@InitiatedBy", getBillApprovalRequest.InitiatedBy));
                 }
 
+                if (!string.IsNullOrWhiteSpace(getBillApprovalRequest?.ReferenceNo))
+                {
+                    showcond = showcond + " And A.TransactionID=@TransactionID";
+                    parameters.Add(new SQLParameters("@TransactionID", getBillApprovalRequest.ReferenceNo));
+                }
+
                 parameters.Add(new SQLParameters("@LimitItems", getBillApprovalRequest!.NoOfRecords ?? 0));
                 parameters.Add(new SQLParameters("@OffSetItems", getBillApprovalRequest!.RecordFrom ?? 0));
 
@@ -3489,10 +3495,10 @@ namespace AdvanceAPI.Repository
                 string str= "";
                 if (Type != "Advance")
                 {
-                    str = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE SUBSTRING_INDEX(PExtra4,'#',1)=@RefNo and `Status`!='Rejected' AND `Status`!='Deleted'";
+                    str = "SELECT ReferenceNo,MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE SUBSTRING_INDEX(PExtra4,'#',1)=@RefNo and `Status`!='Rejected' AND `Status`!='Deleted'";
                 }
                 else
-                    str = "SELECT MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE ReferenceNo=@RefNo and `Status`!='Rejected' AND `Status`!='Deleted'";
+                    str = "SELECT ReferenceNo,MyType,BillId,App1DoneOn,App2DoneOn,App3DoneOn,App4DoneOn,Amount,Status,App1ID,App2ID,App3ID,App4ID FROM otherapprovalsummary WHERE ReferenceNo=@RefNo and `Status`!='Rejected' AND `Status`!='Deleted'";
                 
                 return await _dbOperations.SelectAsync(str, parameters, DBConnections.Advance);
             }
@@ -3507,7 +3513,7 @@ namespace AdvanceAPI.Repository
           
             try
             {
-                string str = "SELECT SUM(AmountRequired) 'Amount',GROUP_CONCAT(TransactionID) 'TransId',COUNT(TransactionID) 'Count',SUM(AmountPaid) 'IssuedAmount' FROM bill_base WHERE FIND_IN_SET(TransactionID,'" + Ids + "') AND `Status`!='Bill Rejected';\r\n";
+                string str = "SELECT (AmountRequired) 'Amount',(TransactionID) 'TransId',(AmountPaid) 'IssuedAmount',Status FROM bill_base WHERE FIND_IN_SET(TransactionID,'" + Ids + "') AND `Status`!='Bill Rejected';\r\n";
                 return await _dbOperations.SelectAsync(str,  DBConnections.Advance);
             }
             catch(Exception ex)
@@ -3551,6 +3557,30 @@ namespace AdvanceAPI.Repository
             catch(Exception ex)
             {
                 _logger.LogError(ex, "Error During GetAuthority...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetCheque(string TandId)
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_CHEQUE_DETAILS.Replace("@Ids", TandId), DBConnections.Advance);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "Error During GetCheque...");
+                throw;
+            }
+        }
+        public async Task<DataTable> GetChequeAuthority(string strId)
+        {
+            try
+            {
+                return await _dbOperations.SelectAsync(AdvanceSql.GET_APPROVAL_AUTHORITY_CHEQUE_BILL.Replace("@TransId", strId), DBConnections.Advance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error During GetChequeAuthority...");
                 throw;
             }
         }

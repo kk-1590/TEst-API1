@@ -10,6 +10,20 @@ namespace AdvanceAPI.DTO.Advance.TimeLine
         public string? Status { get; set; }
         public string? BillNo { get; set; }
         public List<BillAutority> auth {  get; set; }
+        public string? FirmPerson {  get; set; }
+        public string? FirmContactNo {  get; set; }
+        public string? FirmAddress {  get; set; }
+        public string? Remark {  get; set; }
+        public string? BillDate {  get; set; }
+        public string? OnGate {  get; set; }
+        public string? StoreDate {  get; set; }
+        public string? ApprovedOn {  get; set; }
+        public string? Department {  get; set; }
+        public string? Maad {  get; set; }
+        public string? PdfLink { get; set; }
+        public string? ExcelLink { get; set; }
+        public string? TestDate { get; set; }
+        public string? ExpDate { get; set; }
         public BillDetailsResponse1()
         {
 
@@ -22,6 +36,27 @@ namespace AdvanceAPI.DTO.Advance.TimeLine
             AmountRequired = dr["AmountRequired"].ToString();
             Status = dr["Status"].ToString();
             BillNo = dr["BillNo"].ToString() ?? string.Empty;
+            FirmPerson = dr["FirmPerson"].ToString() ?? string.Empty;
+            FirmContactNo = dr["FirmContactNo"].ToString() ?? string.Empty;
+            FirmAddress = dr["FirmAddress"].ToString() ?? string.Empty;
+            Remark = dr["Remark"].ToString();
+            BillDate = dr["BillDate"].ToString();
+            OnGate = dr["OnGate"].ToString();
+            StoreDate = dr["StoreDate"].ToString();
+            ApprovedOn = dr["ApprovedOn"].ToString();
+            Department = dr["Department"].ToString();
+            Maad = dr["Maad"].ToString();
+            TestDate = dr["TestDate"].ToString();
+            ExpDate = dr["ExpDate"].ToString();
+            string ParentPath = Directory.GetCurrentDirectory();
+            if (File.Exists(Path.Combine(ParentPath, "Upload_Bills", dr["TransactionID"].ToString()??""+".pdf")))
+            {
+                PdfLink = Path.Combine("Upload_Bills", dr["TransactionID"].ToString() ?? "" + ".pdf");
+            }
+            if (File.Exists(Path.Combine(ParentPath, "Upload_Bills", dr["TransactionID"].ToString()??""+".xlsx")))
+            {
+                PdfLink = Path.Combine("Upload_Bills", dr["TransactionID"].ToString() ?? "" + ".xlsx");
+            }
         }
 
     }

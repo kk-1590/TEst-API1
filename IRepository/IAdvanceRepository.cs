@@ -179,6 +179,8 @@ namespace AdvanceAPI.IRepository
         Task<DataTable> ChequeDetails(string Ids);
         Task<DataTable> BillDetaild(string Ids);
         Task<DataTable> GetAuthority(string strId);
+        Task<DataTable> GetCheque(string TandId);
+        Task<DataTable> GetChequeAuthority(string strId);
 
     }
 }
