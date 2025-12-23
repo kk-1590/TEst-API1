@@ -60,25 +60,21 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || true)
+if (!app.Environment.IsProduction())
 {
     app.UseSwagger();
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
     app.UseSwaggerUI(options =>
     {
-        app.UseSwaggerUI(options =>
+        for (int i = 0; i < provider.ApiVersionDescriptions.Count; i++)
         {
-            for (int i = 0; i < provider.ApiVersionDescriptions.Count; i++)
-            {
-                ApiVersionDescription? description = provider.ApiVersionDescriptions[i];
-                options.SwaggerEndpoint(
-                    $"/swagger/{description.GroupName}/swagger.json",
-                    description.GroupName.ToUpperInvariant());
-            }
-            options.RoutePrefix = string.Empty; // Serve Swagger UI at root
-        });
-        options.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+            ApiVersionDescription? description = provider.ApiVersionDescriptions[i];
+            options.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant());
+        }
+        options.RoutePrefix = string.Empty; // Serve Swagger UI at root
     });
 
     app.MapOpenApi();
