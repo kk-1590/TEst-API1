@@ -36,12 +36,7 @@ app.UseMiddleware<TokenBlacklistMiddleware>();
 app.UseDefaultFiles();
 app.MapStaticAssets();
 
-app.UseCors(builder =>
-{
-    builder.AllowAnyOrigin()
-           .AllowAnyMethod()
-           .AllowAnyHeader();
-});
+app.UseCors("DefaultCorsPolicy");
 var providerfile = new FileExtensionContentTypeProvider();
 app.UseStaticFiles(new StaticFileOptions
 {
