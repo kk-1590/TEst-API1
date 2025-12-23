@@ -1,5 +1,6 @@
 using AdvanceAPI;
 using AdvanceAPI.Middlewares;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.DotNet.Scaffolding.Shared;
@@ -38,22 +39,12 @@ app.UseCors(builder =>
            .AllowAnyMethod()
            .AllowAnyHeader();
 });
+
 var providerfile = new FileExtensionContentTypeProvider();
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills")),
-    RequestPath = "/Upload_Bills",
-    ServeUnknownFileTypes = true,
-    ContentTypeProvider = providerfile
-});
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills")),
-    RequestPath = "/Upload_Bills/Approved",
-    ServeUnknownFileTypes = true,
-    ContentTypeProvider = providerfile
-});
+providerfile.Mappings.Clear();
+providerfile.Mappings.Add(".pdf", "application/pdf");
+providerfile.Mappings.Add(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+// TODO: Move uploaded bill assets to a dedicated storage service with antivirus scanning and signed URLs.
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || true)
@@ -88,6 +79,34 @@ app.UseHsts();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/Upload_Bills", StringComparison.OrdinalIgnoreCase))
+    {
+        if (context.User?.Identity?.IsAuthenticated != true)
+        {
+            await context.ChallengeAsync();
+            return;
+        }
+    }
+
+    await next();
+});
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills")),
+    RequestPath = "/Upload_Bills",
+    ContentTypeProvider = providerfile
+});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Upload_Bills")),
+    RequestPath = "/Upload_Bills/Approved",
+    ContentTypeProvider = providerfile
+});
 
 app.MapControllers();
 
