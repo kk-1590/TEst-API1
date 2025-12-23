@@ -41,6 +41,17 @@ namespace AdvanceAPI
             services.AddControllers();
             services.AddOpenApi();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("DefaultCorsPolicy", policyBuilder =>
+                {
+                    policyBuilder
+                        .WithOrigins("https://localhost:4200", "https://localhost:3000")
+                        .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .WithHeaders("Content-Type", "Authorization");
+                });
+            });
+
             #region API Version - Swagger
 
             services.AddAuthentication(options =>
