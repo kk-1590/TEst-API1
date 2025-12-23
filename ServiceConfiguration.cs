@@ -29,6 +29,7 @@ using AdvanceAPI.IServices.FirmPaideport;
 using AdvanceAPI.Services.FirmPaid;
 using AdvanceAPI.IServices.Media;
 using AdvanceAPI.Services.Media;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 
 namespace AdvanceAPI
 {
@@ -123,8 +124,18 @@ namespace AdvanceAPI
 
 
 
-            services.AddMemoryCache();
-            services.AddDistributedMemoryCache();
+            var redisConnection = _config.GetValue<string>("Redis:Configuration");
+            if (!string.IsNullOrWhiteSpace(redisConnection))
+            {
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = redisConnection;
+                });
+            }
+            else
+            {
+                services.AddDistributedMemoryCache();
+            }
 
             //connection string setup
             services.AddSingleton<IDBConnectionStrings, DBConnectionStrings>();

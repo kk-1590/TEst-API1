@@ -5,7 +5,8 @@ using AdvanceAPI.IServices;
 using AdvanceAPI.IServices.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 using System.Data;
 
 namespace AdvanceAPI.Services.Account
@@ -16,15 +17,17 @@ namespace AdvanceAPI.Services.Account
         private readonly ILogger<AccountService> _logger;
         private readonly IGeneral _general;
         private readonly IAccountRepository _account;
-        private readonly IMemoryCache _cache;
+        private readonly IDistributedCache _cache;
+        private readonly IConfiguration _configuration;
 
-        public AccountService(ITokenService token, ILogger<AccountService> logger, IGeneral general, IAccountRepository account, IMemoryCache cache)
+        public AccountService(ITokenService token, ILogger<AccountService> logger, IGeneral general, IAccountRepository account, IDistributedCache cache, IConfiguration configuration)
         {
             _token = token;
             _logger = logger;
             _general = general;
             _account = account;
             _cache = cache;
+            _configuration = configuration;
         }
 
         public async Task<ApiResponse> Login(UserLoginRequest? loginRequest)
@@ -152,9 +155,10 @@ namespace AdvanceAPI.Services.Account
 
                 await _account.LogoutToken(token!);
 
-                _cache.Set(token, true, new MemoryCacheEntryOptions
+                var tokenExpirationMinutes = _configuration.GetValue<int?>("Jwt:EXPIRATION_MINUTES") ?? 180;
+                await _cache.SetStringAsync(token, bool.TrueString, new DistributedCacheEntryOptions
                 {
-                    AbsoluteExpiration = DateTime.UtcNow.AddMinutes(180)
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(tokenExpirationMinutes)
                 });
 
 
