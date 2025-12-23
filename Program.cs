@@ -1,6 +1,7 @@
 using AdvanceAPI;
 using AdvanceAPI.Middlewares;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.DotNet.Scaffolding.Shared;
 using Microsoft.Extensions.FileProviders;
@@ -17,7 +18,18 @@ builder.Host.UseSerilog((hostingContext, loggerConfiguration) =>
 
 ServiceConfiguration.RegisterServices(builder.Services, builder.Configuration);
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseForwardedHeaders();
+}
 app.Use(async (context, next) =>
 {
     var forwardedHeader = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
@@ -82,9 +94,11 @@ if (app.Environment.IsDevelopment() || true)
     app.MapFallbackToFile("/swagger");
 }
 
-app.UseHttpsRedirection();
-
-app.UseHsts();
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+    app.UseHsts();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
