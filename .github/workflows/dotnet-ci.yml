@@ -1,0 +1,50 @@
+name: .NET CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore API
+        run: dotnet restore AdvanceAPI.csproj
+
+      - name: Build API
+        run: dotnet build AdvanceAPI.csproj --configuration Release --no-restore
+
+      - name: Run tests when test projects are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          test_projects=0
+          # Only inspect tracked projects; exclude generated bin/obj content.
+          while IFS= read -r -d '' project; do
+            case "$project" in
+              bin/*|obj/*|*/bin/*|*/obj/*) continue ;;
+            esac
+            # Restore imports before evaluating IsTestProject (including test SDK imports).
+            if [[ "$project" != "AdvanceAPI.csproj" ]]; then
+              dotnet restore "$project"
+            fi
+            is_test_project=$(dotnet msbuild "$project" -nologo -getProperty:IsTestProject -property:Configuration=Release)
+            if [[ "${is_test_project,,}" == "true" ]]; then
+              test_projects=$((test_projects + 1))
+              dotnet test "$project" --configuration Release --no-restore
+            fi
+          done < <(git ls-files -z -- '*.csproj')
+          if [[ "$test_projects" -eq 0 ]]; then
+            echo "No test projects found; skipping dotnet test."
+          fi
